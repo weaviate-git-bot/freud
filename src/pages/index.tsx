@@ -6,6 +6,8 @@ import React from "react";
 
 export default function Home() {
   const [query, setQuery] = React.useState("");
+  const [reply, setReply] = React.useState("");
+
   const pokemon = "ditto";
   const hello = api.example.hello.useQuery({ text: pokemon });
   const chatgpt = api.openai.chat.useQuery({
