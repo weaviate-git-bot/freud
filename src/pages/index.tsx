@@ -1,18 +1,17 @@
 import Head from "next/head";
-import Link from "next/link";
 import { api } from "~/utils/api";
-import React from "react";
+import React, { FormEvent } from "react";
 
 
 export default function Home() {
   const [query, setQuery] = React.useState("");
-  const [reply, setReply] = React.useState("");
 
-  const pokemon = "ditto";
-  const hello = api.example.hello.useQuery({ text: pokemon });
-  const chatgpt = api.openai.chat.useQuery({
-    content: `what can you tell me about ${pokemon}?`,
-  });
+  const mutation = api.openai.chat.useMutation();
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    mutation.mutate({ query });
+  }
 
   return (
     <>
@@ -26,25 +25,19 @@ export default function Home() {
           <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
             Freud
           </h1>
-          <form> 
+          <form onSubmit={handleSubmit}>
             <label htmlFor="querySearch">
               Input box;
             </label>
-          <input type="text"
-            id="querySearch" 
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-            }}/>
+            <input type="text"
+              id="querySearch"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+              }} />
           </form>
           <p className="text-2xl text-white">
-            {hello.data ? hello.data.greeting : "Loading tRPC query..."}
-          </p>
-          <p className="text-2xl text-white">
-            {hello.data ? hello.data.pokemon.height : "Loading pokemon..."}
-          </p>
-          <p className="text-2xl text-white">
-            {reply.length > 0 ? reply : "Waiting for ChatGPT"}
+            {mutation.data ? mutation.data.message : "Waiting for ChatGPT"}
           </p>
         </div>
       </main>
