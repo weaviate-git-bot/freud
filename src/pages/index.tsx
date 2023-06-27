@@ -5,8 +5,8 @@ import { api } from "~/utils/api";
 export default function Home() {
   const pokemon = "ditto";
   const hello = api.example.hello.useQuery({ text: pokemon });
-  const chatgpt = api.openai.hello.useQuery({
-    question: "what can you tell me about " + pokemon + "?",
+  const chatgpt = api.openai.chat.useQuery({
+    content: `what can you tell me about ${pokemon}?`,
   });
 
   return (
