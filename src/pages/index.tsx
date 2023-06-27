@@ -3,7 +3,11 @@ import Link from "next/link";
 import { api } from "~/utils/api";
 
 export default function Home() {
-  const hello = api.example.hello.useQuery({ text: "ditto" });
+  const pokemon = "ditto";
+  const hello = api.example.hello.useQuery({ text: pokemon });
+  const chatgpt = api.openai.hello.useQuery({
+    question: "what can you tell me about " + pokemon + "?",
+  });
 
   return (
     <>
@@ -42,10 +46,13 @@ export default function Home() {
             </Link>
           </div>
           <p className="text-2xl text-white">
-            {hello.data ? hello.data.greeting : "Loading tRPC query..."} 
+            {hello.data ? hello.data.greeting : "Loading tRPC query..."}
           </p>
           <p className="text-2xl text-white">
-            {hello.data ? hello.data.pokemon.height : "Loading pokemon..."} 
+            {hello.data ? hello.data.pokemon.height : "Loading pokemon..."}
+          </p>
+          <p className="text-2xl text-white">
+            {chatgpt.data ? chatgpt.data.message : "Waiting for ChatGPT"}
           </p>
         </div>
       </main>
