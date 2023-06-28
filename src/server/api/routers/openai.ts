@@ -14,16 +14,20 @@ export const openAIRouter = createTRPCRouter({
     // using zod schema to validate and infer input values
     .input(z.array(Message))
     .mutation(async ({ input }) => {
-      const chatgptReply = await openai.createChatCompletion({
-        model: "gpt-3.5-turbo",
-        messages: input,
-      });
-      const message: Message = {
-        role: Role.Assistant,
-        content: chatgptReply.data.choices[0].message.content!, //TODO linter complains about possibly undefined value
-      };
-      return {
-        message,
-      };
+      try {
+        const chatgptReply = await openai.createChatCompletion({
+          model: "gpt-3.5-turbo",
+          messages: input,
+        });
+        const message: Message = {
+          role: Role.Assistant,
+          content: chatgptReply.data.choices[0]?.message?.content || "", //TODO: is this acceptable?
+        };
+        return {
+          message,
+        };
+      } catch (error) {
+        console.error(error);
+      }
     }),
 });
