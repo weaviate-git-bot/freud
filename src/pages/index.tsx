@@ -23,7 +23,7 @@ export default function Home() {
       content: query,
     };
     setMessages([...messages, message]);
-    mutation.mutate({ query });
+    mutation.mutate([...messages, message]);
   }
 
   return (
