@@ -1,13 +1,15 @@
 import { z } from "zod";
-import { Configuration, OpenAIApi } from "openai";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { Role, Message } from "~/interfaces/chat";
+import { ChatOpenAI } from "langchain/chat_models/openai";
+import {
+  type BaseChatMessage,
+  HumanChatMessage,
+  AIChatMessage,
+  SystemChatMessage,
+} from "langchain/schema";
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const openai = new OpenAIApi(configuration);
+const chat = new ChatOpenAI({ temperature: 0 });
 
 export const openAIRouter = createTRPCRouter({
   chat: publicProcedure
@@ -15,16 +17,20 @@ export const openAIRouter = createTRPCRouter({
     .input(z.array(Message))
     .mutation(async ({ input }) => {
       try {
-        const chatgptReply = await openai.createChatCompletion({
-          model: "gpt-3.5-turbo",
-          messages: input,
+        const messageArray: BaseChatMessage[] = input.map((message) => {
+          if (message.role === Role.User) {
+            return new HumanChatMessage(message.content);
+          } else if (message.role === Role.System) {
+            return new SystemChatMessage(message.content);
+          } else {
+            return new AIChatMessage(message.content);
+          }
         });
-        const message: Message = {
-          role: Role.Assistant,
-          content: chatgptReply.data.choices[0]?.message?.content || "", //TODO: is this acceptable?
-        };
+
+        const response = await chat.call(messageArray);
         return {
-          message,
+          role: Role.Assistant,
+          content: response.text,
         };
       } catch (error) {
         console.error(error);

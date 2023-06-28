@@ -11,8 +11,8 @@ export default function Home() {
     onError: (error) => {
       console.error(error);
     },
-    onSuccess: ({ message }) => {
-      setMessages([...messages, message]);
+    onSuccess: (message) => {
+      setMessages([...messages, message!]);
     },
   });
 
