@@ -5,23 +5,24 @@ import { Role, type Message } from "~/interfaces/chat";
 
 export default function Home() {
   const [query, setQuery] = React.useState("");
-  const [replies, setReplies] = React.useState<Message[]>([]);
+  const [messages, setMessages] = React.useState<Message[]>([]);
 
   const mutation = api.openai.chat.useMutation({
     onError: (error) => {
       console.error(error);
     },
-    onSuccess: (data) => {
-      const message = {
-        role: Role.Assistant,
-        content: data.message ? data.message : "", //TODO: linter complains about possibly undefined variable,
-      };
-      setReplies([...replies, message]);
+    onSuccess: ({ message }) => {
+      setMessages([...messages, message]);
     },
   });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const message = {
+      role: Role.User,
+      content: query,
+    };
+    setMessages([...messages, message]);
     mutation.mutate({ query });
   }
 
@@ -49,10 +50,14 @@ export default function Home() {
             />
           </form>
           <div>
-            {replies.map((reply, idx) => {
-              return (
+            {messages.map((message, idx) => {
+              return message.role === Role.User ? (
                 <p className="text-white" key={idx}>
-                  {reply.content}
+                  {message.content}
+                </p>
+              ) : (
+                <p className="text-red-500" key={idx}>
+                  {message.content}
                 </p>
               );
             })}
