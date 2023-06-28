@@ -1,15 +1,23 @@
 import Head from "next/head";
 import { api } from "~/utils/api";
-import React, { FormEvent } from "react";
-
+import React, { type FormEvent } from "react";
 
 export default function Home() {
   const [query, setQuery] = React.useState("");
+  const [replies, setReplies] = React.useState([]);
 
-  const mutation = api.openai.chat.useMutation();
+  const mutation = api.openai.chat.useMutation({
+    onError: (error, variables, context) => {
+      console.error(error);
+    },
+    onSuccess: (data, variables, context) => {
+      console.log(data.message);
+      setReplies([...replies, data.message]);
+    },
+  });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+    event.preventDefault();
     mutation.mutate({ query });
   }
 
@@ -26,19 +34,25 @@ export default function Home() {
             Freud
           </h1>
           <form onSubmit={handleSubmit}>
-            <label htmlFor="querySearch">
-              Input box;
-            </label>
-            <input type="text"
+            <label htmlFor="querySearch">Input box;</label>
+            <input
+              type="text"
               id="querySearch"
               value={query}
               onChange={(event) => {
                 setQuery(event.target.value);
-              }} />
+              }}
+            />
           </form>
-          <p className="text-2xl text-white">
-            {mutation.data ? mutation.data.message : "Waiting for ChatGPT"}
-          </p>
+          <div>
+            {replies.map((reply, idx) => {
+              return (
+                <p className="text-white" key={idx}>
+                  {reply}
+                </p>
+              );
+            })}
+          </div>
         </div>
       </main>
     </>
