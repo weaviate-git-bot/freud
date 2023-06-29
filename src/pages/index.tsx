@@ -16,6 +16,11 @@ export default function Home() {
     },
   });
 
+  const vectorStoreMutation = api.vectorstore.create.useMutation({
+    onError: (error) => console.error(error),
+    onSuccess: () => console.info("Vector store created"),
+  });
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const message = {
@@ -24,6 +29,10 @@ export default function Home() {
     };
     setMessages([...messages, message]);
     mutation.mutate([...messages, message]);
+  }
+
+  function createVectorStore() {
+    vectorStoreMutation.mutate("dummy text");
   }
 
   return (
@@ -38,6 +47,9 @@ export default function Home() {
           <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
             Freud
           </h1>
+          <button className="bg-white" onClick={createVectorStore}>
+            Generer vektor-database
+          </button>
           <form onSubmit={handleSubmit}>
             <label htmlFor="querySearch">Input box;</label>
             <input
