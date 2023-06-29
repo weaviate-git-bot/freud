@@ -1,7 +1,7 @@
 import React, { type FormEvent } from "react";
 import Head from "next/head";
 import { api } from "~/utils/api";
-import { Role, type Message } from "~/interfaces/chat";
+import { Role, type Message } from "~/interfaces/message";
 
 export default function Home() {
   const [query, setQuery] = React.useState("");

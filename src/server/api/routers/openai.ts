@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
-import { Role, Message } from "~/interfaces/chat";
+import { Role, Message } from "~/interfaces/message";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { loadQAStuffChain, loadQAMapReduceChain } from "langchain/chains";
