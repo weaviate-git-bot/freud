@@ -50,27 +50,16 @@ export default function Home() {
           <button className="bg-white" onClick={createVectorStore}>
             Generer vektor-database
           </button>
-          <form onSubmit={handleSubmit}>
-            <label htmlFor="querySearch">Input box;</label>
-            <input
-              type="text"
-              id="querySearch"
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-              }}
-            />
-          </form>
           <div>
             {messages.map((message, idx) => {
               return message.role === Role.User ? (
-                <p className="text-white" key={idx}>
+                <p className="pt-5 text-white" key={idx}>
                   {message.content}
                 </p>
               ) : (
                 <div key={idx}>
                   <p
-                    className="pt-5 text-red-500"
+                    className="pt-2 text-red-500"
                     key={"reply-" + idx.toString()}
                   >
                     {message.content}
@@ -106,6 +95,17 @@ export default function Home() {
             })}
           </div>
         </div>
+        <form onSubmit={handleSubmit} className="mb-2 block">
+          <input
+            className="block w-full p-4"
+            type="text"
+            id="querySearch"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+            }}
+          />
+        </form>
       </main>
     </>
   );
