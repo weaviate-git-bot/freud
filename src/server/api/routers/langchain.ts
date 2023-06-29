@@ -7,6 +7,7 @@ import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { BufferMemory } from "langchain/memory";
 import path from "path";
+import { type Source } from "~/interfaces/source";
 
 // Initialize the LLM to use to answer the question
 const model = new OpenAI({});
@@ -43,11 +44,26 @@ export const langchainRouter = createTRPCRouter({
       try {
         const question = input[input.length - 1]?.content;
         const res = await chain.call({ question });
-        console.debug(res.sourceDocuments[0].metadata);
+
+        // Sources used for answering
+        const sources: Source[] = res.sourceDocuments.map((elem) => {
+          return {
+            document: elem.metadata.source.split("/").pop(),
+            location: {
+              from: elem.metadata.loc.lines.from,
+              to: elem.metadata.loc.lines.to,
+            },
+          };
+        });
+
+        // Construct final reply to question
         const reply: Message = {
           role: Role.Assistant,
           content: res.text,
+          sources: sources,
         };
+
+        // Return reply
         return reply;
       } catch (error) {
         console.log(error);

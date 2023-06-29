@@ -68,9 +68,40 @@ export default function Home() {
                   {message.content}
                 </p>
               ) : (
-                <p className="text-red-500" key={idx}>
-                  {message.content}
-                </p>
+                <div key={idx}>
+                  <p
+                    className="pt-5 text-red-500"
+                    key={"reply-" + idx.toString()}
+                  >
+                    {message.content}
+                  </p>
+                  <p
+                    className="bold pt-2 font-bold text-green-900"
+                    key={"sources-" + idx.toString()}
+                  >
+                    Kilder
+                  </p>
+                  <ul
+                    className="list-disc text-green-900"
+                    key={"source-list-" + idx.toString()}
+                  >
+                    {message.sources.map((source, listId) => {
+                      return (
+                        <li
+                          key={
+                            "source-list-" +
+                            idx.toString() +
+                            "-element-" +
+                            listId.toString()
+                          }
+                        >
+                          {source.document} (linje {source.location.from}-
+                          {source.location.to})
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               );
             })}
           </div>

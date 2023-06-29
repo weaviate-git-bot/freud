@@ -8,16 +8,21 @@ export enum Role {
   Assistant = "assistant",
 }
 
+// Type for a source that is used by Freud when replying to a question
+export const Source = z.object({
+  document: z.string(),
+  location: z.object({
+    from: z.number(),
+    to: z.number(),
+  }),
+});
+
+export type Source = z.infer<typeof Source>;
+
 export const Message = z.object({
   role: z.nativeEnum(Role),
   content: z.string(),
+  source: z.optional(z.array(Source)),
 });
 
 export type Message = z.infer<typeof Message>;
-
-// export interface Message {
-//   role: Role;
-//   content: string;
-// }
-//
-// export default Message;
