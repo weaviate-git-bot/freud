@@ -7,7 +7,7 @@ export default function Home() {
   const [query, setQuery] = React.useState("");
   const [messages, setMessages] = React.useState<Message[]>([]);
 
-  const mutation = api.openai.chat.useMutation({
+  const mutation = api.langchain.qa.useMutation({
     onError: (error) => {
       console.error(error);
     },

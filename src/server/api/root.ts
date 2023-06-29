@@ -1,6 +1,7 @@
 import { exampleRouter } from "~/server/api/routers/example";
-import { openAIRouter } from "~/server/api/routers/openai";
 import { createTRPCRouter } from "~/server/api/trpc";
+import { openAIRouter } from "~/server/api/routers/openai";
+import { langchainRouter } from "./routers/langchain";
 
 /**
  * This is the primary router for your server.
@@ -10,6 +11,7 @@ import { createTRPCRouter } from "~/server/api/trpc";
 export const appRouter = createTRPCRouter({
   example: exampleRouter,
   openai: openAIRouter,
+  langchain: langchainRouter,
 });
 
 // export type definition of API
