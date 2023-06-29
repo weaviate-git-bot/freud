@@ -7,7 +7,7 @@ export default function Home() {
   const [query, setQuery] = React.useState("");
   const [messages, setMessages] = React.useState<Message[]>([]);
 
-  const mutation = api.langchain.qa.useMutation({
+  const mutation = api.langchain.conversation.useMutation({
     onError: (error) => {
       console.error(error);
     },

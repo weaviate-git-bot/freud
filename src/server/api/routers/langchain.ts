@@ -4,6 +4,13 @@ import { Message, Role } from "~/interfaces/message";
 import { OpenAI } from "langchain/llms/openai";
 import { loadQAStuffChain } from "langchain/chains";
 import { Document } from "langchain/document";
+import { ConversationalRetrievalQAChain } from "langchain/chains";
+import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { BufferMemory } from "langchain/memory";
+import fs from "fs";
+import path from "path";
 
 // Following template from:
 // https://js.langchain.com/docs/modules/chains/index_related_chains/document_qa
@@ -21,6 +28,31 @@ const docs = [
     metadata: { source: "2" },
   }),
 ];
+
+// Template: https://js.langchain.com/docs/modules/chains/index_related_chains/conversational_retrieval
+/* Initialize the LLM to use to answer the question */
+const model = new OpenAI({});
+/* Load in the file we want to do question answering over */
+const sourceDirectoryPath = path.join(process.cwd(), "documents");
+const text = fs.readFileSync(
+  path.join(sourceDirectoryPath, "state_of_the_union.txt"),
+  "utf8"
+);
+/* Split the text into chunks */
+const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
+const docs2 = await textSplitter.createDocuments([text]);
+/* Create the vectorstore */
+const vectorStore = await HNSWLib.fromDocuments(docs2, new OpenAIEmbeddings());
+/* Create the chain */
+const chain = ConversationalRetrievalQAChain.fromLLM(
+  model,
+  vectorStore.asRetriever(),
+  {
+    memory: new BufferMemory({
+      memoryKey: "chat_history", // Must be set to "chat_history"
+    }),
+  }
+);
 
 export const langchainRouter = createTRPCRouter({
   // Define publice procedure for QA
@@ -43,6 +75,25 @@ export const langchainRouter = createTRPCRouter({
         };
       } catch (error) {
         console.error(error);
+      }
+    }),
+  conversation: publicProcedure
+
+    // Validate input
+    .input(z.array(Message))
+
+    // Query langchain
+    .mutation(async ({ input }) => {
+      try {
+        const question = input[input.length - 1]?.content;
+        const res = await chain.call({ question });
+        const reply: Message = {
+          role: Role.Assistant,
+          content: res.text,
+        };
+        return reply;
+      } catch (error) {
+        console.log(error);
       }
     }),
 });
