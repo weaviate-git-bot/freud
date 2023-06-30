@@ -87,8 +87,6 @@ export default function Home() {
                           {source.title} av {source.author}, s.{" "}
                           {source.location.pageNr} (linje{" "}
                           {source.location.lineFrom}-{source.location.lineTo})
-                          <br />
-                          <em>Fil: {source.file}</em>
                         </li>
                       );
                     })}

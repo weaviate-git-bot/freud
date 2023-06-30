@@ -47,13 +47,14 @@ export const langchainRouter = createTRPCRouter({
         // Sources used for answering
         const sources: Source[] = res.sourceDocuments.map((elem) => {
           return {
-            file: elem.metadata.source.split("/").pop(),
-            title: elem.metadata.pdf.info.Title,
-            author: elem.metadata.pdf.info.Author,
+            title: elem.metadata.title,
+            author: elem.metadata.author,
             location: {
-              pageNr: elem.metadata.lines.pageNumber,
-              lineFrom: elem.metadata.lines.lines.from,
-              lineTo: elem.metadata.lines.lines.to,
+              pageNr: elem.metadata.loc.pageNumber
+                ? elem.metadata.loc.pageNumber
+                : 0,
+              lineFrom: elem.metadata.loc.lines.from,
+              lineTo: elem.metadata.loc.lines.to,
             },
           };
         });
