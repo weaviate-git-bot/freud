@@ -3,7 +3,8 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
 import { TextLoader } from "langchain/document_loaders/fs/text";
-import { CharacterTextSplitter } from "langchain/text_splitter";
+import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import path from "path";
 
@@ -13,14 +14,16 @@ export const vectorRouter = createTRPCRouter({
       // Load documents
       // See https://js.langchain.com/docs/modules/indexes/document_loaders/examples/file_loaders/directory
       const sourceDirectoryPath = path.join(process.cwd(), "documents");
-      const loader = new DirectoryLoader(path.join(sourceDirectoryPath), {
+      const loader = new DirectoryLoader(path.join(sourceDirectoryPath), 
+      {
+        ".pdf": (sourceDirectoryPath) => new PDFLoader(sourceDirectoryPath, {splitPages: true}),
         ".txt": (sourceDirectoryPath) => new TextLoader(sourceDirectoryPath),
       });
 
       const docs = await loader.load();
 
       // // Split the text into chunks
-      const splitter = new CharacterTextSplitter({
+      const splitter = new RecursiveCharacterTextSplitter({
         chunkSize: 1536,
         chunkOverlap: 200,
       });

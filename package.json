@@ -19,6 +19,7 @@
     "langchain": "^0.0.98",
     "next": "^13.4.2",
     "openai": "^3.3.0",
+    "pdf-parse": "^1.1.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "superjson": "1.12.2",
