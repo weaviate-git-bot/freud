@@ -47,8 +47,8 @@ export const langchainRouter = createTRPCRouter({
         // Sources used for answering
         const sources: Source[] = res.sourceDocuments.map((elem) => {
           return {
-            title: elem.metadata.title,
-            author: elem.metadata.author,
+            title: elem.metadata.info.title,
+            author: elem.metadata.info.author,
             location: {
               pageNr: elem.metadata.loc.pageNumber
                 ? elem.metadata.loc.pageNumber

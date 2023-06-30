@@ -72,7 +72,7 @@ export const vectorRouter = createTRPCRouter({
       const sourceDirectoryPath = path.join(process.cwd(), "documents");
       const loader = new DirectoryLoader(path.join(sourceDirectoryPath), {
         ".pdf": (sourceDirectoryPath) =>
-          new PDFLoader(sourceDirectoryPath, { splitPages: false }),
+          new PDFLoader(sourceDirectoryPath, { splitPages: true }),
         ".txt": (sourceDirectoryPath) => new TextLoader(sourceDirectoryPath),
         ".epub": (sourceDirectoryPath) =>
           new EPubLoader(sourceDirectoryPath, {
@@ -82,6 +82,8 @@ export const vectorRouter = createTRPCRouter({
 
       const docs = await loader.load();
 
+      console.info("Add custom metadata to documents");
+
       docs.forEach((document) => {
         // Extract file name
         const file = document.metadata.source.split("/").pop().split(".")[0];
@@ -89,8 +91,8 @@ export const vectorRouter = createTRPCRouter({
         // Get metadata from dictionary
         const metadata = metadataDictionary[file];
 
-        // Overwrite document metadata
-        document.metadata = metadata;
+        // Add metadata to document
+        document.metadata.info = metadata;
       });
 
       // // Split the text into chunks
@@ -99,7 +101,10 @@ export const vectorRouter = createTRPCRouter({
         chunkOverlap: 200,
       });
 
+      console.info("Split documents into chunks");
       const splits = await splitter.splitDocuments(docs);
+
+      console.info("Create vector store (this may take a while...)");
 
       // Create the vectorStore
       const vectorStore = await HNSWLib.fromDocuments(
