@@ -10,10 +10,13 @@ export enum Role {
 
 // Type for a source that is used by Freud when replying to a question
 export const Source = z.object({
-  document: z.string(),
+  file: z.string(),
+  title: z.string(),
+  author: z.string(),
   location: z.object({
-    from: z.number(),
-    to: z.number(),
+    pageNr: z.optional(z.number()),
+    lineFrom: z.number(),
+    lineTo: z.number(),
   }),
 });
 

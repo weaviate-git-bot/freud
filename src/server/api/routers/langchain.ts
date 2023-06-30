@@ -7,7 +7,6 @@ import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { BufferMemory } from "langchain/memory";
 import path from "path";
-import { type Source } from "~/interfaces/source";
 
 // Initialize the LLM to use to answer the question
 const model = new OpenAI({});
@@ -48,10 +47,13 @@ export const langchainRouter = createTRPCRouter({
         // Sources used for answering
         const sources: Source[] = res.sourceDocuments.map((elem) => {
           return {
-            document: elem.metadata.source.split("/").pop(),
+            file: elem.metadata.source.split("/").pop(),
+            title: elem.metadata.pdf.info.Title,
+            author: elem.metadata.pdf.info.Author,
             location: {
-              from: elem.metadata.loc.lines.from,
-              to: elem.metadata.loc.lines.to,
+              pageNr: elem.metadata.lines.pageNumber,
+              lineFrom: elem.metadata.lines.lines.from,
+              lineTo: elem.metadata.lines.lines.to,
             },
           };
         });
