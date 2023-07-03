@@ -7,6 +7,7 @@ import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { BufferMemory } from "langchain/memory";
 import path from "path";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
 // Initialize the LLM to use to answer the question
 const model = new OpenAI({});
@@ -18,19 +19,8 @@ const loadedVectorStore = await HNSWLib.load(
   new OpenAIEmbeddings()
 );
 
-// Create the chain
-const chain = ConversationalRetrievalQAChain.fromLLM(
-  model,
-  loadedVectorStore.asRetriever(),
-  {
-    memory: new BufferMemory({
-      memoryKey: "chat_history", // Must be set to "chat_history"
-      inputKey: "memoryKey",
-      outputKey: "text",
-    }),
-    returnSourceDocuments: true,
-  }
-);
+const THRESHOLD = 0.15
+const NUM_LOADED = 10
 
 export const langchainRouter = createTRPCRouter({
   conversation: publicProcedure
@@ -40,8 +30,38 @@ export const langchainRouter = createTRPCRouter({
 
     // Query langchain
     .mutation(async ({ input }) => {
+
+      const question = input[input.length - 1]?.content;
+
+      if (!question) {
+        console.error('No question recieved')
+        return
+      }
+
+      const documentsWithScore = await loadedVectorStore.similaritySearchWithScore(question, NUM_LOADED)
+      //doc[0] is the Document. doc[1] is the score. Line below filters on threshold and maps from tuple to list.
+      const filteredDocuments = documentsWithScore.filter((doc) => doc[1] >= THRESHOLD).map((doc, i) => { console.log(i, doc[0].metadata.info, 'score: ', doc[1]); return doc[0] })
+      const retriever = (await MemoryVectorStore.fromDocuments(filteredDocuments, new OpenAIEmbeddings)).asRetriever(NUM_LOADED)
+
+      // Create the chain
+      const chain = ConversationalRetrievalQAChain.fromLLM(
+        model,
+        retriever,
+        // loadedVectorStore.asRetriever(),
+        {
+          memory: new BufferMemory({
+            memoryKey: "chat_history", // Must be set to "chat_history"
+            inputKey: "memoryKey",
+            outputKey: "text",
+          }),
+          returnSourceDocuments: true,
+          //map_reduce is used because:
+          //This chain incorporates a preprocessing step to select relevant sections from each document until the total number of tokens is less than the maximum number of tokens allowed by the model. It then uses the transformed documents as context to answer the question. It is suitable for QA tasks over larger documents and can run the preprocessing step in parallel, reducing the running time.
+          // Other possibilities are https://js.langchain.com/docs/api/chains/types/QAChainParams
+          qaChainOptions: { type: 'map_reduce' }
+        }
+      );
       try {
-        const question = input[input.length - 1]?.content;
         const res = await chain.call({ question });
 
         // Sources used for answering
