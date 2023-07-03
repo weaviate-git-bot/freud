@@ -53,7 +53,6 @@ export default function Home() {
           </button>
           <div>
             {messages.map((message, idx) => {
-              console.log(message)
               return message.role === Role.User ? (
                 <p className="pt-5 text-white" key={idx}>
                   {message.content}
@@ -76,30 +75,30 @@ export default function Home() {
                     className="list-disc text-green-900"
                     key={"source-list-" + idx.toString()}
                   >
-                    {
-                      message.sources ?
-                        message.sources.map((source, listId) => {
-                          console.log(source)
-                          return (
-                            <li
-                              key={
-                                "source-list-" +
-                                idx.toString() +
-                                "-element-" +
-                                listId.toString()
-                              }
-                            >
-                              {source.title} av {source.author}, s.{" "}
-                              {source.location.pageNr} (linje{" "}
-                              {source.location.lineFrom}-{source.location.lineTo})
-                              <br />
-                              <SourceComponent text={source.content}></SourceComponent>
-                            </li>
-                          );
-                        })
-                        : <li>
-                          No sources available
-                        </li>}
+                    {message.sources ? (
+                      message.sources.map((source, listId) => {
+                        return (
+                          <li
+                            key={
+                              "source-list-" +
+                              idx.toString() +
+                              "-element-" +
+                              listId.toString()
+                            }
+                          >
+                            {source.title} av {source.author}, s.{" "}
+                            {source.location.pageNr} (linje{" "}
+                            {source.location.lineFrom}-{source.location.lineTo})
+                            <br />
+                            <SourceComponent
+                              text={source.content}
+                            ></SourceComponent>
+                          </li>
+                        );
+                      })
+                    ) : (
+                      <li>No sources available</li>
+                    )}
                   </ul>
                 </div>
               );

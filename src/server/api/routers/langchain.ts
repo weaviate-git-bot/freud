@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { Message, Role, Source } from "~/interfaces/message";
+import { Message, Role, type Source } from "~/interfaces/message";
 import { OpenAI } from "langchain/llms/openai";
 import { ConversationalRetrievalQAChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
@@ -47,7 +47,6 @@ export const langchainRouter = createTRPCRouter({
         // Sources used for answering
         //@ts-ignore Because there is little use for defineng the elem-type
         const sources: Source[] = res.sourceDocuments.map((elem) => {
-          console.log(elem)
           return {
             title: elem.metadata.info.title,
             author: elem.metadata.info.author,
@@ -58,7 +57,7 @@ export const langchainRouter = createTRPCRouter({
               lineFrom: elem.metadata.loc.lines.from,
               lineTo: elem.metadata.loc.lines.to,
             },
-            content: elem.pageContent
+            content: elem.pageContent,
           };
         });
 
