@@ -18,6 +18,7 @@ export const Source = z.object({
     lineFrom: z.number(),
     lineTo: z.number(),
   }),
+  content: z.string(),
 });
 
 export type Source = z.infer<typeof Source>;
@@ -25,7 +26,7 @@ export type Source = z.infer<typeof Source>;
 export const Message = z.object({
   role: z.nativeEnum(Role),
   content: z.string(),
-  source: z.optional(z.array(Source)),
+  sources: z.optional(z.array(Source)),
 });
 
 export type Message = z.infer<typeof Message>;
