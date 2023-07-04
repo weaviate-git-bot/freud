@@ -8,9 +8,12 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { BufferMemory } from "langchain/memory";
 import path from "path";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { ConsoleCallbackHandler } from "langchain/callbacks";
 
 // Initialize the LLM to use to answer the question
-const model = new OpenAI({});
+const model = new OpenAI({
+  callbacks: [new ConsoleCallbackHandler()]
+});
 
 // Load the vectorStore from disk
 const databaseDirectoryPath = path.join(process.cwd(), "db");
@@ -40,7 +43,10 @@ export const langchainRouter = createTRPCRouter({
 
       const documentsWithScore = await loadedVectorStore.similaritySearchWithScore(question, NUM_LOADED)
       //doc[0] is the Document. doc[1] is the score. Line below filters on threshold and maps from tuple to list.
-      const filteredDocuments = documentsWithScore.filter((doc) => doc[1] >= THRESHOLD).map((doc, i) => { console.log(i, doc[0].metadata.info, 'score: ', doc[1]); return doc[0] })
+      const filteredDocuments = documentsWithScore.filter((doc) => doc[1] <= THRESHOLD).map((doc, i) => {
+        // console.log(i, doc[0].metadata.info.title, 'score: ', doc[1]);
+        return doc[0]
+      })
       const retriever = (await MemoryVectorStore.fromDocuments(filteredDocuments, new OpenAIEmbeddings)).asRetriever(NUM_LOADED)
 
       // Create the chain
