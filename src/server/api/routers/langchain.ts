@@ -2,11 +2,6 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { Message, Role, type Source } from "~/interfaces/message";
 import { OpenAI } from "langchain/llms/openai";
-import {
-  BasePromptTemplate,
-  PromptTemplate,
-  StringPromptValue,
-} from "langchain/prompts";
 import { ConversationalRetrievalQAChain } from "langchain/chains";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
