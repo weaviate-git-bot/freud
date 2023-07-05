@@ -7,6 +7,7 @@ import { LogoWordmark } from "~/components/logo/LogoWordmark";
 import { InputField } from "~/components/inputField/InputField";
 import { Button } from "~/components/button/Button";
 import { colors } from "~/stitches/colors";
+import { Icon } from "~/components/icon/Icon";
 
 export default function Home() {
   const [query, setQuery] = React.useState("");
@@ -32,6 +33,12 @@ export default function Home() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    //Quickfix for empty query
+    if (query.length == 0) {
+      return
+    }
+
     setIsLoadingReply(true);
     const message = {
       role: Role.User,
@@ -64,65 +71,66 @@ export default function Home() {
             </div>
           </div>
 
-          <div>
+          <div className="container text-2xl">
             {messages.map((message, idx) => {
-              return message.role === Role.User ? (
-                <p className="text-white pt-5" key={idx}>
-                  {message.content}
-                </p>
-              ) : (
-                <div key={idx}>
-                  <p
-                    className="text-red-500 pt-2"
-                    key={"reply-" + idx.toString()}
-                  >
+              return <div key={idx.toString()} className="border-gray900 border-b-2 container py-10">
+                {message.role === Role.User ? (
+                  <p className="pt-5" key={idx}>
                     {message.content}
                   </p>
-
-                  {message.sources == undefined ||
-                  message.sources?.length == 0 ? (
-                    <p className="bold text-yellow-300 pt-2 font-bold">
-                      Fant ingen kilder til dette spørsmålet
+                ) : (
+                  <div key={idx}>
+                    <p
+                      color={colors.beige400}
+                      className="pt-2"
+                      key={"reply-" + idx.toString()}
+                    >
+                      {message.content}
                     </p>
-                  ) : (
-                    <p className="bold text-green-900 pt-2 font-bold">Kilder</p>
-                  )}
 
-                  <ul
-                    className="text-green-900 list-disc"
-                    key={"source-list-" + idx.toString()}
-                  >
-                    {message.sources ? (
-                      message.sources.map((source, sourceIdx) => {
-                        return (
-                          <SourceComponent
-                            key={
-                              "q-" +
-                              messages.length.toString() +
-                              "-source-" +
-                              sourceIdx.toString()
-                            }
-                            source={source}
-                          ></SourceComponent>
-                        );
-                      })
-                    ) : (
-                      <li>No sources available</li>
-                    )}
-                  </ul>
-                </div>
-              );
+                    <div className="mb-3">
+                      {message.sources == undefined ||
+                        message.sources?.length == 0 ? (
+                        <p className="bold text-yellow550 py-2 font-bold">
+                          Fant ingen kilder til dette spørsmålet
+                        </p>
+                      ) : (
+                        <div>
+                          <p className="bold py-2 font-bold">Kilder</p>
+
+                          <ul>
+                            {message.sources.map((source, sourceIdx) => {
+                              return (
+                                <SourceComponent
+                                  source={source}
+                                ></SourceComponent>
+                              );
+
+                            })}
+
+                          </ul>
+                        </div>
+                      )}
+
+
+                    </div>
+                  </div>
+                )}
+              </div>
             })}
           </div>
         </div>
-        <form onSubmit={handleSubmit} className="mb-2 block">
+        <form onSubmit={handleSubmit} className="mb-0 flex flex-row gap-3">
           <InputField
             disabled={isLoadingReply}
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
-            }}
+            }} label={""} id={"submitquestion"}
           />
+          <Button type="submit" color={"lightGreen"} withBorder={true} disabled={isLoadingReply} className="mb-[0.4rem] mt-1">
+            <Icon name={"arrowNarrowRight"} color={colors.green600}></Icon>
+          </Button>
         </form>
         <Button onClick={createVectorStore}>Lag vektordatabase</Button>
       </main>
