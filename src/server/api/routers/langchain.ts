@@ -83,7 +83,7 @@ export const langchainRouter = createTRPCRouter({
           //map_reduce is used because:
           //This chain incorporates a preprocessing step to select relevant sections from each document until the total number of tokens is less than the maximum number of tokens allowed by the model. It then uses the transformed documents as context to answer the question. It is suitable for QA tasks over larger documents and can run the preprocessing step in parallel, reducing the running time.
           // Other possibilities are https://js.langchain.com/docs/api/chains/types/QAChainParams
-          qaChainOptions: { type: 'map_reduce' }
+          // qaChainOptions: { type: 'map_reduce' }
         }
       );
       try {
