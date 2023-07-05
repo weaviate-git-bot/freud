@@ -4,6 +4,8 @@ import { api } from "~/utils/api";
 import { Role, type Message } from "~/interfaces/message";
 import SourceComponent from "~/components/sourceComponent";
 import { LogoWordmark } from "~/components/logo/LogoWordmark";
+import { InputField } from "~/components/inputField/InputField";
+import { Button } from "~/components/button/Button";
 import { colors } from "~/stitches/colors";
 
 export default function Home() {
@@ -18,6 +20,7 @@ export default function Home() {
     },
     onSuccess: (message) => {
       setMessages([...messages, message!]);
+      setQuery("");
       setIsLoadingReply(false);
     },
   });
@@ -55,9 +58,6 @@ export default function Home() {
             Freud
           </h1>
           <LogoWordmark color={colors.green750} />
-          <button className="bg-white" onClick={createVectorStore}>
-            Generer vektor-database
-          </button>
           <div>
             {messages.map((message, idx) => {
               return message.role === Role.User ? (
@@ -90,6 +90,7 @@ export default function Home() {
                       message.sources.map((source) => {
                         return (
                           <SourceComponent
+                            key={idx}
                             source={source}
                           ></SourceComponent>
                         );
@@ -103,22 +104,16 @@ export default function Home() {
             })}
           </div>
         </div>
-        <form
-          onSubmit={handleSubmit}
-          className="mb-2 block"
-          aria-disabled={isLoadingReply}
-        >
-          <input
-            className="block w-full p-4"
+        <form onSubmit={handleSubmit} className="mb-2 block">
+          <InputField
             disabled={isLoadingReply}
-            type="text"
-            id="querySearch"
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
             }}
           />
         </form>
+        <Button onClick={createVectorStore}>Lag vektordatabase</Button>
       </main>
     </>
   );
