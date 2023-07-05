@@ -64,15 +64,14 @@ export default function Home() {
                     key={"reply-" + idx.toString()}
                   >
                     {message.content}
-
-
-                    {(message.sources == undefined || message.sources?.length == 0) ?
-                      <p className="bold pt-2 font-bold text-yellow-300">
-                        Fant ingen kilder til dette spørsmålet
-
-                      </p>
-                      : <p className="bold pt-2 font-bold text-green-900">Kilder</p>}
                   </p>
+
+                  {(message.sources == undefined || message.sources?.length == 0) ?
+                    <p className="bold pt-2 font-bold text-yellow-300">
+                      Fant ingen kilder til dette spørsmålet
+                    </p>
+                    : <p className="bold pt-2 font-bold text-green-900">Kilder</p>}
+
 
                   <ul
                     className="list-disc text-green-900"
