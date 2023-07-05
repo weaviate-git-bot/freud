@@ -54,10 +54,19 @@ export default function Home() {
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center bg-beige100">
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
-          <h1 className="text-5xl font-extrabold tracking-tight text-green750 sm:text-[5rem]">
-            Freud
-          </h1>
-          <LogoWordmark color={colors.green750} />
+          <div className="flex flex-row items-end gap-1">
+            <h1 className="text-5xl font-extrabold tracking-tight text-green750 sm:text-[5rem]">
+              Freud
+            </h1>
+            <p className="pb-[0.3rem]">by</p>
+            <div className="w-16 h-6">
+              <LogoWordmark color={colors.green750} />
+            </div>
+          </div>
+
+          <button className="bg-white" onClick={createVectorStore}>
+            Generer vektor-database
+          </button>
           <div>
             {messages.map((message, idx) => {
               return message.role === Role.User ? (
@@ -74,7 +83,7 @@ export default function Home() {
                   </p>
 
                   {message.sources == undefined ||
-                  message.sources?.length == 0 ? (
+                    message.sources?.length == 0 ? (
                     <p className="bold text-yellow-300 pt-2 font-bold">
                       Fant ingen kilder til dette spørsmålet
                     </p>
