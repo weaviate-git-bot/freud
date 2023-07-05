@@ -58,15 +58,12 @@ export default function Home() {
             <h1 className="text-5xl font-extrabold tracking-tight text-green750 sm:text-[5rem]">
               Freud
             </h1>
-            <p className="pb-[0.3rem]">by</p>
-            <div className="w-16 h-6">
+            <p className="pb-[0.3rem] text-green750">by</p>
+            <div className="h-6 w-16">
               <LogoWordmark color={colors.green750} />
             </div>
           </div>
 
-          <button className="bg-white" onClick={createVectorStore}>
-            Generer vektor-database
-          </button>
           <div>
             {messages.map((message, idx) => {
               return message.role === Role.User ? (
@@ -83,7 +80,7 @@ export default function Home() {
                   </p>
 
                   {message.sources == undefined ||
-                    message.sources?.length == 0 ? (
+                  message.sources?.length == 0 ? (
                     <p className="bold text-yellow-300 pt-2 font-bold">
                       Fant ingen kilder til dette spørsmålet
                     </p>
@@ -96,10 +93,15 @@ export default function Home() {
                     key={"source-list-" + idx.toString()}
                   >
                     {message.sources ? (
-                      message.sources.map((source) => {
+                      message.sources.map((source, sourceIdx) => {
                         return (
                           <SourceComponent
-                            key={idx}
+                            key={
+                              "q-" +
+                              messages.length.toString() +
+                              "-source-" +
+                              sourceIdx.toString()
+                            }
                             source={source}
                           ></SourceComponent>
                         );
