@@ -26,7 +26,7 @@ const myFont = localFont({
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   return <main className={myFont.className}>
-    <Component {...pageProps} />;
+    <Component {...pageProps} />
   </main>
 };
 
