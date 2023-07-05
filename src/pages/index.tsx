@@ -9,6 +9,10 @@ import { Button } from "~/components/button/Button";
 import { colors } from "~/stitches/colors";
 import { Icon } from "~/components/icon/Icon";
 
+import Image from "next/image";
+
+const AVATAR_IMAGE_SIZE = 50;
+
 export default function Home() {
   const [query, setQuery] = React.useState("");
   const [messages, setMessages] = React.useState<Message[]>([]);
@@ -75,18 +79,36 @@ export default function Home() {
             {messages.map((message, idx) => {
               return <div key={idx.toString()} className="border-gray900 border-b-2 container py-10">
                 {message.role === Role.User ? (
-                  <p className="pt-5" key={idx}>
+                  <div key={idx} className="flex items-start space-x-4">
+                    <Image
+                    className="mt-3"
+                    src="/chatter_avatar_2.png"
+                    alt="This is text"
+                    width={AVATAR_IMAGE_SIZE}
+                    height={AVATAR_IMAGE_SIZE}
+                  />
+                    <p className="pt-5" key={idx}>
                     {message.content}
                   </p>
+                  </div>
                 ) : (
                   <div key={idx}>
-                    <p
-                      color={colors.beige400}
-                      className="pt-2"
-                      key={"reply-" + idx.toString()}
-                    >
-                      {message.content}
-                    </p>
+                    <div className="flex items-start space-x-4">
+                      <Image
+                      className="mt-3"
+                        src="/sigmund_freud_avatar.png"
+                        alt="This is text"
+                        width={AVATAR_IMAGE_SIZE}
+                        height={AVATAR_IMAGE_SIZE}
+                      />
+                      <p
+                        color={colors.beige400}
+                        className="pt-5"
+                        key={"reply-" + idx.toString()}
+                      >
+                        {message.content}
+                      </p>
+                    </div>
 
                     <div className="mb-3">
                       {message.sources == undefined ||
@@ -102,6 +124,7 @@ export default function Home() {
                             {message.sources.map((source, sourceIdx) => {
                               return (
                                 <SourceComponent
+                                key={sourceIdx}
                                   source={source}
                                 ></SourceComponent>
                               );
