@@ -7,13 +7,16 @@ import SourceComponent from "~/components/sourceComponent";
 export default function Home() {
   const [query, setQuery] = React.useState("");
   const [messages, setMessages] = React.useState<Message[]>([]);
+  const [isLoadingReply, setIsLoadingReply] = React.useState(false);
 
   const mutation = api.langchain.conversation.useMutation({
     onError: (error) => {
       console.error(error);
+      setIsLoadingReply(false);
     },
     onSuccess: (message) => {
       setMessages([...messages, message!]);
+      setIsLoadingReply(false);
     },
   });
 
@@ -24,6 +27,7 @@ export default function Home() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setIsLoadingReply(true);
     const message = {
       role: Role.User,
       content: query,
@@ -66,12 +70,14 @@ export default function Home() {
                     {message.content}
                   </p>
 
-                  {(message.sources == undefined || message.sources?.length == 0) ?
+                  {message.sources == undefined ||
+                  message.sources?.length == 0 ? (
                     <p className="bold pt-2 font-bold text-yellow-300">
                       Fant ingen kilder til dette spørsmålet
                     </p>
-                    : <p className="bold pt-2 font-bold text-green-900">Kilder</p>}
-
+                  ) : (
+                    <p className="bold pt-2 font-bold text-green-900">Kilder</p>
+                  )}
 
                   <ul
                     className="list-disc text-green-900"
@@ -107,9 +113,14 @@ export default function Home() {
             })}
           </div>
         </div>
-        <form onSubmit={handleSubmit} className="mb-2 block">
+        <form
+          onSubmit={handleSubmit}
+          className="mb-2 block"
+          aria-disabled={isLoadingReply}
+        >
           <input
             className="block w-full p-4"
+            disabled={isLoadingReply}
             type="text"
             id="querySearch"
             value={query}
