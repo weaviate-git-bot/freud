@@ -87,24 +87,11 @@ export default function Home() {
                     key={"source-list-" + idx.toString()}
                   >
                     {message.sources ? (
-                      message.sources.map((source, listId) => {
+                      message.sources.map((source) => {
                         return (
-                          <li
-                            key={
-                              "source-list-" +
-                              idx.toString() +
-                              "-element-" +
-                              listId.toString()
-                            }
-                          >
-                            {source.title} av {source.author}, s.{" "}
-                            {source.location.pageNr} (linje{" "}
-                            {source.location.lineFrom}-{source.location.lineTo})
-                            <br />
-                            <SourceComponent
-                              text={source.content}
-                            ></SourceComponent>
-                          </li>
+                          <SourceComponent
+                            source={source}
+                          ></SourceComponent>
                         );
                       })
                     ) : (
