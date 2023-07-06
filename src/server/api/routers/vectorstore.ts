@@ -4,7 +4,6 @@ import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { WeaviateStore } from "langchain/vectorstores/weaviate";
 import path from "path";
 import weaviate from "weaviate-ts-client";
@@ -103,9 +102,6 @@ export const vectorRouter = createTRPCRouter({
           .split("/")
           .pop()
           .split(".")[0];
-
-        // Get metadata from dictionary
-        const metadata = metadataDictionary[filename];
 
         // Add metadata to document
         document.metadata.author = metadataDictionary[filename].author;

@@ -3,9 +3,7 @@ import { ConversationalRetrievalQAChain } from "langchain/chains";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { BufferMemory } from "langchain/memory";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { WeaviateStore } from "langchain/vectorstores/weaviate";
-import path from "path";
 import weaviate from "weaviate-ts-client";
 import { z } from "zod";
 import { Message, Role, type Source } from "~/interfaces/message";
@@ -33,8 +31,8 @@ Question: {question}:
 
 Helpful answer:`;
 
-const THRESHOLD = 0.15;
-const NUM_LOADED = 10;
+const NUM_SOURCES = 5;
+const SIMILARITY_THRESHOLD = 0.3;
 
 // Setup weaviate client
 const client = (weaviate as any).client({
@@ -54,22 +52,6 @@ const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
   metadataKeys: ["source", "author", "title", "pageNumber"],
 });
 
-// Setup langchain: Conversational Retriever QA
-const chain = ConversationalRetrievalQAChain.fromLLM(
-  model,
-  vectorStore.asRetriever(),
-  {
-    memory: new BufferMemory({
-      memoryKey: "chat_history", // Must be set to "chat_history"
-      inputKey: "memoryKey",
-      outputKey: "text",
-    }),
-    returnSourceDocuments: true,
-    qaTemplate: QA_PROMPT,
-    questionGeneratorTemplate: CONDENSE_PROMPT,
-  }
-);
-
 // Define TRPCRouter endpoint
 export const langchainRouter = createTRPCRouter({
   conversation: publicProcedure
@@ -81,7 +63,30 @@ export const langchainRouter = createTRPCRouter({
       const question = input[input.length - 1]?.content;
 
       try {
-        // Chain call
+        // Call to langchain Conversational Retriever QA
+        // For filtering, see https://weaviate.io/developers/weaviate/api/graphql/filters
+        const chain = ConversationalRetrievalQAChain.fromLLM(
+          model,
+          vectorStore.asRetriever(NUM_SOURCES, {
+            distance: SIMILARITY_THRESHOLD,
+            where: {
+              operator: "NotEqual",
+              path: ["author"],
+              valueText: "Aslak",
+            },
+          }),
+          {
+            memory: new BufferMemory({
+              memoryKey: "chat_history", // Must be set to "chat_history"
+              inputKey: "memoryKey",
+              outputKey: "text",
+            }),
+            returnSourceDocuments: true,
+            qaTemplate: QA_PROMPT,
+            questionGeneratorTemplate: CONDENSE_PROMPT,
+          }
+        );
+
         const res = await chain.call({ question });
 
         // Sources used for answering
