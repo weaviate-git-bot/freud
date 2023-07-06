@@ -10,6 +10,7 @@ import { colors } from "~/stitches/colors";
 import { Icon } from "~/components/icon/Icon";
 
 import Image from "next/image";
+import FeedbackComponent from "~/components/feedbackComponent";
 
 const AVATAR_IMAGE_SIZE = 50;
 
@@ -81,29 +82,30 @@ export default function Home() {
                 {message.role === Role.User ? (
                   <div key={idx} className="flex items-start space-x-4">
                     <Image
-                    className="mt-3"
-                    src="/chatter_avatar_2.png"
-                    alt="This is text"
-                    width={AVATAR_IMAGE_SIZE}
-                    height={AVATAR_IMAGE_SIZE}
-                  />
+                      className="mt-3"
+                      src="/chatter_avatar_2.png"
+                      alt="This is text"
+                      width={AVATAR_IMAGE_SIZE}
+                      height={AVATAR_IMAGE_SIZE}
+                    />
                     <p className="pt-5" key={idx}>
-                    {message.content}
-                  </p>
+                      {message.content}
+                    </p>
                   </div>
                 ) : (
                   <div key={idx}>
-                    <div className="flex items-start space-x-4">
+                    <div className="relative">
                       <Image
-                      className="mt-3"
+                        className="float-left mr-4"
                         src="/sigmund_freud_avatar.png"
                         alt="This is text"
                         width={AVATAR_IMAGE_SIZE}
                         height={AVATAR_IMAGE_SIZE}
                       />
+                      <FeedbackComponent chat={messages} />
                       <p
                         color={colors.beige400}
-                        className="pt-5"
+                        className=""
                         key={"reply-" + idx.toString()}
                       >
                         {message.content}
@@ -124,7 +126,7 @@ export default function Home() {
                             {message.sources.map((source, sourceIdx) => {
                               return (
                                 <SourceComponent
-                                key={sourceIdx}
+                                  key={sourceIdx}
                                   source={source}
                                 ></SourceComponent>
                               );
