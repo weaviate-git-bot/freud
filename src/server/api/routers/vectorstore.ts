@@ -76,7 +76,7 @@ const client = (weaviate as any).client({
 const embeddings = new OpenAIEmbeddings();
 
 export const vectorRouter = createTRPCRouter({
-  create: publicProcedure.input(z.string()).mutation(async () => {
+  create: publicProcedure.mutation(async () => {
     console.debug("Called create vector store procedure");
 
     try {

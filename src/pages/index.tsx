@@ -7,11 +7,16 @@ import { LogoWordmark } from "~/components/logo/LogoWordmark";
 import { InputField } from "~/components/inputField/InputField";
 import { Button } from "~/components/button/Button";
 import { colors } from "~/stitches/colors";
+import { Icon } from "~/components/icon/Icon";
+import Image from "next/image";
+const AVATAR_IMAGE_SIZE = 50;
 
 export default function Home() {
   const [query, setQuery] = React.useState("");
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [isLoadingReply, setIsLoadingReply] = React.useState(false);
+  const [showSettings, setShowSettings] = React.useState(false);
+  const [isCreatingDatabase, setIsCreatingDatabase] = React.useState(false);
 
   const mutation = api.langchain.conversation.useMutation({
     onError: (error) => {
@@ -19,19 +24,33 @@ export default function Home() {
       setIsLoadingReply(false);
     },
     onSuccess: (message) => {
-      setMessages([...messages, message!]);
+      setMessages([...messages, message]);
       setQuery("");
       setIsLoadingReply(false);
     },
   });
 
   const vectorStoreMutation = api.vectorstore.create.useMutation({
-    onError: (error) => console.error(error),
-    onSuccess: () => console.info("Vector store created"),
+    onError: (error) => {
+      console.error(error);
+      setIsCreatingDatabase(false);
+    },
+    onSuccess: () => {
+      console.info("Vector store created");
+      setIsCreatingDatabase(false);
+    },
   });
+
+  const vectorStoreStatistics = api.weaviate.stats.useQuery();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    //Quickfix for empty query
+    if (query.length == 0) {
+      return;
+    }
+
     setIsLoadingReply(true);
     const message = {
       role: Role.User,
@@ -42,7 +61,8 @@ export default function Home() {
   }
 
   function createVectorStore() {
-    vectorStoreMutation.mutate("dummy text");
+    vectorStoreMutation.mutate();
+    setIsCreatingDatabase(true);
   }
 
   return (
@@ -53,6 +73,37 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center bg-beige100">
+        <div className="container absolute top-10">
+          <div>
+            <Button onClick={() => setShowSettings(!showSettings)}>
+              <Icon name={"cog"} />
+            </Button>
+          </div>
+          <div hidden={!showSettings}>
+            <div className="container mt-5">
+              <b>Statistikk fra databasen</b>
+              {vectorStoreStatistics.isLoading
+                ? "Venter på databasen..."
+                : vectorStoreStatistics.data.map((data, idx) => {
+                    return (
+                      <p key={idx}>
+                        {data.author}: {data.count}
+                      </p>
+                    );
+                  })}
+            </div>
+            <div className="mt-5">
+              <Button
+                size={"small"}
+                loading={isCreatingDatabase}
+                disabled={isCreatingDatabase}
+                onClick={createVectorStore}
+              >
+                Lag vektordatabase
+              </Button>
+            </div>
+          </div>
+        </div>
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
           <div className="flex flex-row items-end gap-1">
             <h1 className="text-5xl font-extrabold tracking-tight text-green750 sm:text-[5rem]">
@@ -66,50 +117,68 @@ export default function Home() {
 
           <div>
             {messages.map((message, idx) => {
-              return message.role === Role.User ? (
-                <p className="text-white pt-5" key={idx}>
-                  {message.content}
-                </p>
-              ) : (
-                <div key={idx}>
-                  <p
-                    className="text-red-500 pt-2"
-                    key={"reply-" + idx.toString()}
-                  >
-                    {message.content}
-                  </p>
-
-                  {message.sources == undefined ||
-                  message.sources?.length == 0 ? (
-                    <p className="bold text-yellow-300 pt-2 font-bold">
-                      Fant ingen kilder til dette spørsmålet
-                    </p>
+              return (
+                <div
+                  key={idx.toString()}
+                  className="container border-b-2 border-gray900 py-10"
+                >
+                  {message.role === Role.User ? (
+                    <div key={idx} className="flex items-start space-x-4">
+                      <Image
+                        className="mt-3"
+                        src="/chatter_avatar_2.png"
+                        alt="This is text"
+                        width={AVATAR_IMAGE_SIZE}
+                        height={AVATAR_IMAGE_SIZE}
+                      />
+                      <p className="pt-5" key={idx}>
+                        {message.content}
+                      </p>
+                    </div>
                   ) : (
-                    <p className="bold text-green-900 pt-2 font-bold">Kilder</p>
-                  )}
+                    <div key={idx}>
+                      <div className="flex items-start space-x-4">
+                        <Image
+                          className="mt-3"
+                          src="/sigmund_freud_avatar.png"
+                          alt="This is text"
+                          width={AVATAR_IMAGE_SIZE}
+                          height={AVATAR_IMAGE_SIZE}
+                        />
+                        <p
+                          color={colors.beige400}
+                          className="pt-5"
+                          key={"reply-" + idx.toString()}
+                        >
+                          {message.content}
+                        </p>
+                      </div>
 
-                  <ul
-                    className="text-green-900 list-disc"
-                    key={"source-list-" + idx.toString()}
-                  >
-                    {message.sources ? (
-                      message.sources.map((source, sourceIdx) => {
-                        return (
-                          <SourceComponent
-                            key={
-                              "q-" +
-                              messages.length.toString() +
-                              "-source-" +
-                              sourceIdx.toString()
-                            }
-                            source={source}
-                          ></SourceComponent>
-                        );
-                      })
-                    ) : (
-                      <li>No sources available</li>
-                    )}
-                  </ul>
+                      <div className="mb-3">
+                        {message.sources == undefined ||
+                        message.sources?.length == 0 ? (
+                          <p className="bold py-2 font-bold text-yellow550">
+                            Fant ingen kilder til dette spørsmålet
+                          </p>
+                        ) : (
+                          <div>
+                            <p className="bold py-2 font-bold">Kilder</p>
+
+                            <ul>
+                              {message.sources.map((source, sourceIdx) => {
+                                return (
+                                  <SourceComponent
+                                    key={sourceIdx}
+                                    source={source}
+                                  />
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -122,9 +191,19 @@ export default function Home() {
             onChange={(event) => {
               setQuery(event.target.value);
             }}
+            label={""}
+            id={"submitquestion"}
           />
+          <Button
+            type="submit"
+            color={"lightGreen"}
+            withBorder={true}
+            disabled={isLoadingReply}
+            className="mb-[0.4rem] mt-1"
+          >
+            <Icon name={"arrowNarrowRight"} color={colors.green600}></Icon>
+          </Button>
         </form>
-        <Button onClick={createVectorStore}>Lag vektordatabase</Button>
       </main>
     </>
   );
