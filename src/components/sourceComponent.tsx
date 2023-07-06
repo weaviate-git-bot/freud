@@ -14,7 +14,7 @@ const SourceComponent = ({ source }: SourceProps) => {
             {source.location.lineFrom}-{source.location.lineTo})
             <br />
             <button
-                className="text-blue600"
+                className="text-blue"
             >
                 {shown ? "Skjul" : "Vis mer"}
             </button>
