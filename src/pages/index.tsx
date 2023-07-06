@@ -12,12 +12,19 @@ import { Icon } from "~/components/icon/Icon";
 import Image from "next/image";
 import FeedbackComponent from "~/components/feedbackComponent";
 
+
+
 const AVATAR_IMAGE_SIZE = 50;
 
 export default function Home() {
   const [query, setQuery] = React.useState("");
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [isLoadingReply, setIsLoadingReply] = React.useState(false);
+
+  const [childData, setChildData] = React.useState("");
+
+
+
 
   const mutation = api.langchain.conversation.useMutation({
     onError: (error) => {
@@ -30,11 +37,18 @@ export default function Home() {
       setIsLoadingReply(false);
     },
   });
+  const users = api.feedback.getAllData.useQuery();
 
+  const queryResult = api.feedback.addMessage.useMutation({ // temporary test
+    onError: (error) => console.error(error),
+    onSuccess: () => console.info("Data sent!"),
+  });
+  
   const vectorStoreMutation = api.vectorstore.create.useMutation({
     onError: (error) => console.error(error),
     onSuccess: () => console.info("Vector store created"),
   });
+
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,6 +71,19 @@ export default function Home() {
     vectorStoreMutation.mutate("dummy text");
   }
 
+  function testingDatabase() {
+    const user=users.data;
+    console.log(user);
+  } 
+
+  function updatingDatabase() {
+    const message:Message={
+      role: Role.User,
+      content:"Hei på deg",
+    }
+    queryResult.mutate({message:message,chatId:1});
+  }
+
   return (
     <>
       <Head>
@@ -75,7 +102,8 @@ export default function Home() {
               <LogoWordmark color={colors.green750} />
             </div>
           </div>
-
+          <button onClick={testingDatabase}>Test Database</button>
+          <button onClick={updatingDatabase}>Update Database</button>
           <div className="container text-2xl">
             {messages.map((message, idx) => {
               return <div key={idx.toString()} className="border-gray900 border-b-2 container py-10">
@@ -102,7 +130,7 @@ export default function Home() {
                         width={AVATAR_IMAGE_SIZE}
                         height={AVATAR_IMAGE_SIZE}
                       />
-                      <FeedbackComponent chat={messages} />
+                      <FeedbackComponent chat={messages} passChildData={setChildData}/>
                       <p
                         color={colors.beige400}
                         className=""

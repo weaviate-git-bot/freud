@@ -1,6 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
-
+// Necessary
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,13 +8,38 @@ generator client {
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
-model Product {
+// Datamodelling
+model Message {
+  id        Int      @id @default(autoincrement())
+  role String
+  content String
+  sources Json
+  chat   Chat   @relation(fields: [chatId], references: [id])
+  chatId Int    @unique
+}
+
+model UserFeedback {
   id        Int      @id @default(autoincrement())
   name      String
-  price     Int
-  img       String
+  email     String
+  feedback  String
+  comment_id Int
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  chat   Chat   @relation(fields: [chatId], references: [id])
+  chatId Int    @unique
+}
+
+model Chat {
+  id        Int      @id @default(autoincrement())
+  feedbacks UserFeedback[]
+  messages Message[]
+}
+
+model TestTable {
+  id      Int @id @default(autoincrement())
+  name    String
+  email   String
 }

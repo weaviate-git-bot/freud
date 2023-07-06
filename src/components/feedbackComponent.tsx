@@ -9,6 +9,8 @@ import { TextArea } from './textArea/TextArea';
 import { TextAreaField } from './textAreaField/TextAreaField';
 import { Message } from '~/interfaces/message';
 import { Label } from './label/Label';
+import { api } from "~/utils/api";
+import { Feedback } from '~/interfaces/feedback';
 
 Modal.setAppElement('#__next');
 
@@ -27,24 +29,31 @@ const customStyles = {
 
 type Props = {
     chat: Message[]
+    passChildData: ()=>void;
+}
+type ChatSchema = {
+    id: number|undefined,
+    feedbacks: FeedbackSchema[],
+    messages: Message[],
 }
 
-type FeedbackSchema = {
-    name: string | null | undefined,
-    email: string | null | undefined,
-    feedback: string
-    chat: Message[]
-}
 
-
-const FeedbackComponent = ({ chat }: Props) => {
+const FeedbackComponent = ({ chat, passChildData }: Props) => {
 
     let thanku: HTMLParagraphElement;
     const [feedback, setFeedback] = useState<string | null>();
     const [name, setName] = useState<string | undefined>();
-    const [email, setEmail] = useState<string | null>();
-    const [positive, setNegative] = useState<string | null>();
+    const [email, setEmail] = useState<string | undefined>();
+
+    const [chatID, setchatId]=useState<number>();
+
     const [modalIsOpen, setIsOpen] = useState(false);
+
+    const mutateChat = api.feedback.sendValues.useMutation({
+        onError: (error) => console.error(error),
+        onSuccess: () => console.info("Data sent!"),
+      });
+      
 
 
     function openModal() {
@@ -74,11 +83,22 @@ const FeedbackComponent = ({ chat }: Props) => {
         }
         thanku.style.display = "block";
 
-        const userfeedback: FeedbackSchema = {
+
+        console.log(chatID)
+
+        const chat:chatSchema={
+
+        }
+        if(chatID==undefined){
+            mutateChat.mutate(
+
+            )
+        }
+
+        const userfeedback: Feedback = {
             name: name,
             email: email,
             feedback: feedback,
-            chat: chat
         }
         console.log(userfeedback)
         await sleep(1 * 1000);
