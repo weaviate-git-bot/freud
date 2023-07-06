@@ -68,8 +68,8 @@ const metadataDictionary = {
 
 // Setup weaviate client
 const client = (weaviate as any).client({
-  scheme: process.env.WEAVIATE_SCHEME || "http",
-  host: process.env.WEAVIATE_HOST || "localhost:8080",
+  scheme: process.env.WEAVIATE_SCHEME,
+  host: process.env.WEAVIATE_HOST,
   apiKey: new (weaviate as any).ApiKey(process.env.WEAVIATE_API_KEY),
 });
 
