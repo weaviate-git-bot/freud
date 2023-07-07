@@ -26,8 +26,8 @@ type Props = {
 }
 
 type FeedbackSchema = {
-    name: string | null | undefined,
-    email: string | null | undefined,
+    name: string,
+    email: string,
     feedback: string
     chat: Message[]
 }
@@ -36,10 +36,9 @@ type FeedbackSchema = {
 const FeedbackComponent = ({ chat }: Props) => {
 
     let thanku: HTMLParagraphElement;
-    const [feedback, setFeedback] = useState<string | null>();
-    const [name, setName] = useState<string | undefined>();
-    const [email, setEmail] = useState<string | null>();
-    const [positive, setNegative] = useState<string | null>();
+    const [feedback, setFeedback] = useState<string>("");
+    const [name, setName] = useState<string>("");
+    const [email, setEmail] = useState<string>("");
     const [modalIsOpen, setIsOpen] = useState(false);
 
 
