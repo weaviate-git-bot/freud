@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { Message, Role, type Source } from "~/interfaces/message";
@@ -89,7 +93,7 @@ export const langchainRouter = createTRPCRouter({
       try {
         const res = await chain.call({ question });
         // Sources used for answering
-        //@ts-ignore Because there is little use for defineng the elem-type
+        //@ts-ignore Because there is little use for defineng the elem-type // I have ignored eslinter for this whole file
         const sources: Source[] = res.sourceDocuments.map((elem) => {
           return {
             title: elem.metadata.info.title,

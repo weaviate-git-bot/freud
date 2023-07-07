@@ -20,15 +20,25 @@ export const feedbackRouter = createTRPCRouter({
   addMessage: publicProcedure
     .input(z.object({message:Message,chatId:z.number()}))
     .mutation(async ( {input} ) => {
-        const messageID = await prisma.message.create({
-            data: {
-                content:input.message.content,
-                role:input.message.role,
-                sources:JSON.stringify(input.message.sources),
-                
-            },
-        });
-        return messageID;
+        console.log(input.message.sources);
+        try{
+            const messageID = await prisma.message.create({
+                data: {
+                    content:input.message.content,
+                    role:input.message.role,
+                    sources: ,
+                    chat: {
+                        connect: {
+                            id: input.chatId,
+                        }
+                    }
+                },
+            });
+            return messageID;
+        }
+        catch(e){
+            console.log(e);
+        }
     }),
 
   getAllData: publicProcedure

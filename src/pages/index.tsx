@@ -77,9 +77,10 @@ export default function Home() {
   } 
 
   function updatingDatabase() {
-    const message:Message={
+    const message: Message={
       role: Role.User,
       content:"Hei på deg",
+      sources: 
     }
     queryResult.mutate({message:message,chatId:1});
     // queryResult.mutate();
