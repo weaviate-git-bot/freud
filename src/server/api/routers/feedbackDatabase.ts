@@ -10,7 +10,7 @@ import { Message } from "~/interfaces/message";
 
 
 export const feedbackRouter = createTRPCRouter({
-  createNewChat: publicProcedure
+  createNewChat: publicProcedure // good
     .mutation(async () => {
         const chatID = await prisma.chat.create({
             data: {}, 
@@ -26,6 +26,11 @@ export const feedbackRouter = createTRPCRouter({
                 content:input.message.content,
                 role:input.message.role,
                 sources:JSON.stringify(input.message.sources),
+                chat: {
+                    connect: {
+                        id: input.chatId,
+                    }
+                }
             },
         });
         return messageID;

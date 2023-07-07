@@ -1,0 +1,27 @@
+version: '3.7'
+
+services:
+  mysql:
+    image: mysql:8.0
+    command: --default-authentication-plugin=caching_sha2_password
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=tests
+      - MYSQL_USER=prisma
+    ports:
+      - '3316:3306' #change the first port number if you already have MySQL running locally
+
+  #   postgres-db:
+#     image: postgres
+#     restart: always
+#     ports:
+#       - 5432:5432
+#     environment:
+#       POSTGRES_USER: joddern
+#       POSTGRES_PASSWORD: prisma
+#       POSTGRES_DB: freud
+#     volumes:
+#       - postgres:/var/lib/postgresql/data
+# volumes:
+#   postgres: ~

@@ -39,8 +39,8 @@ Question: {question}:
 
 Helpful answer:`;
 
-const THRESHOLD = 0.15
-const NUM_LOADED = 10
+const THRESHOLD = 0.2
+const NUM_LOADED = 5
 
 
 export const langchainRouter = createTRPCRouter({
