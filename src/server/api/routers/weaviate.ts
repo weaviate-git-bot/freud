@@ -1,4 +1,3 @@
-import { WeaviateStore } from "langchain/vectorstores/weaviate";
 import weaviate from "weaviate-ts-client";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -16,7 +15,7 @@ export const weaviateRouter = createTRPCRouter({
     return await client.graphql
       .aggregate()
       .withClassName("ISTDP_initial")
-      .withGroupBy(["author"])
+      .withGroupBy(["title"])
       .withFields("groupedBy { value } meta { count }")
       .do()
       .then((res) => {

@@ -1,16 +1,16 @@
-import React, { type FormEvent } from "react";
 import Head from "next/head";
-import { api } from "~/utils/api";
-import { Role, type Message } from "~/interfaces/message";
-import SourceComponent from "~/components/sourceComponent";
-import { LogoWordmark } from "~/components/logo/LogoWordmark";
-import { InputField } from "~/components/inputField/InputField";
-import { Button } from "~/components/button/Button";
-import { colors } from "~/stitches/colors";
-import { Icon } from "~/components/icon/Icon";
-
 import Image from "next/image";
+import React, { type FormEvent } from "react";
+import { SidebarFreud } from "~/SidebarFreud";
+import { Button } from "~/components/button/Button";
 import FeedbackComponent from "~/components/feedbackComponent";
+import { Icon } from "~/components/icon/Icon";
+import { InputField } from "~/components/inputField/InputField";
+import { LogoWordmark } from "~/components/logo/LogoWordmark";
+import SourceComponent from "~/components/sourceComponent";
+import { Role, type Message } from "~/interfaces/message";
+import { colors } from "~/stitches/colors";
+import { api } from "~/utils/api";
 
 const AVATAR_IMAGE_SIZE = 50;
 
@@ -76,26 +76,22 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center bg-beige100">
-        <div className="container absolute top-10">
-          <div>
-            <Button onClick={() => setShowSettings(!showSettings)}>
-              <Icon name={"cog"} />
-            </Button>
-          </div>
-          <div hidden={!showSettings}>
-            <div className="container mt-5">
-              <b>Statistikk fra databasen</b>
-              {vectorStoreStatistics.isLoading
-                ? "Venter på databasen..."
-                : vectorStoreStatistics.data.map((data, idx) => {
-                    return (
-                      <p key={idx}>
-                        {data.author}: {data.count}
-                      </p>
-                    );
-                  })}
-            </div>
-            <div className="mt-5">
+        <SidebarFreud
+          showSettings={showSettings}
+          setShowSettings={setShowSettings}
+        >
+          <div className="m-10">
+            <b>Statistikk fra databasen</b>
+            {vectorStoreStatistics.isLoading
+              ? "Venter på databasen..."
+              : vectorStoreStatistics.data.map((data, idx) => {
+                  return (
+                    <p key={idx}>
+                      {data.author}: {data.count}
+                    </p>
+                  );
+                })}
+            <div className="pt-5">
               <Button
                 size={"small"}
                 loading={isCreatingDatabase}
@@ -106,7 +102,7 @@ export default function Home() {
               </Button>
             </div>
           </div>
-        </div>
+        </SidebarFreud>
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
           <div className="flex flex-row items-end gap-1">
             <h1 className="text-5xl font-extrabold tracking-tight text-green750 sm:text-[5rem]">
