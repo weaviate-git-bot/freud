@@ -8,7 +8,10 @@ import { InputField } from "~/components/inputField/InputField";
 import { Button } from "~/components/button/Button";
 import { colors } from "~/stitches/colors";
 import { Icon } from "~/components/icon/Icon";
+
 import Image from "next/image";
+import FeedbackComponent from "~/components/feedbackComponent";
+
 const AVATAR_IMAGE_SIZE = 50;
 
 export default function Home() {
@@ -115,7 +118,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div>
+          <div className="container text-2xl">
             {messages.map((message, idx) => {
               return (
                 <div
@@ -137,17 +140,18 @@ export default function Home() {
                     </div>
                   ) : (
                     <div key={idx}>
-                      <div className="flex items-start space-x-4">
+                      <div className="relative">
                         <Image
-                          className="mt-3"
+                          className="float-left mr-4"
                           src="/sigmund_freud_avatar.png"
                           alt="This is text"
                           width={AVATAR_IMAGE_SIZE}
                           height={AVATAR_IMAGE_SIZE}
                         />
+                        <FeedbackComponent chat={messages} />
                         <p
                           color={colors.beige400}
-                          className="pt-5"
+                          className=""
                           key={"reply-" + idx.toString()}
                         >
                           {message.content}
@@ -170,7 +174,7 @@ export default function Home() {
                                   <SourceComponent
                                     key={sourceIdx}
                                     source={source}
-                                  />
+                                  ></SourceComponent>
                                 );
                               })}
                             </ul>
@@ -184,7 +188,7 @@ export default function Home() {
             })}
           </div>
         </div>
-        <form onSubmit={handleSubmit} className="mb-2 block">
+        <form onSubmit={handleSubmit} className="mb-0 flex flex-row gap-3">
           <InputField
             disabled={isLoadingReply}
             value={query}
