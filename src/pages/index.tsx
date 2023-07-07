@@ -82,6 +82,7 @@ export default function Home() {
       content:"Hei på deg",
     }
     queryResult.mutate({message:message,chatId:1});
+    // queryResult.mutate();
   }
 
   return (

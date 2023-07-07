@@ -6,9 +6,9 @@ services:
     command: --default-authentication-plugin=caching_sha2_password
     restart: always
     environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=tests
-      - MYSQL_USER=prisma
+      - MYSQL_DATABASE=freuddb
+      - MYSQL_USER=freud
+      - MYSQL_PASSWORD=testpswd
     ports:
       - '3316:3306' #change the first port number if you already have MySQL running locally
 

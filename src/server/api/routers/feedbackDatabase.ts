@@ -22,15 +22,10 @@ export const feedbackRouter = createTRPCRouter({
     .mutation(async ( {input} ) => {
         const messageID = await prisma.message.create({
             data: {
-                chatId:input.chatId,
                 content:input.message.content,
                 role:input.message.role,
                 sources:JSON.stringify(input.message.sources),
-                chat: {
-                    connect: {
-                        id: input.chatId,
-                    }
-                }
+                
             },
         });
         return messageID;
