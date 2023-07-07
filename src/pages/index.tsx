@@ -1,16 +1,16 @@
-import React, { type FormEvent } from "react";
 import Head from "next/head";
-import { api } from "~/utils/api";
-import { Role, type Message } from "~/interfaces/message";
-import SourceComponent from "~/components/sourceComponent";
-import { LogoWordmark } from "~/components/logo/LogoWordmark";
-import { InputField } from "~/components/inputField/InputField";
-import { Button } from "~/components/button/Button";
-import { colors } from "~/stitches/colors";
-import { Icon } from "~/components/icon/Icon";
-
 import Image from "next/image";
+import React, { type FormEvent } from "react";
+import { SidebarFreud } from "~/SidebarFreud";
+import { Button } from "~/components/button/Button";
 import FeedbackComponent from "~/components/feedbackComponent";
+import { Icon } from "~/components/icon/Icon";
+import { InputField } from "~/components/inputField/InputField";
+import { LogoWordmark } from "~/components/logo/LogoWordmark";
+import SourceComponent from "~/components/sourceComponent";
+import { Role, type Message } from "~/interfaces/message";
+import { colors } from "~/stitches/colors";
+import { api } from "~/utils/api";
 
 const AVATAR_IMAGE_SIZE = 50;
 
@@ -18,6 +18,8 @@ export default function Home() {
   const [query, setQuery] = React.useState("");
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [isLoadingReply, setIsLoadingReply] = React.useState(false);
+  const [showSettings, setShowSettings] = React.useState(false);
+  const [isCreatingDatabase, setIsCreatingDatabase] = React.useState(false);
 
   const mutation = api.langchain.conversation.useMutation({
     onError: (error) => {
@@ -25,23 +27,31 @@ export default function Home() {
       setIsLoadingReply(false);
     },
     onSuccess: (message) => {
-      setMessages([...messages, message!]);
+      setMessages([...messages, message]);
       setQuery("");
       setIsLoadingReply(false);
     },
   });
 
   const vectorStoreMutation = api.vectorstore.create.useMutation({
-    onError: (error) => console.error(error),
-    onSuccess: () => console.info("Vector store created"),
+    onError: (error) => {
+      console.error(error);
+      setIsCreatingDatabase(false);
+    },
+    onSuccess: () => {
+      console.info("Vector store created");
+      setIsCreatingDatabase(false);
+    },
   });
+
+  const vectorStoreStatistics = api.weaviate.stats.useQuery();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     //Quickfix for empty query
     if (query.length == 0) {
-      return
+      return;
     }
 
     setIsLoadingReply(true);
@@ -54,7 +64,8 @@ export default function Home() {
   }
 
   function createVectorStore() {
-    vectorStoreMutation.mutate("dummy text");
+    vectorStoreMutation.mutate();
+    setIsCreatingDatabase(true);
   }
 
   return (
@@ -65,6 +76,33 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center bg-beige100">
+        <SidebarFreud
+          showSettings={showSettings}
+          setShowSettings={setShowSettings}
+        >
+          <div className="m-10">
+            <b>Statistikk fra databasen</b>
+            {vectorStoreStatistics.isLoading
+              ? "Venter på databasen..."
+              : vectorStoreStatistics.data.map((data, idx) => {
+                  return (
+                    <p key={idx}>
+                      {data.author}: {data.count}
+                    </p>
+                  );
+                })}
+            <div className="pt-5">
+              <Button
+                size={"small"}
+                loading={isCreatingDatabase}
+                disabled={isCreatingDatabase}
+                onClick={createVectorStore}
+              >
+                Lag vektordatabase
+              </Button>
+            </div>
+          </div>
+        </SidebarFreud>
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
           <div className="flex flex-row items-end gap-1">
             <h1 className="text-5xl font-extrabold tracking-tight text-green750 sm:text-[5rem]">
@@ -78,70 +116,71 @@ export default function Home() {
 
           <div className="container text-2xl">
             {messages.map((message, idx) => {
-              return <div key={idx.toString()} className="border-gray900 border-b-2 container py-10">
-                {message.role === Role.User ? (
-                  <div key={idx} className="flex items-start space-x-4">
-                    <Image
-                      className="mt-3"
-                      src="/chatter_avatar_2.png"
-                      alt="This is text"
-                      width={AVATAR_IMAGE_SIZE}
-                      height={AVATAR_IMAGE_SIZE}
-                    />
-                    <p className="pt-5" key={idx}>
-                      {message.content}
-                    </p>
-                  </div>
-                ) : (
-                  <div key={idx}>
-                    <div className="relative">
+              return (
+                <div
+                  key={idx.toString()}
+                  className="container border-b-2 border-gray900 py-10"
+                >
+                  {message.role === Role.User ? (
+                    <div key={idx} className="flex items-start space-x-4">
                       <Image
-                        className="float-left mr-4"
-                        src="/sigmund_freud_avatar.png"
+                        className="mt-3"
+                        src="/chatter_avatar_2.png"
                         alt="This is text"
                         width={AVATAR_IMAGE_SIZE}
                         height={AVATAR_IMAGE_SIZE}
                       />
-                      <FeedbackComponent chat={messages} />
-                      <p
-                        color={colors.beige400}
-                        className=""
-                        key={"reply-" + idx.toString()}
-                      >
+                      <p className="pt-5" key={idx}>
                         {message.content}
                       </p>
                     </div>
-
-                    <div className="mb-3">
-                      {message.sources == undefined ||
-                        message.sources?.length == 0 ? (
-                        <p className="bold text-yellow550 py-2 font-bold">
-                          Fant ingen kilder til dette spørsmålet
+                  ) : (
+                    <div key={idx}>
+                      <div className="relative">
+                        <Image
+                          className="float-left mr-4"
+                          src="/sigmund_freud_avatar.png"
+                          alt="This is text"
+                          width={AVATAR_IMAGE_SIZE}
+                          height={AVATAR_IMAGE_SIZE}
+                        />
+                        <FeedbackComponent chat={messages} />
+                        <p
+                          color={colors.beige400}
+                          className=""
+                          key={"reply-" + idx.toString()}
+                        >
+                          {message.content}
                         </p>
-                      ) : (
-                        <div>
-                          <p className="bold py-2 font-bold">Kilder</p>
+                      </div>
 
-                          <ul>
-                            {message.sources.map((source, sourceIdx) => {
-                              return (
-                                <SourceComponent
-                                  key={sourceIdx}
-                                  source={source}
-                                ></SourceComponent>
-                              );
+                      <div className="mb-3">
+                        {message.sources == undefined ||
+                        message.sources?.length == 0 ? (
+                          <p className="bold py-2 font-bold text-yellow550">
+                            Fant ingen kilder til dette spørsmålet
+                          </p>
+                        ) : (
+                          <div>
+                            <p className="bold py-2 font-bold">Kilder</p>
 
-                            })}
-
-                          </ul>
-                        </div>
-                      )}
-
-
+                            <ul>
+                              {message.sources.map((source, sourceIdx) => {
+                                return (
+                                  <SourceComponent
+                                    key={sourceIdx}
+                                    source={source}
+                                  ></SourceComponent>
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              );
             })}
           </div>
         </div>
@@ -151,13 +190,20 @@ export default function Home() {
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
-            }} label={""} id={"submitquestion"}
+            }}
+            label={""}
+            id={"submitquestion"}
           />
-          <Button type="submit" color={"lightGreen"} withBorder={true} disabled={isLoadingReply} className="mb-[0.4rem] mt-1">
+          <Button
+            type="submit"
+            color={"lightGreen"}
+            withBorder={true}
+            disabled={isLoadingReply}
+            className="mb-[0.4rem] mt-1"
+          >
             <Icon name={"arrowNarrowRight"} color={colors.green600}></Icon>
           </Button>
         </form>
-        <Button onClick={createVectorStore}>Lag vektordatabase</Button>
       </main>
     </>
   );

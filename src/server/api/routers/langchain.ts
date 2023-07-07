@@ -1,26 +1,18 @@
-import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { Message, Role, type Source } from "~/interfaces/message";
-import { OpenAI } from "langchain/llms/openai";
-import { ConversationalRetrievalQAChain } from "langchain/chains";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { BufferMemory } from "langchain/memory";
-import path from "path";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { ConsoleCallbackHandler } from "langchain/callbacks";
+import { ConversationalRetrievalQAChain } from "langchain/chains";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAI } from "langchain/llms/openai";
+import { BufferMemory } from "langchain/memory";
+import { WeaviateStore } from "langchain/vectorstores/weaviate";
+import weaviate from "weaviate-ts-client";
+import { z } from "zod";
+import { Message, Role, type Source } from "~/interfaces/message";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
-// Initialize the LLM to use to answer the question
+// Specify language model, embeddings and prompts
 const model = new OpenAI({
-  callbacks: [new ConsoleCallbackHandler()]
+  callbacks: [new ConsoleCallbackHandler()],
 });
-
-// Load the vectorStore from disk
-const databaseDirectoryPath = path.join(process.cwd(), "db");
-const loadedVectorStore = await HNSWLib.load(
-  databaseDirectoryPath,
-  new OpenAIEmbeddings()
-);
 
 const CONDENSE_PROMPT = `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
 
@@ -39,81 +31,89 @@ Question: {question}:
 
 Helpful answer:`;
 
-const THRESHOLD = 0.15
-const NUM_LOADED = 10
+const NUM_SOURCES = 5;
+const SIMILARITY_THRESHOLD = 0.3;
 
+// Setup weaviate client
+const client = (weaviate as any).client({
+  scheme: process.env.WEAVIATE_SCHEME || "http",
+  host: process.env.WEAVIATE_HOST || "localhost:8080",
+  apiKey: new (weaviate as any).ApiKey(
+    process.env.WEAVIATE_API_KEY || "default-api-key"
+  ),
+});
 
+// Connect to weaviate vector store
+const embeddings = new OpenAIEmbeddings();
+
+const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
+  client,
+  indexName: "ISTDP_initial",
+  metadataKeys: ["source", "author", "title", "pageNumber"],
+});
+
+// Define TRPCRouter endpoint
 export const langchainRouter = createTRPCRouter({
   conversation: publicProcedure
 
     // Validate input
     .input(z.array(Message))
 
-    // Query langchain
     .mutation(async ({ input }) => {
       const question = input[input.length - 1]?.content;
 
-      if (!question) {
-        console.error('No question recieved')
-        return
-      }
-
-      const documentsWithScore = await loadedVectorStore.similaritySearchWithScore(question, NUM_LOADED)
-      //doc[0] is the Document. doc[1] is the score. Line below filters on threshold and maps from tuple to list.
-      const filteredDocuments = documentsWithScore.filter((doc) => doc[1] <= THRESHOLD).map((doc, i) => {
-        // console.log(i, doc[0].metadata.info.title, 'score: ', doc[1]);
-        return doc[0]
-      })
-
-      const retriever = (await MemoryVectorStore.fromDocuments(filteredDocuments, new OpenAIEmbeddings)).asRetriever(NUM_LOADED)
-
-      const chain = ConversationalRetrievalQAChain.fromLLM(
-        model,
-        retriever,
-        // loadedVectorStore.asRetriever(),
-        {
-          memory: new BufferMemory({
-            memoryKey: "chat_history", // Must be set to "chat_history"
-            inputKey: "memoryKey",
-            outputKey: "text",
-          }),
-          returnSourceDocuments: true,
-          qaTemplate: QA_PROMPT,
-          questionGeneratorTemplate: CONDENSE_PROMPT,
-          //map_reduce is used because:
-          //This chain incorporates a preprocessing step to select relevant sections from each document until the total number of tokens is less than the maximum number of tokens allowed by the model. It then uses the transformed documents as context to answer the question. It is suitable for QA tasks over larger documents and can run the preprocessing step in parallel, reducing the running time.
-          // Other possibilities are https://js.langchain.com/docs/api/chains/types/QAChainParams
-          // qaChainOptions: { type: 'map_reduce' }
-        }
-      );
       try {
-        const res = await chain.call({ question });
-        // Sources used for answering
-        //@ts-ignore Because there is little use for defineng the elem-type
-        const sources: Source[] = res.sourceDocuments.map((elem) => {
-          return {
-            title: elem.metadata.info.title,
-            author: elem.metadata.info.author,
-            location: {
-              pageNr: elem.metadata.loc.pageNumber
-                ? elem.metadata.loc.pageNumber
-                : 0,
-              lineFrom: elem.metadata.loc.lines.from,
-              lineTo: elem.metadata.loc.lines.to,
+        // Call to langchain Conversational Retriever QA
+        // For filtering, see https://weaviate.io/developers/weaviate/api/graphql/filters
+        const chain = ConversationalRetrievalQAChain.fromLLM(
+          model,
+          vectorStore.asRetriever(NUM_SOURCES, {
+            distance: SIMILARITY_THRESHOLD,
+            where: {
+              operator: "NotEqual",
+              path: ["author"],
+              valueText: "Aslak",
             },
-            content: elem.pageContent,
+          }),
+          {
+            memory: new BufferMemory({
+              memoryKey: "chat_history", // Must be set to "chat_history"
+              inputKey: "memoryKey",
+              outputKey: "text",
+            }),
+            returnSourceDocuments: true,
+            qaTemplate: QA_PROMPT,
+            questionGeneratorTemplate: CONDENSE_PROMPT,
+          }
+        );
+
+        const res = await chain.call({ question });
+
+        // Sources used for answering
+        const sources: Source[] = res.sourceDocuments.map((source) => {
+          return {
+            author: source.metadata.author,
+            title: source.metadata.title,
+            location: {
+              pageNr: source.metadata.pageNumber,
+              lineFrom: 0,
+              lineTo: 0,
+            },
+            content: source.pageContent,
           };
         });
-        // Construct final reply to question
+
+        // Reply
         const reply: Message = {
           role: Role.Assistant,
           content: res.text,
           sources: sources,
         };
+
         // Return reply
         return reply;
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     }),
 });
