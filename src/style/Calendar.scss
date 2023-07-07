@@ -1,0 +1,412 @@
+$out-of-range-color: #666666;
+$out-of-range-bg-color: var(--colors-gray100);
+
+$calendar-border: var(--colors-gray200);
+$cell-border: #d1d7db; // gray300. Using the CSS variable makes things crash
+
+@keyframes spinner {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading .rbc-time-view::after,
+.loading .rbc-month-view::after {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  top: calc(50% - 20px);
+  left: calc(50% - 20px);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid var(--colors-gray100);
+  border-top-color: var(--colors-green500);
+  animation: spinner 0.8s linear infinite;
+}
+
+.loading .rbc-time-view .rbc-time-content .rbc-day-slot,
+.loading .rbc-month-view .rbc-month-row {
+  opacity: 0.2;
+}
+
+$border-color: #ccc;
+
+$segment-width: percentage(1 / 7);
+
+$time-selection-color: white;
+$time-selection-bg-color: rgba(0, 0, 0, 0.6);
+$date-selection-bg-color: rgba(0, 0, 0, 0.1);
+
+$event-bg: hsl(140 45% 87% / 70%);
+$event-border: transparent;
+$event-outline: #121212;
+$event-color: #000;
+$event-border-radius: 5px;
+$event-padding: 2px 5px;
+$event-zindex: 4;
+
+$btn-color: #333333;
+$btn-bg: #fff;
+$btn-border: #ccc;
+
+$current-time-color: var(--colors-red400);
+
+$today-highlight-bg: var(--colors-beige10);
+
+@import 'react-big-calendar/lib/sass/styles';
+
+.rbc-calendar {
+  font-size: var(--fontSizes-s);
+}
+
+.rbc-header {
+  padding-block: var(--space-1);
+  font-size: var(--fontSizes-s);
+  font-weight: 500;
+  color: var(--colors-textBody);
+}
+
+.rbc-header,
+.rbc-time-header-gutter {
+  background-color: var(--colors-gray10);
+}
+
+.rbc-header + .rbc-header,
+.rbc-time-header-content {
+  border-left: none;
+}
+
+.rbc-time-view .rbc-header {
+  border-bottom: none;
+  &:last-child {
+    border-right: none;
+  }
+}
+
+.rbc-time-header.rbc-overflowing {
+  margin-right: 14px;
+  border-right: none;
+}
+
+.rbc-timeslot-group {
+  min-height: var(--sizes-20);
+  color: var(--colors-textMuted);
+}
+
+// Remove borders indicating half hours
+.rbc-day-slot .rbc-time-slot {
+  border-top: none;
+}
+
+// Align the time gutter with the table lines
+.rbc-time-gutter .rbc-timeslot-group .rbc-time-slot {
+  position: relative;
+  top: -10px;
+  background-color: white;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+// Background event, used for placeholder of new events
+.rbc-day-slot .rbc-events-container .rbc-background-event {
+  animation: pulse 2.7s infinite ease-in-out;
+  border-left: 2px solid hsl(208 19% 27% / 80%) !important; // gray700
+  background-color: hsl(208 19% 27% / 80%) !important; // gray700
+
+  .rbc-event-content,
+  .rbc-event-label {
+    color: white;
+  }
+}
+
+// On-drag selection placeholder
+.rbc-day-slot .rbc-slot-selection {
+  border-left: 2px solid var(--colors-grayA500) !important;
+  background-color: var(--colors-grayA300);
+  color: var(--colors-grayA900) !important;
+  margin-left: 2px;
+  width: calc(100% - 2px);
+  padding: $event-padding;
+  font-size: 11.2px;
+  opacity: 0.9;
+  border-radius: var(--radii-sm);
+
+  // Create 1px of gap between events
+  background-clip: padding-box;
+  border-top: 1px solid transparent;
+}
+
+// Hide 00:00, as that specific time is cut off due the styling above
+.rbc-time-gutter .rbc-timeslot-group:first-child .rbc-time-slot {
+  color: white;
+}
+
+.rbc-time-content {
+  border-top: 1px solid var(--colors-gray300);
+
+  // Avoid showing a horizontal scrollbar when we have events on sunday, in weekview.
+  // The underlying problem is that we've added `margin-left: 1px` to .rbc-event.
+  // However, we want to keep that margin for the aesthetic 💅
+  overflow-x: hidden;
+}
+
+.rbc-event {
+  border-left: 2px solid var(--colors-green450);
+  border-radius: var(--radii-sm);
+
+  // Create gap between events
+  background-clip: padding-box;
+  border-right: 2px solid transparent !important;
+  margin-left: 1px;
+}
+
+.rbc-day-slot .rbc-event {
+  border-bottom: none;
+  border-left: 2px solid var(--colors-green450);
+}
+
+.selected-episode .rbc-event {
+  z-index: 1;
+}
+
+.selected-episode.editing-episode .rbc-event {
+  display: none;
+}
+
+.green-episode {
+  .rbc-event {
+    border-left: 2px solid hsl(161 72% 31% / 80%); // green500
+    background-color: hsl(140 45% 87% / 70%); // green50/green100
+  }
+  .rbc-event-content,
+  .rbc-event-label {
+    color: var(--colors-green700);
+  }
+
+  &.selected-episode {
+    .rbc-event {
+      background-color: hsl(161 72% 31% / 80%); // green500
+    }
+    .rbc-event-content,
+    .rbc-event-label {
+      color: white;
+    }
+  }
+}
+
+.blue-episode {
+  .rbc-event {
+    border-left: 2px solid hsl(205 79% 32% / 80%);
+    background-color: hsl(190 53% 85% / 60%);
+  }
+  .rbc-event-content,
+  .rbc-event-label {
+    color: hsl(208 79% 25%);
+  }
+
+  &.selected-episode {
+    .rbc-event {
+      background-color: hsl(205 79% 32% / 80%);
+    }
+    .rbc-event-content,
+    .rbc-event-label {
+      color: white;
+    }
+  }
+}
+
+.red-episode {
+  .rbc-event {
+    border-left: 2px solid hsl(358 61% 49% / 80%); // red500
+    background-color: hsl(358 77% 91% / 60%); // red100
+  }
+
+  .rbc-event-content,
+  .rbc-event-label {
+    color: var(--colors-red700);
+  }
+
+  &.selected-episode {
+    .rbc-event {
+      background-color: hsl(358 61% 49% / 80%); // red500
+    }
+    .rbc-event-content,
+    .rbc-event-label {
+      color: white;
+    }
+  }
+}
+
+.yellow-episode {
+  .rbc-event {
+    border-left: 2px solid var(--colors-yellow500);
+    background-color: hsl(52 97% 88% / 70%); // yellow50
+  }
+  .rbc-event-content,
+  .rbc-event-label {
+    color: var(--colors-yellow700);
+  }
+
+  &.selected-episode {
+    .rbc-event {
+      border-left-color: hsl(44 78% 63% / 80%); // yellow400
+      background-color: hsl(44 78% 63% / 80%); // yellow400
+    }
+    .rbc-event-content,
+    .rbc-event-label {
+      color: var(--colors-yellow900);
+    }
+  }
+}
+
+.gray-episode {
+  .rbc-event {
+    border-left: 2px solid hsl(208 19% 27% / 80%); // gray700
+    background-color: hsl(204 12% 84% / 60%); // gray300
+  }
+  .rbc-event-content,
+  .rbc-event-label {
+    color: var(--colors-gray700);
+  }
+  &.selected-episode {
+    .rbc-event {
+      border-left-color: hsl(212 28% 17% / 80%); // gray800
+      background-color: hsl(212 28% 17% / 80%); // gray800
+    }
+    .rbc-event-content,
+    .rbc-event-label {
+      color: white;
+    }
+  }
+}
+
+.brown-episode {
+  .rbc-event {
+    border-left: 2px solid hsl(30 20% 30% / 80%); // beige600, but browner
+    background-color: hsl(30 20% 90% / 60%); // beige150
+  }
+  .rbc-event-content,
+  .rbc-event-label {
+    color: var(--colors-beige700);
+  }
+  &.selected-episode {
+    .rbc-event {
+      background-color: hsl(30 20% 30% / 80%); // beige600, but browner
+    }
+    .rbc-event-content,
+    .rbc-event-label {
+      color: white;
+    }
+  }
+}
+
+.purple-episode {
+  .rbc-event {
+    border-left: 2px solid hsl(286 25% 35% / 80%);
+    background-color: hsl(286 42% 90% / 60%);
+  }
+  .rbc-event-content,
+  .rbc-event-label {
+    color: hsl(286 25% 25%);
+  }
+  &.selected-episode {
+    .rbc-event {
+      border-left-color: hsl(286 30% 40% / 80%);
+      background-color: hsl(286 30% 40% / 80%);
+    }
+    .rbc-event-content,
+    .rbc-event-label {
+      color: white;
+    }
+  }
+}
+
+.rbc-event-content {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--colors-green700);
+}
+
+.rbc-event-label {
+  color: var(--colors-green700);
+}
+
+.rbc-month-row {
+  .rbc-event-content {
+    padding: 0 var(--sizes-1);
+  }
+}
+
+.rbc-day-slot .rbc-events-container {
+  margin-right: 0;
+}
+
+.rbc-time-view,
+.rbc-month-view {
+  background-color: white;
+  border: none;
+}
+
+.rbc-allday-cell {
+  display: none;
+}
+
+.rbc-row-content {
+  z-index: unset;
+}
+
+// Current time indicator
+.rbc-current-time-indicator {
+  height: 2px;
+
+  &:before {
+    --size: var(--sizes-3);
+
+    content: '';
+    display: block;
+    position: relative;
+    height: var(--size);
+    width: var(--size);
+    top: calc(var(--size) / -2 + 1px);
+    left: calc(var(--size) / -2);
+    border-radius: 100%;
+    background-color: var(--colors-red400);
+  }
+}
+
+.rbc-btn-group button + button {
+  margin-left: 1px;
+}
+
+.rbc-button-link.rbc-show-more {
+  font-weight: 500;
+  margin-top: var(--space-1);
+  margin-left: var(--space-2);
+  font-size: var(--fontSizes-s);
+  color: var(--colors-green700);
+
+  &:hover {
+    color: var(--colors-green900);
+  }
+}
+
+// Style slots occuring outside workhours
+.rbc-day-slot .slot-inside-workhours {
+  background-color: white;
+}
+.rbc-day-slot .slot-outside-workhours {
+  background-color: var(--colors-gray100);
+}
