@@ -1,13 +1,10 @@
 import React, { useState } from 'react'
-import { colors } from '~/stitches/colors'
 import { Button } from './button/Button'
 import { Icon } from './icon/Icon'
-import ReactDOM from 'react-dom';
 import Modal from 'react-modal';
 import { InputField } from './inputField/InputField';
 import { TextArea } from './textArea/TextArea';
-import { TextAreaField } from './textAreaField/TextAreaField';
-import { Message } from '~/interfaces/message';
+import { type Message } from '~/interfaces/message';
 import { Label } from './label/Label';
 
 Modal.setAppElement('#__next');
@@ -19,7 +16,6 @@ const customStyles = {
         innerHeight: '80vh',
         bottom: 'auto',
         right: 'auto',
-        // marginRight: '-50%',
         transform: 'translate(-50%, -50%)',
         padding: '3rem'
     },
@@ -30,8 +26,8 @@ type Props = {
 }
 
 type FeedbackSchema = {
-    name: string | null | undefined,
-    email: string | null | undefined,
+    name: string,
+    email: string,
     feedback: string
     chat: Message[]
 }
@@ -40,10 +36,9 @@ type FeedbackSchema = {
 const FeedbackComponent = ({ chat }: Props) => {
 
     let thanku: HTMLParagraphElement;
-    const [feedback, setFeedback] = useState<string | null>();
-    const [name, setName] = useState<string | undefined>();
-    const [email, setEmail] = useState<string | null>();
-    const [positive, setNegative] = useState<string | null>();
+    const [feedback, setFeedback] = useState<string>("");
+    const [name, setName] = useState<string>("");
+    const [email, setEmail] = useState<string>("");
     const [modalIsOpen, setIsOpen] = useState(false);
 
 
