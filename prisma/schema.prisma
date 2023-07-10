@@ -1,0 +1,31 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Necessary
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Datamodelling
+model Message {
+  id         Int      @id @default(autoincrement())
+  role       String
+  content    String   @db.Text
+  sources    Json     @default("[]")
+  createdAt  DateTime @default(now())
+  feedback   Feedback @relation(fields: [feedbackId], references: [id])
+  feedbackId Int
+}
+
+model Feedback {
+  id        Int       @id @default(autoincrement())
+  name      String?
+  email     String?
+  comment   String    @db.Text //https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#mysql
+  messages  Message[]
+  createdAt DateTime  @default(now())
+}

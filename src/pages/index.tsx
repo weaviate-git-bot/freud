@@ -1,17 +1,20 @@
 import Head from "next/head";
-import Image from "next/image";
 import React, { type FormEvent } from "react";
 import { SidebarFreud } from "~/SidebarFreud";
 import { VectorStoreComponent } from "~/components/VectorStoreComponent";
 import { Button } from "~/components/button/Button";
-import FeedbackComponent from "~/components/feedbackComponent";
-import { Icon } from "~/components/icon/Icon";
-import { InputField } from "~/components/inputField/InputField";
-import { LogoWordmark } from "~/components/logo/LogoWordmark";
-import SourceComponent from "~/components/sourceComponent";
-import { Role, type Message } from "~/interfaces/message";
 import { colors } from "~/stitches/colors";
+import { Icon } from "~/components/icon/Icon";
 import { api } from "~/utils/api";
+import { Role, type Message } from "~/interfaces/message";
+import SourceComponent from "~/components/sourceComponent";
+import { LogoWordmark } from "~/components/logo/LogoWordmark";
+import { InputField } from "~/components/inputField/InputField";
+
+import Image from "next/image";
+import FeedbackComponent from "~/components/feedbackComponent";
+import { type Feedback } from "~/interfaces/feedback";
+import { error } from "console";
 
 const AVATAR_IMAGE_SIZE = 50;
 
@@ -27,10 +30,17 @@ export default function Home() {
       setIsLoadingReply(false);
     },
     onSuccess: (message) => {
-      setMessages([...messages, message]);
+      setMessages([...messages, message!]);
       setQuery("");
       setIsLoadingReply(false);
     },
+  });
+  // const feedbacks = api.feedback.getAllData.useQuery();
+
+  const queryResult = api.feedback.createNewFeedback.useMutation({
+    // temporary test
+    onError: (error) => console.error(error),
+    onSuccess: () => console.info("Data sent!"),
   });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -48,6 +58,25 @@ export default function Home() {
     };
     setMessages([...messages, message]);
     mutation.mutate([...messages, message]);
+  }
+
+  function createVectorStore() {
+    vectorStoreMutation.mutate();
+    setIsCreatingDatabase(true);
+  }
+
+  function testingDatabase() {
+    throw new Error();
+  }
+
+  function updatingDatabase() {
+    const feedback: Feedback = {
+      comment: "Dette var et bra svar!",
+      messages: [],
+      name: "David",
+    };
+    queryResult.mutate(feedback);
+    // queryResult.mutate();
   }
 
   return (
@@ -74,7 +103,8 @@ export default function Home() {
               <LogoWordmark color={colors.green750} />
             </div>
           </div>
-
+          <button onClick={testingDatabase}>Test Database</button>
+          <button onClick={updatingDatabase}>Update Database</button>
           <div className="container text-2xl">
             {messages.map((message, idx) => {
               return (

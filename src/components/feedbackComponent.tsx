@@ -1,14 +1,13 @@
-import React, { useState } from 'react'
-import { colors } from '~/stitches/colors'
+import React, { useEffect, useState } from 'react'
 import { Button } from './button/Button'
 import { Icon } from './icon/Icon'
-import ReactDOM from 'react-dom';
 import Modal from 'react-modal';
 import { InputField } from './inputField/InputField';
 import { TextArea } from './textArea/TextArea';
-import { TextAreaField } from './textAreaField/TextAreaField';
-import { Message } from '~/interfaces/message';
+import { type Message } from '~/interfaces/message';
 import { Label } from './label/Label';
+import { api } from "~/utils/api";
+import { Feedback } from '~/interfaces/feedback';
 
 Modal.setAppElement('#__next');
 
@@ -19,7 +18,6 @@ const customStyles = {
         innerHeight: '80vh',
         bottom: 'auto',
         right: 'auto',
-        // marginRight: '-50%',
         transform: 'translate(-50%, -50%)',
         padding: '3rem'
     },
@@ -29,29 +27,36 @@ type Props = {
     chat: Message[]
 }
 
-type FeedbackSchema = {
-    name: string | null | undefined,
-    email: string | null | undefined,
-    feedback: string
-    chat: Message[]
-}
-
 
 const FeedbackComponent = ({ chat }: Props) => {
 
     let thanku: HTMLParagraphElement;
-    const [feedback, setFeedback] = useState<string | null>();
-    const [name, setName] = useState<string | undefined>();
-    const [email, setEmail] = useState<string | null>();
-    const [positive, setNegative] = useState<string | null>();
+    const [feedbackComment, setFeedbackComment] = useState<string>("");
+    const [name, setName] = useState<string>("");
+    const [email, setEmail] = useState<string>("");
+
+    useEffect(() => {
+        // Get the value from local storage if it exists
+        let nameValue = localStorage.getItem("name") || ""
+        let emailValue = localStorage.getItem("email") || ""
+        setName(nameValue)
+        setEmail(emailValue)
+    }, [])
+
+    const [chatID, setchatId] = useState<number>();
+
     const [modalIsOpen, setIsOpen] = useState(false);
+
+    const mutateFeedback = api.feedback.createNewFeedback.useMutation({
+        onError: (error) => console.error(error),
+        onSuccess: () => console.info("Feedback sent!"),
+    });
+
 
 
     function openModal() {
         setIsOpen(true);
-        setName("")
-        setEmail("")
-        setFeedback("")
+        setFeedbackComment("")
     }
 
     function afterOpenModal() {
@@ -60,6 +65,8 @@ const FeedbackComponent = ({ chat }: Props) => {
     }
 
     function closeModal() {
+        localStorage.setItem("email", email)
+        localStorage.setItem("name", name)
         setIsOpen(false);
     }
 
@@ -68,19 +75,21 @@ const FeedbackComponent = ({ chat }: Props) => {
     }
 
     async function handleSubmit() {
-        console.log(feedback)
-        if (feedback == undefined || feedback == null || feedback == "") {
+        if (feedbackComment == undefined || feedbackComment == null || feedbackComment == "") {
             return
         }
         thanku.style.display = "block";
 
-        const userfeedback: FeedbackSchema = {
+
+        const feedback: Feedback = {
+            comment: feedbackComment,
             name: name,
             email: email,
-            feedback: feedback,
-            chat: chat
+            messages: chat
         }
-        console.log(userfeedback)
+
+        mutateFeedback.mutate(feedback);
+
         await sleep(1 * 1000);
         closeModal()
     }
@@ -99,10 +108,10 @@ const FeedbackComponent = ({ chat }: Props) => {
                 <h1 className='font-bold text-2xl'>Tilbakemeldingskjema</h1>
                 <p>Både tilbakemelding og samtalen du har hatt vil bli sendt inn til oss</p>
                 <form>
-                    <InputField id='' label='Navn (valgfritt)' onChange={(e) => setName(e.target.value)}></InputField>
-                    <InputField id='' label='E-mail (valgfritt)' onChange={(e) => setEmail(e.target.value)}></InputField>
                     <Label>Tilbakemelding</Label>
-                    <TextArea id={'feedback'} className="w-[40rem] h-[40rem]" onChange={(e) => setFeedback(e.target.value)} />
+                    <TextArea id={'feedback'} className="w-[40rem] h-[40rem]" onChange={(e) => setFeedbackComment(e.target.value)} />
+                    <InputField id='' label='Navn (valgfritt)' onChange={(e) => setName(e.target.value)} value={name}></InputField>
+                    <InputField id='' label='E-mail (valgfritt)' onChange={(e) => setEmail(e.target.value)} value={email}></InputField>
                 </form>
                 <Button className='float-right' color={"green"} onClick={handleSubmit}>Send inn</Button>
                 <Button className='float-right' color={"red"} onClick={closeModal}>Cancel</Button>
