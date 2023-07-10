@@ -103,14 +103,12 @@ export const langchainRouter = createTRPCRouter({
             title: source.metadata.title,
             location: {
               pageNr: source.metadata.pageNumber,
-              lineFrom:
-                source.metadata.loc && source.metadata.loc.lines
-                  ? source.metadata.loc.lines.from
-                  : 0,
-              lineTo:
-                source.metadata.loc && source.metadata.loc.lines.to
-                  ? source.metadata.loc.lines.to
-                  : 0,
+              lineFrom: source.metadata.loc_lines_from
+                ? source.metadata.loc_lines_from
+                : 0,
+              lineTo: source.metadata.loc_lines_to
+                ? source.metadata.loc_lines_to
+                : 0,
             },
             content: source.pageContent,
           };
