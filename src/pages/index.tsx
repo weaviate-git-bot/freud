@@ -12,7 +12,7 @@ import { InputField } from "~/components/inputField/InputField";
 
 import Image from "next/image";
 import FeedbackComponent from "~/components/feedbackComponent";
-import { Feedback } from "~/interfaces/feedback";
+import { type Feedback } from "~/interfaces/feedback";
 import { error } from "console";
 
 const AVATAR_IMAGE_SIZE = 50;
@@ -37,7 +37,8 @@ export default function Home() {
   });
   // const feedbacks = api.feedback.getAllData.useQuery();
 
-  const queryResult = api.feedback.createNewFeedback.useMutation({ // temporary test
+  const queryResult = api.feedback.createNewFeedback.useMutation({
+    // temporary test
     onError: (error) => console.error(error),
     onSuccess: () => console.info("Data sent!"),
   });
@@ -52,8 +53,6 @@ export default function Home() {
       setIsCreatingDatabase(false);
     },
   });
-
-  const vectorStoreStatistics = api.weaviate.stats.useQuery();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -78,16 +77,15 @@ export default function Home() {
   }
 
   function testingDatabase() {
-    throw new Error
+    throw new Error();
   }
 
   function updatingDatabase() {
     const feedback: Feedback = {
       comment: "Dette var et bra svar!",
       messages: [],
-      name: "David"
-
-    }
+      name: "David",
+    };
     queryResult.mutate(feedback);
     // queryResult.mutate();
   }
@@ -105,26 +103,14 @@ export default function Home() {
           setShowSettings={setShowSettings}
         >
           <div className="m-10">
-            <b>Statistikk fra databasen</b>
-            {vectorStoreStatistics.isLoading
-              ? "Venter på databasen..."
-              : vectorStoreStatistics.data.map((data, idx) => {
-                return (
-                  <p key={idx}>
-                    {data.author}: {data.count}
-                  </p>
-                );
-              })}
-            <div className="pt-5">
-              <Button
-                size={"small"}
-                loading={isCreatingDatabase}
-                disabled={isCreatingDatabase}
-                onClick={createVectorStore}
-              >
-                Lag vektordatabase
-              </Button>
-            </div>
+            <Button
+              size={"small"}
+              loading={isCreatingDatabase}
+              disabled={isCreatingDatabase}
+              onClick={createVectorStore}
+            >
+              Lag vektordatabase
+            </Button>
           </div>
         </SidebarFreud>
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
@@ -181,7 +167,7 @@ export default function Home() {
 
                       <div className="mb-3">
                         {message.sources == undefined ||
-                          message.sources?.length == 0 ? (
+                        message.sources?.length == 0 ? (
                           <p className="bold py-2 font-bold text-yellow550">
                             Fant ingen kilder til dette spørsmålet
                           </p>

@@ -52,7 +52,7 @@ const embeddings = new OpenAIEmbeddings();
 
 const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
   client,
-  indexName: "ISTDP_initial",
+  indexName: "ISTDP",
   metadataKeys: ["source", "author", "title", "pageNumber"],
 });
 
