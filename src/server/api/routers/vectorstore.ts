@@ -1,14 +1,16 @@
+import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
+import { EPubLoader } from "langchain/document_loaders/fs/epub";
+import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+import { TextLoader } from "langchain/document_loaders/fs/text";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { WeaviateStore } from "langchain/vectorstores/weaviate";
+import path from "path";
+import weaviate from "weaviate-ts-client";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
-import { TextLoader } from "langchain/document_loaders/fs/text";
-import { PDFLoader } from "langchain/document_loaders/fs/pdf";
-import { EPubLoader } from "langchain/document_loaders/fs/epub";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import path from "path";
 
+// Define manual metadata
 const metadataDictionary = {
   a_revolutionary_method_of_dynamic_psychotherapy: {
     title: "Lives Transformed: A Revolutionary Method of Dynamic Psychotherapy",
@@ -64,11 +66,23 @@ const metadataDictionary = {
   },
 };
 
+// Setup weaviate client
+const client = (weaviate as any).client({
+  scheme: process.env.WEAVIATE_SCHEME,
+  host: process.env.WEAVIATE_HOST,
+  apiKey: new (weaviate as any).ApiKey(process.env.WEAVIATE_API_KEY),
+});
+
+const embeddings = new OpenAIEmbeddings();
+
 export const vectorRouter = createTRPCRouter({
-  create: publicProcedure.input(z.string()).mutation(async () => {
+  create: publicProcedure.mutation(async () => {
+    console.debug("Called create vector store procedure");
+
     try {
       // Load documents
       // See https://js.langchain.com/docs/modules/indexes/document_loaders/examples/file_loaders/directory
+      console.debug("Load documents");
       const sourceDirectoryPath = path.join(process.cwd(), "documents");
       const loader = new DirectoryLoader(path.join(sourceDirectoryPath), {
         ".pdf": (sourceDirectoryPath) =>
@@ -79,46 +93,43 @@ export const vectorRouter = createTRPCRouter({
             splitChapters: false,
           }),
       });
-
       const docs = await loader.load();
 
-      console.info("Add custom metadata to documents");
-
+      // Add custom metadata
+      console.debug("Add custom metadata to documents");
       docs.forEach((document) => {
-        // Extract file name
-        const file = document.metadata.source.split("/").pop().split(".")[0];
-
-        // Get metadata from dictionary
-        const metadata = metadataDictionary[file];
+        const filename = document.metadata.source
+          .split("/")
+          .pop()
+          .split(".")[0];
 
         // Add metadata to document
-        document.metadata.info = metadata;
+        document.metadata.author = metadataDictionary[filename].author;
+        document.metadata.title = metadataDictionary[filename].title;
+        document.metadata.pageNumber =
+          document.metadata.loc && document.metadata.loc.pageNumber
+            ? document.metadata.loc.pageNumber
+            : 0;
       });
 
       // // Split the text into chunks
+      console.debug("Split documents into chunks");
       const splitter = new RecursiveCharacterTextSplitter({
         chunkSize: 1536,
         chunkOverlap: 200,
       });
-
-      console.info("Split documents into chunks");
       const splits = await splitter.splitDocuments(docs);
 
-      console.info("Create vector store (this may take a while...)");
+      // Create the vector store
+      console.debug("Create vector store (this may take a while...)");
+      await WeaviateStore.fromDocuments(splits, embeddings, {
+        client,
+        indexName: "ISTDP_initial",
+        textKey: "text",
+        metadataKeys: ["source", "author", "title", "info"],
+      });
 
-      // Create the vectorStore
-      const vectorStore = await HNSWLib.fromDocuments(
-        splits,
-        new OpenAIEmbeddings()
-      );
-
-      console.info("Vector store created");
-
-      // Save the vectorStore to disk
-      const databaseDirectoryPath = path.join(process.cwd(), "db");
-      await vectorStore.save(databaseDirectoryPath);
-
-      console.info("Vector store saved to disk");
+      console.debug("Vector store created");
 
       return;
     } catch (error) {

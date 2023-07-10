@@ -12,20 +12,20 @@ datasource db {
 
 // Datamodelling
 model Message {
-  id        Int      @id @default(autoincrement())
-  role String
-  content String
-  sources Json  @default("[]") 
-  userfeedback UserFeedback @relation(fields: [userfeedbackid], references: [id])
+  id             Int          @id @default(autoincrement())
+  role           String
+  content        String
+  sources        Json         @default("[]")
+  userfeedback   UserFeedback @relation(fields: [userfeedbackid], references: [id])
   userfeedbackid Int
 }
 
 model UserFeedback {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
   email     String
   feedback  String
-  messages Message[]
-  createdAt DateTime @default(now())
-  chatId Int
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  chatId    Int
 }

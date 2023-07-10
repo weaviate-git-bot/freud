@@ -3,6 +3,7 @@ import { createTRPCRouter } from "~/server/api/trpc";
 import { openAIRouter } from "~/server/api/routers/openai";
 import { langchainRouter } from "./routers/langchain";
 import { vectorRouter } from "./routers/vectorstore";
+import { weaviateRouter } from "./routers/weaviate";
 import { feedbackRouter } from "./routers/feedbackDatabase";
 
 /**
@@ -15,6 +16,7 @@ export const appRouter = createTRPCRouter({
   openai: openAIRouter,
   langchain: langchainRouter,
   vectorstore: vectorRouter,
+  weaviate: weaviateRouter,
   feedback: feedbackRouter,
 });
 

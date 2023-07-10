@@ -8,6 +8,10 @@ export const env = createEnv({
    */
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]),
+    OPENAI_API_KEY: z.string(),
+    WEAVIATE_API_KEY: z.string(),
+    WEAVIATE_SCHEME: z.string(),
+    WEAVIATE_HOST: z.string(),
   },
 
   /**
@@ -25,6 +29,10 @@ export const env = createEnv({
    */
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    WEAVIATE_API_KEY: process.env.WEAVIATE_API_KEY,
+    WEAVIATE_SCHEME: process.env.WEAVIATE_SCHEME,
+    WEAVIATE_HOST: process.env.WEAVIATE_HOST,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
