@@ -14,7 +14,6 @@ import { InputField } from "~/components/inputField/InputField";
 import Image from "next/image";
 import FeedbackComponent from "~/components/feedbackComponent";
 import { type Feedback } from "~/interfaces/feedback";
-import { error } from "console";
 
 const AVATAR_IMAGE_SIZE = 50;
 
@@ -58,11 +57,6 @@ export default function Home() {
     };
     setMessages([...messages, message]);
     mutation.mutate([...messages, message]);
-  }
-
-  function createVectorStore() {
-    vectorStoreMutation.mutate();
-    setIsCreatingDatabase(true);
   }
 
   function testingDatabase() {

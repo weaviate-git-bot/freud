@@ -1,7 +1,6 @@
 import React from "react";
 import { Button } from "~/components/button/Button";
 import { api } from "~/utils/api";
-import { Icon } from "./icon/Icon";
 
 export const VectorStoreComponent = () => {
   const [isCreatingDatabase, setIsCreatingDatabase] = React.useState(false);
