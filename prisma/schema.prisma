@@ -14,7 +14,7 @@ datasource db {
 model Message {
   id         Int      @id @default(autoincrement())
   role       String
-  content    String
+  content    String   @db.Text
   sources    Json     @default("[]")
   createdAt  DateTime @default(now())
   feedback   Feedback @relation(fields: [feedbackId], references: [id])
