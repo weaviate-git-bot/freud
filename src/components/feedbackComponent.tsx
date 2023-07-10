@@ -27,18 +27,11 @@ type Props = {
     chat: Message[]
 }
 
-type FeedbackSchema = {
-    name: string,
-    email: string,
-    feedback: string
-    chat: Message[]
-}
-
 
 const FeedbackComponent = ({ chat }: Props) => {
 
     let thanku: HTMLParagraphElement;
-    const [feedback, setFeedback] = useState<string | null>();
+    const [feedbackComment, setFeedbackComment] = useState<string | undefined>();
     const [name, setName] = useState<string | undefined>();
     const [email, setEmail] = useState<string | undefined>();
 
@@ -46,9 +39,9 @@ const FeedbackComponent = ({ chat }: Props) => {
 
     const [modalIsOpen, setIsOpen] = useState(false);
 
-    const mutateChat = api.feedback.sendValues.useMutation({
+    const mutateFeedback = api.feedback.createNewFeedback.useMutation({
         onError: (error) => console.error(error),
-        onSuccess: () => console.info("Data sent!"),
+        onSuccess: () => console.info("Feedback sent!"),
     });
 
 
@@ -57,7 +50,7 @@ const FeedbackComponent = ({ chat }: Props) => {
         setIsOpen(true);
         setName("")
         setEmail("")
-        setFeedback("")
+        setFeedbackComment("")
     }
 
     function afterOpenModal() {
@@ -74,30 +67,21 @@ const FeedbackComponent = ({ chat }: Props) => {
     }
 
     async function handleSubmit() {
-        console.log(feedback)
-        if (feedback == undefined || feedback == null || feedback == "") {
+        if (feedbackComment == undefined || feedbackComment == null || feedbackComment == "") {
             return
         }
         thanku.style.display = "block";
 
 
-        console.log(chatID)
-
-        const chat: chatSchema = {
-
-        }
-        if (chatID == undefined) {
-            mutateChat.mutate(
-
-            )
-        }
-
-        const userfeedback: Feedback = {
+        const feedback: Feedback = {
+            comment: feedbackComment,
             name: name,
             email: email,
-            feedback: feedback,
+            messages: chat
         }
-        console.log(userfeedback)
+
+        mutateFeedback.mutate(feedback);
+
         await sleep(1 * 1000);
         closeModal()
     }
@@ -119,7 +103,7 @@ const FeedbackComponent = ({ chat }: Props) => {
                     <InputField id='' label='Navn (valgfritt)' onChange={(e) => setName(e.target.value)}></InputField>
                     <InputField id='' label='E-mail (valgfritt)' onChange={(e) => setEmail(e.target.value)}></InputField>
                     <Label>Tilbakemelding</Label>
-                    <TextArea id={'feedback'} className="w-[40rem] h-[40rem]" onChange={(e) => setFeedback(e.target.value)} />
+                    <TextArea id={'feedback'} className="w-[40rem] h-[40rem]" onChange={(e) => setFeedbackComment(e.target.value)} />
                 </form>
                 <Button className='float-right' color={"green"} onClick={handleSubmit}>Send inn</Button>
                 <Button className='float-right' color={"red"} onClick={closeModal}>Cancel</Button>

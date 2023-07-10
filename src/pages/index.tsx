@@ -13,6 +13,7 @@ import { InputField } from "~/components/inputField/InputField";
 import Image from "next/image";
 import FeedbackComponent from "~/components/feedbackComponent";
 import { Feedback } from "~/interfaces/feedback";
+import { error } from "console";
 
 const AVATAR_IMAGE_SIZE = 50;
 
@@ -34,7 +35,7 @@ export default function Home() {
       setIsLoadingReply(false);
     },
   });
-  const feedbacks = api.feedback.getAllData.useQuery();
+  // const feedbacks = api.feedback.getAllData.useQuery();
 
   const queryResult = api.feedback.createNewFeedback.useMutation({ // temporary test
     onError: (error) => console.error(error),
@@ -77,13 +78,11 @@ export default function Home() {
   }
 
   function testingDatabase() {
-    const output = feedbacks.data;
-    console.log(output);
+    throw new Error
   }
 
   function updatingDatabase() {
     const feedback: Feedback = {
-      chatId: 1,
       comment: "Dette var et bra svar!",
       messages: [],
       name: "David"
@@ -151,7 +150,7 @@ export default function Home() {
                     <div key={idx} className="flex items-start space-x-4">
                       <Image
                         className="mt-3"
-                        src="/chatter_avatar_2.png"
+                        src="/chatfter_avatar_2.png"
                         alt="This is text"
                         width={AVATAR_IMAGE_SIZE}
                         height={AVATAR_IMAGE_SIZE}

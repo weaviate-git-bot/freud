@@ -17,8 +17,16 @@ export const feedbackRouter = createTRPCRouter({
                 data: {
                     name: input.name,
                     email: input.email,
-                    chatId: input.chatId,
                     comment: input.comment,
+                    messages: {
+                        create: input.messages.map((message) => {
+                            return {
+                                role: message.role,
+                                content: message.content,
+                                sources: message.sources
+                            }
+                        })
+                    }
                 },
             });
             return feedbackID;

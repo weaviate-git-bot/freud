@@ -6,7 +6,6 @@ export const Feedback = z.object({
     email: z.string().optional(),
     comment: z.string(),
     messages: z.array(Message),
-    chatId: z.number(),
 })
 
 
