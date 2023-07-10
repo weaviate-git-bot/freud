@@ -3,7 +3,7 @@ import { Button } from "~/components/button/Button";
 import { Icon } from "~/components/icon/Icon";
 
 export const SidebarFreud = ({ children, showSettings, setShowSettings }) => {
-  const width = !showSettings ? "w-0" : "w-1/2";
+  const width = !showSettings ? "w-0" : "w-3/4";
 
   return (
     <>

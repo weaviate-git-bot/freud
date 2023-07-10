@@ -5,6 +5,7 @@ import { api } from "~/utils/api";
 export const VectorStoreComponent = () => {
   const [isCreatingDatabase, setIsCreatingDatabase] = React.useState(false);
   const vectorStoreStatistics = api.weaviate.stats.useQuery();
+  const vectorStoreSchemas = api.weaviate.listSchemas.useQuery();
 
   const vectorStoreMutation = api.vectorstore.create.useMutation({
     onError: (error) => {
@@ -35,16 +36,63 @@ export const VectorStoreComponent = () => {
                 </p>
               );
             })}
-        <div className="pt-5">
-          <Button
-            size={"small"}
-            loading={isCreatingDatabase}
-            disabled={isCreatingDatabase}
-            onClick={createVectorStore}
-          >
-            Lag vektordatabase
-          </Button>
-        </div>
+      </div>
+      <div className="pt-5">
+        {vectorStoreSchemas.isLoading
+          ? "..."
+          : vectorStoreSchemas.data.map((data, tidx) => {
+              return (
+                <>
+                  <h2>{data.classname}</h2>
+                  Beskrivelse: {data.description}
+                  <br />
+                  Indekseringsmetode: {data.vectorIndexType}
+                  <br />
+                  Distanse: {data.distanceMetric}
+                  <br />
+                  <br />
+                  <h3>Attributter</h3>
+                  <table>
+                    <tbody>
+                      <tr>
+                        <th>Navn</th>
+                        <th>Datatype</th>
+                        <th>Beskrivelse</th>
+                        <th>Filtrerbar</th>
+                        <th>Søkbar</th>
+                      </tr>
+                      {data.properties.map((property, ridx) => {
+                        return (
+                          <>
+                            <tr>
+                              <td>{property.name}</td>
+                              <td>{property.dataType[0]}</td>
+                              <td>{property.description}</td>
+                              <td>
+                                {property.indexFilterable.valueOf().toString()}
+                              </td>
+                              <td>
+                                {property.indexSearchable.valueOf().toString()}
+                              </td>
+                            </tr>
+                          </>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </>
+              );
+            })}
+      </div>
+      <div className="pt-5">
+        <Button
+          size={"small"}
+          loading={isCreatingDatabase}
+          disabled={isCreatingDatabase}
+          onClick={createVectorStore}
+        >
+          Lag vektordatabase
+        </Button>
       </div>
     </>
   );
