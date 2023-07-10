@@ -48,8 +48,15 @@ const embeddings = new OpenAIEmbeddings();
 
 const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
   client,
-  indexName: "ISTDP_initial",
-  metadataKeys: ["source", "author", "title", "pageNumber"],
+  indexName: "ISTDP",
+  metadataKeys: [
+    "title",
+    "author",
+    "source",
+    "pageNumber",
+    "loc_lines_from",
+    "loc_lines_to",
+  ],
 });
 
 // Define TRPCRouter endpoint
@@ -96,8 +103,14 @@ export const langchainRouter = createTRPCRouter({
             title: source.metadata.title,
             location: {
               pageNr: source.metadata.pageNumber,
-              lineFrom: 0,
-              lineTo: 0,
+              lineFrom:
+                source.metadata.loc && source.metadata.loc.lines
+                  ? source.metadata.loc.lines.from
+                  : 0,
+              lineTo:
+                source.metadata.loc && source.metadata.loc.lines.to
+                  ? source.metadata.loc.lines.to
+                  : 0,
             },
             content: source.pageContent,
           };

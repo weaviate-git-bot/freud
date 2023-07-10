@@ -1,49 +1,52 @@
 import React from "react";
 import { Button } from "~/components/button/Button";
 import { api } from "~/utils/api";
+import { Icon } from "./icon/Icon";
 
 export const VectorStoreComponent = () => {
   const [isCreatingDatabase, setIsCreatingDatabase] = React.useState(false);
-  const vectorStoreStatistics = api.weaviate.stats.useQuery();
   const vectorStoreSchemas = api.weaviate.listSchemas.useQuery();
 
-  const vectorStoreMutation = api.vectorstore.create.useMutation({
+  const vectorStoreCreation = api.vectorstore.create.useMutation({
     onError: (error) => {
       console.error(error);
       setIsCreatingDatabase(false);
     },
     onSuccess: () => {
-      console.info("Vector store created");
+      console.info("Vector store create request submitted");
       setIsCreatingDatabase(false);
     },
   });
 
+  const vectorStoreClassDeletion = api.weaviate.deleteSchema.useMutation();
+
   function createVectorStore() {
-    vectorStoreMutation.mutate();
+    vectorStoreCreation.mutate();
     setIsCreatingDatabase(true);
+  }
+
+  function deleteVectorClass(classname: string) {
+    console.debug("Deleting " + classname);
+    vectorStoreClassDeletion.mutate(classname);
   }
 
   return (
     <>
-      <div className="m-10">
-        <b>Statistikk fra databasen</b>
-        {vectorStoreStatistics.isLoading
-          ? "Venter på databasen..."
-          : vectorStoreStatistics.data.map((data, idx) => {
-              return (
-                <p key={idx}>
-                  {data.author}: {data.count}
-                </p>
-              );
-            })}
-      </div>
-      <div className="pt-5">
+      <div className="p-10">
         {vectorStoreSchemas.isLoading
           ? "..."
           : vectorStoreSchemas.data.map((data, tidx) => {
               return (
-                <>
+                <div key={"schema-" + tidx.toString()}>
                   <h2>{data.classname}</h2>
+                  <Button
+                    color={"red"}
+                    size={"small"}
+                    onClick={() => deleteVectorClass(data.classname)}
+                  >
+                    Slett
+                  </Button>
+                  <br />
                   Beskrivelse: {data.description}
                   <br />
                   Indekseringsmetode: {data.vectorIndexType}
@@ -51,36 +54,43 @@ export const VectorStoreComponent = () => {
                   Distanse: {data.distanceMetric}
                   <br />
                   <br />
-                  <h3>Attributter</h3>
-                  <table>
+                  <h3>Metadata</h3>
+                  <table className="border">
                     <tbody>
-                      <tr>
-                        <th>Navn</th>
-                        <th>Datatype</th>
-                        <th>Beskrivelse</th>
-                        <th>Filtrerbar</th>
-                        <th>Søkbar</th>
+                      <tr className="border">
+                        <th className="border" key={"name-" + tidx.toString()}>
+                          Navn
+                        </th>
+                        <th className="border">Datatype</th>
+                        <th className="border">Beskrivelse</th>
+                        <th className="border">Filtrerbar</th>
+                        <th className="border">Søkbar</th>
                       </tr>
                       {data.properties.map((property, ridx) => {
                         return (
-                          <>
-                            <tr>
-                              <td>{property.name}</td>
-                              <td>{property.dataType[0]}</td>
-                              <td>{property.description}</td>
-                              <td>
-                                {property.indexFilterable.valueOf().toString()}
-                              </td>
-                              <td>
-                                {property.indexSearchable.valueOf().toString()}
-                              </td>
-                            </tr>
-                          </>
+                          <tr
+                            key={
+                              "schema" +
+                              tidx.toString() +
+                              "-metadata-" +
+                              ridx.toString()
+                            }
+                          >
+                            <td className="border">{property.name}</td>
+                            <td className="border">{property.dataType[0]}</td>
+                            <td className="border">{property.description}</td>
+                            <td className="border">
+                              {property.indexFilterable.valueOf().toString()}
+                            </td>
+                            <td className="border">
+                              {property.indexSearchable.valueOf().toString()}
+                            </td>
+                          </tr>
                         );
                       })}
                     </tbody>
                   </table>
-                </>
+                </div>
               );
             })}
       </div>

@@ -79,61 +79,131 @@ export const vectorRouter = createTRPCRouter({
   create: publicProcedure.mutation(async () => {
     console.debug("Called create vector store procedure");
 
-    try {
-      // Load documents
-      // See https://js.langchain.com/docs/modules/indexes/document_loaders/examples/file_loaders/directory
-      console.debug("Load documents");
-      const sourceDirectoryPath = path.join(process.cwd(), "documents");
-      const loader = new DirectoryLoader(path.join(sourceDirectoryPath), {
-        ".pdf": (sourceDirectoryPath) =>
-          new PDFLoader(sourceDirectoryPath, { splitPages: true }),
-        ".txt": (sourceDirectoryPath) => new TextLoader(sourceDirectoryPath),
-        ".epub": (sourceDirectoryPath) =>
-          new EPubLoader(sourceDirectoryPath, {
-            splitChapters: false,
-          }),
+    const classObj = {
+      class: "ISTDP",
+      description: "Initial batch of ISTDP works for Freud",
+      vectorIndexType: "hnsw",
+      vectorizeClassName: true,
+      properties: [
+        {
+          name: "title",
+          dataType: ["string"],
+          description: "Book title",
+          vectorizePropertyName: true,
+          index: true,
+        },
+        {
+          name: "author",
+          dataType: ["string"],
+          description: "Author of book",
+        },
+        {
+          name: "source",
+          dataType: ["string"],
+          description: "Filename of source data",
+        },
+        {
+          name: "text",
+          dataType: ["text"],
+          description: "Text split",
+        },
+        {
+          name: "pageNumber",
+          dataType: ["int"],
+          description: "Page number of text split",
+        },
+        {
+          name: "loc_lines_from",
+          dataType: ["int"],
+          description: "Text split beginning",
+        },
+        {
+          name: "loc_lines_to",
+          dataType: ["int"],
+          description: "Text split end",
+        },
+      ],
+    };
+
+    client.schema
+      .classCreator()
+      .withClass(classObj)
+      .do()
+      .then(async (res) => {
+        console.log(res);
+        try {
+          // Load documents
+          // See https://js.langchain.com/docs/modules/indexes/document_loaders/examples/file_loaders/directory
+          console.debug("Load documents");
+          const sourceDirectoryPath = path.join(process.cwd(), "documents");
+          const loader = new DirectoryLoader(path.join(sourceDirectoryPath), {
+            ".pdf": (sourceDirectoryPath) =>
+              new PDFLoader(sourceDirectoryPath, { splitPages: true }),
+            ".txt": (sourceDirectoryPath) =>
+              new TextLoader(sourceDirectoryPath),
+            ".epub": (sourceDirectoryPath) =>
+              new EPubLoader(sourceDirectoryPath, {
+                splitChapters: false,
+              }),
+          });
+          const docs = await loader.load();
+
+          // Add custom metadata
+          console.debug("Add custom metadata to documents");
+
+          const validKeys = ["author", "title", "source", "pageNumber"];
+          docs.forEach((document) => {
+            const filename = document.metadata.source
+              .split("/")
+              .pop()
+              .split(".")[0];
+
+            // Add metadata to document
+            document.metadata.author = metadataDictionary[filename].author;
+            document.metadata.title = metadataDictionary[filename].title;
+            document.metadata.pageNumber =
+              document.metadata.loc && document.metadata.loc.pageNumber
+                ? document.metadata.loc.pageNumber
+                : 0;
+
+            // Remove remainding metadata
+            Object.keys(document.metadata).forEach(
+              (key) => validKeys.includes(key) || delete document.metadata[key]
+            );
+          });
+
+          // // Split the text into chunks
+          console.debug("Split documents into chunks");
+          const splitter = new RecursiveCharacterTextSplitter({
+            chunkSize: 1536,
+            chunkOverlap: 200,
+          });
+          const splits = await splitter.splitDocuments(docs);
+
+          // Create the vector store
+          console.debug("Create vector store (this may take a while...)");
+          await WeaviateStore.fromDocuments(splits, embeddings, {
+            client,
+            indexName: "ISTDP",
+            metadataKeys: [
+              "title",
+              "author",
+              "source",
+              "pageNumber",
+              "loc_lines_from",
+              "loc_lines_to",
+            ],
+          });
+
+          console.debug("Vector store created");
+
+          return;
+        } catch (error) {
+          console.error(error);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
       });
-      const docs = await loader.load();
-
-      // Add custom metadata
-      console.debug("Add custom metadata to documents");
-      docs.forEach((document) => {
-        const filename = document.metadata.source
-          .split("/")
-          .pop()
-          .split(".")[0];
-
-        // Add metadata to document
-        document.metadata.author = metadataDictionary[filename].author;
-        document.metadata.title = metadataDictionary[filename].title;
-        document.metadata.pageNumber =
-          document.metadata.loc && document.metadata.loc.pageNumber
-            ? document.metadata.loc.pageNumber
-            : 0;
-      });
-
-      // // Split the text into chunks
-      console.debug("Split documents into chunks");
-      const splitter = new RecursiveCharacterTextSplitter({
-        chunkSize: 1536,
-        chunkOverlap: 200,
-      });
-      const splits = await splitter.splitDocuments(docs);
-
-      // Create the vector store
-      console.debug("Create vector store (this may take a while...)");
-      await WeaviateStore.fromDocuments(splits, embeddings, {
-        client,
-        indexName: "ISTDP_initial",
-        textKey: "text",
-        metadataKeys: ["source", "author", "title", "info"],
-      });
-
-      console.debug("Vector store created");
-
-      return;
-    } catch (error) {
-      console.error(error);
-    }
   }),
 });

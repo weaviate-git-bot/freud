@@ -4,44 +4,23 @@ import {
   type weaviateClass,
   type weaviateClassProperties,
 } from "~/types/vectorStore";
+import { z } from "zod";
 
 // Setup weaviate client
 const client = (weaviate as any).client({
-  scheme: process.env.WEAVIATE_SCHEME || "http",
-  host: process.env.WEAVIATE_HOST || "localhost:8080",
-  apiKey: new (weaviate as any).ApiKey(
-    process.env.WEAVIATE_API_KEY || "default-api-key"
-  ),
+  scheme: process.env.WEAVIATE_SCHEME,
+  host: process.env.WEAVIATE_HOST,
+  apiKey: new (weaviate as any).ApiKey(process.env.WEAVIATE_API_KEY),
 });
 
 export const weaviateRouter = createTRPCRouter({
-  stats: publicProcedure.query(async () => {
-    return await client.graphql
-      .aggregate()
-      .withClassName("ISTDP_initial")
-      .withGroupBy(["title"])
-      .withFields("groupedBy { value } meta { count }")
-      .do()
-      .then((res) => {
-        const reply = res.data.Aggregate.ISTDP_initial.map((data) => {
-          return {
-            author: data.groupedBy.value,
-            count: data.meta.count,
-          };
-        });
-        return reply;
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }),
-
+  /* List all schemas */
   listSchemas: publicProcedure.query(async () => {
     // The final response is an array with weaviateClass objects
     const response: weaviateClass[] = [];
 
     // Make request
-    client.schema
+    return client.schema
       .getter()
       .do()
       .then((res: any) => {
@@ -77,18 +56,27 @@ export const weaviateRouter = createTRPCRouter({
           // Append weaviate class object to array
           response.push(weaviateClass);
         });
+        return response;
       })
       .catch((error: Error) => {
         console.error(error);
       });
-    return response;
   }),
 
-  schema: publicProcedure.query(async () => {
-    return await client.schema
-      .getter()
-      // .classGetter()
-      // .withClassName("ISTDP_initial")
-      .do();
-  }),
+  /* Delete a schema */
+  deleteSchema: publicProcedure
+    .input(z.string())
+    .mutation(async ({ input }) => {
+      console.debug("Deleting " + input);
+      return client.schema
+        .classDeleter()
+        .withClassName(input)
+        .do()
+        .then((res: any) => {
+          console.debug(res);
+        })
+        .catch((error: Error) => {
+          console.error(error);
+        });
+    }),
 });
