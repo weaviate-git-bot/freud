@@ -2,6 +2,7 @@ import Head from "next/head";
 import Image from "next/image";
 import React, { type FormEvent } from "react";
 import { SidebarFreud } from "~/SidebarFreud";
+import { VectorStoreComponent } from "~/components/VectorStoreComponent";
 import { Button } from "~/components/button/Button";
 import FeedbackComponent from "~/components/feedbackComponent";
 import { Icon } from "~/components/icon/Icon";
@@ -19,7 +20,6 @@ export default function Home() {
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [isLoadingReply, setIsLoadingReply] = React.useState(false);
   const [showSettings, setShowSettings] = React.useState(false);
-  const [isCreatingDatabase, setIsCreatingDatabase] = React.useState(false);
 
   const mutation = api.langchain.conversation.useMutation({
     onError: (error) => {
@@ -32,19 +32,6 @@ export default function Home() {
       setIsLoadingReply(false);
     },
   });
-
-  const vectorStoreMutation = api.vectorstore.create.useMutation({
-    onError: (error) => {
-      console.error(error);
-      setIsCreatingDatabase(false);
-    },
-    onSuccess: () => {
-      console.info("Vector store created");
-      setIsCreatingDatabase(false);
-    },
-  });
-
-  const vectorStoreStatistics = api.weaviate.stats.useQuery();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -63,11 +50,6 @@ export default function Home() {
     mutation.mutate([...messages, message]);
   }
 
-  function createVectorStore() {
-    vectorStoreMutation.mutate();
-    setIsCreatingDatabase(true);
-  }
-
   return (
     <>
       <Head>
@@ -80,28 +62,7 @@ export default function Home() {
           showSettings={showSettings}
           setShowSettings={setShowSettings}
         >
-          <div className="m-10">
-            <b>Statistikk fra databasen</b>
-            {vectorStoreStatistics.isLoading
-              ? "Venter på databasen..."
-              : vectorStoreStatistics.data.map((data, idx) => {
-                  return (
-                    <p key={idx}>
-                      {data.author}: {data.count}
-                    </p>
-                  );
-                })}
-            <div className="pt-5">
-              <Button
-                size={"small"}
-                loading={isCreatingDatabase}
-                disabled={isCreatingDatabase}
-                onClick={createVectorStore}
-              >
-                Lag vektordatabase
-              </Button>
-            </div>
-          </div>
+          <VectorStoreComponent />
         </SidebarFreud>
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
           <div className="flex flex-row items-end gap-1">
