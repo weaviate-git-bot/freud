@@ -12,6 +12,7 @@ import { InputField } from "~/components/inputField/InputField";
 
 import Image from "next/image";
 import FeedbackComponent from "~/components/feedbackComponent";
+import { Feedback } from "~/interfaces/feedback";
 
 const AVATAR_IMAGE_SIZE = 50;
 
@@ -28,14 +29,14 @@ export default function Home() {
       setIsLoadingReply(false);
     },
     onSuccess: (message) => {
-      setMessages([...messages, message]);
+      setMessages([...messages, message!]);
       setQuery("");
       setIsLoadingReply(false);
     },
   });
-  const users = api.feedback.getAllData.useQuery();
+  const feedbacks = api.feedback.getAllData.useQuery();
 
-  const queryResult = api.feedback.addMessage.useMutation({ // temporary test
+  const queryResult = api.feedback.createNewFeedback.useMutation({ // temporary test
     onError: (error) => console.error(error),
     onSuccess: () => console.info("Data sent!"),
   });
@@ -76,16 +77,19 @@ export default function Home() {
   }
 
   function testingDatabase() {
-    const user = users.data;
-    console.log(user);
+    const output = feedbacks.data;
+    console.log(output);
   }
 
   function updatingDatabase() {
-    const message: Message = {
-      role: Role.User,
-      content: "Hei på deg",
+    const feedback: Feedback = {
+      chatId: 1,
+      comment: "Dette var et bra svar!",
+      messages: [],
+      name: "David"
+
     }
-    queryResult.mutate({ message: message, chatId: 1 });
+    queryResult.mutate(feedback);
     // queryResult.mutate();
   }
 

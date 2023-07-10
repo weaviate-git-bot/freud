@@ -10,15 +10,21 @@ import { Message } from "~/interfaces/message";
 
 
 export const feedbackRouter = createTRPCRouter({
-    createNewChat: publicProcedure // good
-        .mutation(async () => {
-            const chatID = await prisma.chat.create({
-                data: {},
+    createNewFeedback: publicProcedure
+        .input(Feedback)
+        .mutation(async ({ input }) => {
+            const feedbackID = await prisma.feedback.create({
+                data: {
+                    name: input.name,
+                    email: input.email,
+                    chatId: input.chatId,
+                    comment: input.comment,
+                },
             });
-            return chatID;
+            return feedbackID;
         }),
     addMessage: publicProcedure
-        .input(z.object({ message: Message, chatId: z.number() }))
+        .input(z.object({ message: Message, feedbackId: z.number() }))
         .mutation(async ({ input }) => {
             console.log(input.message.sources);
             try {
@@ -26,9 +32,9 @@ export const feedbackRouter = createTRPCRouter({
                     data: {
                         content: input.message.content,
                         role: input.message.role,
-                        chat: {
+                        feedback: {
                             connect: {
-                                id: input.chatId,
+                                id: input.feedbackId,
                             }
                         }
                     },
@@ -42,18 +48,18 @@ export const feedbackRouter = createTRPCRouter({
 
     getAllData: publicProcedure
         .query(async () => {
-            const users = await prisma.chat.findMany();
-            console.log(users);
-            return users;
+            const output = await prisma.feedback.findMany();
+            // console.log(users);
+            return output;
         }),
     sendValues: publicProcedure
         .mutation(async () => {
-            await prisma.testTable.create({
-                data: {
-                    name: "David",
-                    email: "davidmail",
-                }
-            })
+            // await prisma.testTable.create({
+            //     data: {
+            //         name: "David",
+            //         email: "davidmail",
+            //     }
+            // })
         }),
 });
 

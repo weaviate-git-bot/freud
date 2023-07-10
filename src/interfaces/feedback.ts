@@ -1,9 +1,12 @@
+import { Message } from "~/interfaces/message";
 import { z } from "zod";
 
-export const Feedback=z.object({
+export const Feedback = z.object({
     name: z.string().optional(),
-email: z.string().optional(),
-feedback: z.string(),
+    email: z.string().optional(),
+    comment: z.string(),
+    messages: z.array(Message),
+    chatId: z.number(),
 })
 
 
