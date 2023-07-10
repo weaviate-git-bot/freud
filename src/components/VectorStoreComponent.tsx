@@ -38,15 +38,7 @@ export const VectorStoreComponent = () => {
           : vectorStoreSchemas.data.map((data, tidx) => {
               return (
                 <div key={"schema-" + tidx.toString()}>
-                  <h2>{data.classname}</h2>
-                  <Button
-                    color={"red"}
-                    size={"small"}
-                    onClick={() => deleteVectorClass(data.classname)}
-                  >
-                    Slett
-                  </Button>
-                  <br />
+                  <h2 className="font-extrabold">{data.classname}</h2>
                   Beskrivelse: {data.description}
                   <br />
                   Indekseringsmetode: {data.vectorIndexType}
@@ -54,7 +46,7 @@ export const VectorStoreComponent = () => {
                   Distanse: {data.distanceMetric}
                   <br />
                   <br />
-                  <h3>Metadata</h3>
+                  <h3 className="font-bold">Metadata</h3>
                   <table className="border">
                     <tbody>
                       <tr className="border">
@@ -90,6 +82,14 @@ export const VectorStoreComponent = () => {
                       })}
                     </tbody>
                   </table>
+                  <br />
+                  <Button
+                    color={"red"}
+                    size={"small"}
+                    onClick={() => deleteVectorClass(data.classname)}
+                  >
+                    Slett
+                  </Button>
                 </div>
               );
             })}
