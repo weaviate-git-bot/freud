@@ -150,7 +150,7 @@ export default function Home() {
                     <div key={idx} className="flex items-start space-x-4">
                       <Image
                         className="mt-3"
-                        src="/chatfter_avatar_2.png"
+                        src="/chatter_avatar_2.png"
                         alt="This is text"
                         width={AVATAR_IMAGE_SIZE}
                         height={AVATAR_IMAGE_SIZE}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button } from './button/Button'
 import { Icon } from './icon/Icon'
 import Modal from 'react-modal';
@@ -31,9 +31,17 @@ type Props = {
 const FeedbackComponent = ({ chat }: Props) => {
 
     let thanku: HTMLParagraphElement;
-    const [feedbackComment, setFeedbackComment] = useState<string | undefined>();
-    const [name, setName] = useState<string | undefined>();
-    const [email, setEmail] = useState<string | undefined>();
+    const [feedbackComment, setFeedbackComment] = useState<string>("");
+    const [name, setName] = useState<string>("");
+    const [email, setEmail] = useState<string>("");
+
+    useEffect(() => {
+        // Get the value from local storage if it exists
+        let nameValue = localStorage.getItem("name") || ""
+        let emailValue = localStorage.getItem("email") || ""
+        setName(nameValue)
+        setEmail(emailValue)
+    }, [])
 
     const [chatID, setchatId] = useState<number>();
 
@@ -48,8 +56,6 @@ const FeedbackComponent = ({ chat }: Props) => {
 
     function openModal() {
         setIsOpen(true);
-        setName("")
-        setEmail("")
         setFeedbackComment("")
     }
 
@@ -59,6 +65,8 @@ const FeedbackComponent = ({ chat }: Props) => {
     }
 
     function closeModal() {
+        localStorage.setItem("email", email)
+        localStorage.setItem("name", name)
         setIsOpen(false);
     }
 
@@ -100,10 +108,10 @@ const FeedbackComponent = ({ chat }: Props) => {
                 <h1 className='font-bold text-2xl'>Tilbakemeldingskjema</h1>
                 <p>Både tilbakemelding og samtalen du har hatt vil bli sendt inn til oss</p>
                 <form>
-                    <InputField id='' label='Navn (valgfritt)' onChange={(e) => setName(e.target.value)}></InputField>
-                    <InputField id='' label='E-mail (valgfritt)' onChange={(e) => setEmail(e.target.value)}></InputField>
                     <Label>Tilbakemelding</Label>
                     <TextArea id={'feedback'} className="w-[40rem] h-[40rem]" onChange={(e) => setFeedbackComment(e.target.value)} />
+                    <InputField id='' label='Navn (valgfritt)' onChange={(e) => setName(e.target.value)} value={name}></InputField>
+                    <InputField id='' label='E-mail (valgfritt)' onChange={(e) => setEmail(e.target.value)} value={email}></InputField>
                 </form>
                 <Button className='float-right' color={"green"} onClick={handleSubmit}>Send inn</Button>
                 <Button className='float-right' color={"red"} onClick={closeModal}>Cancel</Button>
