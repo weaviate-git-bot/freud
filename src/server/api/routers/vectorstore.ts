@@ -1,3 +1,4 @@
+import { readdirSync } from "fs";
 import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
 import { EPubLoader } from "langchain/document_loaders/fs/epub";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
@@ -12,10 +13,12 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 type metadataType = {
-  title: string,
-  author: string,
-  isbn: number,
-}
+  title: string;
+  author: string;
+  isbn: number;
+};
+// Root directory containing source documents
+const rootDirectoryPath = path.join(process.cwd(), "documents");
 
 // Define manual metadata
 const metadataDictionary: { [key: string]: metadataType } = {
@@ -73,6 +76,11 @@ const metadataDictionary: { [key: string]: metadataType } = {
   },
 };
 
+const indexDescriptions = {
+  ISTDP: "Initial batch of ISTDP works for Freud",
+  Test: "Testing...",
+};
+
 // Setup weaviate client
 const client = (weaviate as any).client({
   scheme: process.env.WEAVIATE_SCHEME,
@@ -86,131 +94,142 @@ export const vectorRouter = createTRPCRouter({
   create: publicProcedure.mutation(async () => {
     console.debug("Called create vector store procedure");
 
-    const classObj = {
-      class: "ISTDP",
-      description: "Initial batch of ISTDP works for Freud",
-      vectorIndexType: "hnsw",
-      vectorizeClassName: true,
-      properties: [
-        {
-          name: "title",
-          dataType: ["string"],
-          description: "Book title",
-          vectorizePropertyName: true,
-          index: true,
-        },
-        {
-          name: "author",
-          dataType: ["string"],
-          description: "Author of book",
-        },
-        {
-          name: "source",
-          dataType: ["string"],
-          description: "Filename of source data",
-        },
-        {
-          name: "text",
-          dataType: ["text"],
-          description: "Text split",
-        },
-        {
-          name: "pageNumber",
-          dataType: ["int"],
-          description: "Page number of text split",
-        },
-        {
-          name: "loc_lines_from",
-          dataType: ["int"],
-          description: "Text split beginning",
-        },
-        {
-          name: "loc_lines_to",
-          dataType: ["int"],
-          description: "Text split end",
-        },
-      ],
-    };
+    const indexesFromDirectories: string[] = readdirSync(rootDirectoryPath, {
+      withFileTypes: true,
+    })
+      .filter((dirent) => dirent.isDirectory())
+      .map((dirent) => dirent.name);
 
-    client.schema
-      .classCreator()
-      .withClass(classObj)
-      .do()
-      .then(async (res: any) => {
-        console.log(res);
-        try {
-          // Load documents
-          // See https://js.langchain.com/docs/modules/indexes/document_loaders/examples/file_loaders/directory
-          console.debug("Load documents");
-          const sourceDirectoryPath = path.join(process.cwd(), "documents");
-          const loader = new DirectoryLoader(path.join(sourceDirectoryPath), {
-            ".pdf": (sourceDirectoryPath) =>
-              new PDFLoader(sourceDirectoryPath, { splitPages: true }),
-            ".txt": (sourceDirectoryPath) =>
-              new TextLoader(sourceDirectoryPath),
-            ".epub": (sourceDirectoryPath) =>
-              new EPubLoader(sourceDirectoryPath, {
-                splitChapters: false,
-              }),
-          });
-          const docs = await loader.load();
+    indexesFromDirectories.forEach((indexName) => {
+      console.debug("Processing documents from: " + indexName);
 
-          // Add custom metadata
-          console.debug("Add custom metadata to documents");
+      const weaviateClassObj = {
+        class: indexName,
+        description: indexDescriptions[indexName],
+        vectorIndexType: "hnsw",
+        vectorizeClassName: true,
+        properties: [
+          {
+            name: "title",
+            dataType: ["string"],
+            description: "Book title",
+            vectorizePropertyName: true,
+            index: true,
+          },
+          {
+            name: "author",
+            dataType: ["string"],
+            description: "Author of book",
+          },
+          {
+            name: "source",
+            dataType: ["string"],
+            description: "Filename of source data",
+          },
+          {
+            name: "text",
+            dataType: ["text"],
+            description: "Text split",
+          },
+          {
+            name: "pageNumber",
+            dataType: ["int"],
+            description: "Page number of text split",
+          },
+          {
+            name: "loc_lines_from",
+            dataType: ["int"],
+            description: "Text split beginning",
+          },
+          {
+            name: "loc_lines_to",
+            dataType: ["int"],
+            description: "Text split end",
+          },
+        ],
+      };
 
-          const validKeys = ["author", "title", "source", "pageNumber"];
-          docs.forEach((document) => {
-            const filename = document.metadata.source
-              .split("/")
-              .pop()
-              .split(".")[0];
+      client.schema
+        .classCreator()
+        .withClass(weaviateClassObj)
+        .do()
+        .then(async (res) => {
+          console.log(res);
+          try {
+            // Load documents
+            // See https://js.langchain.com/docs/modules/indexes/document_loaders/examples/file_loaders/directory
+            console.debug("- Load documents");
+            const sourceDirectoryPath = path.join(rootDirectoryPath, indexName);
+            const loader = new DirectoryLoader(path.join(sourceDirectoryPath), {
+              ".pdf": (sourceDirectoryPath) =>
+                new PDFLoader(sourceDirectoryPath, { splitPages: true }),
+              ".txt": (sourceDirectoryPath) =>
+                new TextLoader(sourceDirectoryPath),
+              ".epub": (sourceDirectoryPath) =>
+                new EPubLoader(sourceDirectoryPath, {
+                  splitChapters: false,
+                }),
+            });
+            const docs = await loader.load();
 
-            // Add metadata to document
-            document.metadata.author = metadataDictionary[filename]!.author;
-            document.metadata.title = metadataDictionary[filename]!.title;
-            document.metadata.pageNumber =
-              document.metadata.loc && document.metadata.loc.pageNumber
-                ? document.metadata.loc.pageNumber
-                : 0;
+            // Add custom metadata
+            console.debug("- Add custom metadata to documents");
 
-            // Remove remainding metadata
-            Object.keys(document.metadata).forEach(
-              (key) => validKeys.includes(key) || delete document.metadata[key]
-            );
-          });
+            const validKeys = ["author", "title", "source", "pageNumber"];
+            docs.forEach((document) => {
+              const filename = document.metadata.source
+                .split("/")
+                .pop()
+                .split(".")[0];
 
-          // // Split the text into chunks
-          console.debug("Split documents into chunks");
-          const splitter = new RecursiveCharacterTextSplitter({
-            chunkSize: 1536,
-            chunkOverlap: 200,
-          });
-          const splits = await splitter.splitDocuments(docs);
+              // Add metadata to document
+              document.metadata.author = metadataDictionary[filename].author;
+              document.metadata.title = metadataDictionary[filename].title;
+              document.metadata.pageNumber =
+                document.metadata.loc && document.metadata.loc.pageNumber
+                  ? document.metadata.loc.pageNumber
+                  : 0;
 
-          // Create the vector store
-          console.debug("Create vector store (this may take a while...)");
-          await WeaviateStore.fromDocuments(splits, embeddings, {
-            client,
-            indexName: "ISTDP",
-            metadataKeys: [
-              "title",
-              "author",
-              "source",
-              "pageNumber",
-              "loc_lines_from",
-              "loc_lines_to",
-            ],
-          });
+              // Remove remainding metadata
+              Object.keys(document.metadata).forEach(
+                (key) =>
+                  validKeys.includes(key) || delete document.metadata[key]
+              );
+            });
 
-          console.debug("Vector store created");
+            // // Split the text into chunks
+            console.debug("- Split documents into chunks");
+            const splitter = new RecursiveCharacterTextSplitter({
+              chunkSize: 1536,
+              chunkOverlap: 200,
+            });
+            const splits = await splitter.splitDocuments(docs);
 
-          return;
-        } catch (error) {
-          console.error(error);
-        }
-      })
-      .catch((err: Error) => {
-        console.error(err);
-      });
+            // Create the vector store
+            console.debug("- Create vector store (this may take a while...)");
+            await WeaviateStore.fromDocuments(splits, embeddings, {
+              client,
+              indexName: indexName,
+              metadataKeys: [
+                "title",
+                "author",
+                "source",
+                "pageNumber",
+                "loc_lines_from",
+                "loc_lines_to",
+              ],
+            });
+
+            console.debug("- Vector store created");
+
+            return;
+          } catch (error) {
+            console.error(error);
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    });
   }),
 });

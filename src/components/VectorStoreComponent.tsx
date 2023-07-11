@@ -149,7 +149,7 @@ export const VectorStoreComponent = () => {
           disabled={isCreatingDatabase}
           onClick={createVectorStore}
         >
-          Lag vektordatabase
+          Generer vektordatabase på nytt
         </Button>
       </div>
     </>

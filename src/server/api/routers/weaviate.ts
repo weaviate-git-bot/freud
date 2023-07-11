@@ -85,7 +85,7 @@ export const weaviateRouter = createTRPCRouter({
         });
     }),
 
-  /* List objects contained in given schema */
+  /* List objects contained in given schema, grouped by title */
   listObjectsFromSchema: publicProcedure
 
     // Input validation
