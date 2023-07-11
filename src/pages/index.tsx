@@ -1,6 +1,7 @@
 import Head from "next/head";
 import React, { type FormEvent } from "react";
 import { SidebarFreud } from "~/SidebarFreud";
+import { VectorStoreComponent } from "~/components/VectorStoreComponent";
 import { Button } from "~/components/button/Button";
 import { colors } from "~/stitches/colors";
 import { Icon } from "~/components/icon/Icon";
@@ -12,8 +13,7 @@ import { InputField } from "~/components/inputField/InputField";
 
 import Image from "next/image";
 import FeedbackComponent from "~/components/feedbackComponent";
-import { Feedback } from "~/interfaces/feedback";
-import { error } from "console";
+import { type Feedback } from "~/interfaces/feedback";
 
 const AVATAR_IMAGE_SIZE = 50;
 
@@ -22,7 +22,6 @@ export default function Home() {
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [isLoadingReply, setIsLoadingReply] = React.useState(false);
   const [showSettings, setShowSettings] = React.useState(false);
-  const [isCreatingDatabase, setIsCreatingDatabase] = React.useState(false);
 
   const mutation = api.langchain.conversation.useMutation({
     onError: (error) => {
@@ -37,23 +36,11 @@ export default function Home() {
   });
   // const feedbacks = api.feedback.getAllData.useQuery();
 
-  const queryResult = api.feedback.createNewFeedback.useMutation({ // temporary test
+  const queryResult = api.feedback.createNewFeedback.useMutation({
+    // temporary test
     onError: (error) => console.error(error),
     onSuccess: () => console.info("Data sent!"),
   });
-
-  const vectorStoreMutation = api.vectorstore.create.useMutation({
-    onError: (error) => {
-      console.error(error);
-      setIsCreatingDatabase(false);
-    },
-    onSuccess: () => {
-      console.info("Vector store created");
-      setIsCreatingDatabase(false);
-    },
-  });
-
-  // const vectorStoreStatistics = api.weaviate.stats.useQuery();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -72,22 +59,16 @@ export default function Home() {
     mutation.mutate([...messages, message]);
   }
 
-  function createVectorStore() {
-    vectorStoreMutation.mutate();
-    setIsCreatingDatabase(true);
-  }
-
   function testingDatabase() {
-    throw new Error
+    throw new Error();
   }
 
   function updatingDatabase() {
     const feedback: Feedback = {
       comment: "Dette var et bra svar!",
       messages: [],
-      name: "David"
-
-    }
+      name: "David",
+    };
     queryResult.mutate(feedback);
     // queryResult.mutate();
   }
@@ -104,28 +85,7 @@ export default function Home() {
           showSettings={showSettings}
           setShowSettings={setShowSettings}
         >
-          <div className="m-10">
-            <b>Statistikk fra databasen</b>
-            {/* {vectorStoreStatistics.isLoading
-              ? "Venter på databasen..."
-              : vectorStoreStatistics.data.map((data, idx) => {
-                return (
-                  <p key={idx}>
-                    {data.author}: {data.count}
-                  </p>
-                );
-              })} */}
-            <div className="pt-5">
-              <Button
-                size={"small"}
-                loading={isCreatingDatabase}
-                disabled={isCreatingDatabase}
-                onClick={createVectorStore}
-              >
-                Lag vektordatabase
-              </Button>
-            </div>
-          </div>
+          <VectorStoreComponent />
         </SidebarFreud>
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
           <div className="flex flex-row items-end gap-1">
