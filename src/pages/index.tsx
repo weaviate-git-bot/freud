@@ -38,7 +38,7 @@ export default function Home() {
 
   const queryResult = api.feedback.createNewFeedback.useMutation({
     // temporary test
-    onError: (error: Error) => console.error(error),
+    onError: (error: any) => console.error(error),
     onSuccess: () => console.info("Data sent!"),
   });
 

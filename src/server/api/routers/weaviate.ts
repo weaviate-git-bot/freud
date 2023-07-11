@@ -100,8 +100,8 @@ export const weaviateRouter = createTRPCRouter({
         .withGroupBy(["title"])
         .withFields("groupedBy { value }")
         .do()
-        .then((res) => {
-          const titles: string[] = res.data.Aggregate[input].map((data) => {
+        .then((res: any) => {
+          const titles: string[] = res.data.Aggregate[input].map((data: any) => {
             return data.groupedBy.value;
           });
           return titles;
