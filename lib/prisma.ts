@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 
 // PrismaClient is attached to the `global` object in development to prevent
 // exhausting your database connection limit.
@@ -6,14 +5,19 @@ import { PrismaClient } from "@prisma/client";
 // Learn more:
 // https://pris.ly/d/help/next-js-best-practices
 
-let prisma: PrismaClient;
+// https://github.com/prisma/blogr-nextjs-prisma/blob/final/lib/prisma.ts
 
-if (process.env.NODE_ENV === "production") {
-    prisma = new PrismaClient();
-} else {
-    if (!global.prisma) {
-        global.prisma = new PrismaClient();
-    }
-    prisma = global.prisma;
+// https://github.com/prisma/prisma/discussions/10037
+
+// Docs about instantiating `PrismaClient` with Next.js:
+// https://pris.ly/d/help/next-js-best-practices
+
+import { PrismaClient } from '@prisma/client'
+
+const globalForPrisma = globalThis as unknown as {
+    prisma: PrismaClient | undefined
 }
-export default prisma;
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient()
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma

@@ -43,8 +43,6 @@ const FeedbackComponent = ({ chat }: Props) => {
         setEmail(emailValue)
     }, [])
 
-    const [chatID, setchatId] = useState<number>();
-
     const [modalIsOpen, setIsOpen] = useState(false);
 
     const mutateFeedback = api.feedback.createNewFeedback.useMutation({

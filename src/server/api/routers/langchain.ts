@@ -50,19 +50,6 @@ const client = (weaviate as any).client({
 // Connect to weaviate vector store
 const embeddings = new OpenAIEmbeddings();
 
-const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
-  client,
-  indexName: "ISTDP",
-  metadataKeys: [
-    "title",
-    "author",
-    "source",
-    "pageNumber",
-    "loc_lines_from",
-    "loc_lines_to",
-  ],
-});
-
 // Define TRPCRouter endpoint
 export const langchainRouter = createTRPCRouter({
   conversation: publicProcedure
@@ -72,6 +59,19 @@ export const langchainRouter = createTRPCRouter({
 
     .mutation(async ({ input }) => {
       const question = input[input.length - 1]?.content;
+
+      const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
+        client,
+        indexName: "ISTDP",
+        metadataKeys: [
+          "title",
+          "author",
+          "source",
+          "pageNumber",
+          "loc_lines_from",
+          "loc_lines_to",
+        ],
+      });
 
       try {
         // Call to langchain Conversational Retriever QA
@@ -101,22 +101,33 @@ export const langchainRouter = createTRPCRouter({
         const res = await chain.call({ question });
 
         // Sources used for answering
-        const sources: Source[] = res.sourceDocuments.map((source) => {
-          return {
-            author: source.metadata.author,
-            title: source.metadata.title,
-            location: {
-              pageNr: source.metadata.pageNumber,
-              lineFrom: source.metadata.loc_lines_from
-                ? source.metadata.loc_lines_from
-                : 0,
-              lineTo: source.metadata.loc_lines_to
-                ? source.metadata.loc_lines_to
-                : 0,
-            },
-            content: source.pageContent,
-          };
-        });
+        const sources: Source[] = res.sourceDocuments.map(
+          (source: {
+            metadata: {
+              author: any;
+              title: any;
+              pageNumber: any;
+              loc_lines_from: any;
+              loc_lines_to: any;
+            };
+            pageContent: any;
+          }) => {
+            return {
+              author: source.metadata.author,
+              title: source.metadata.title,
+              location: {
+                pageNr: source.metadata.pageNumber,
+                lineFrom: source.metadata.loc_lines_from
+                  ? source.metadata.loc_lines_from
+                  : 0,
+                lineTo: source.metadata.loc_lines_to
+                  ? source.metadata.loc_lines_to
+                  : 0,
+              },
+              content: source.pageContent,
+            };
+          }
+        );
 
         // Reply
         const reply: Message = {

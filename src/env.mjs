@@ -12,6 +12,7 @@ export const env = createEnv({
     WEAVIATE_API_KEY: z.string(),
     WEAVIATE_SCHEME: z.string(),
     WEAVIATE_HOST: z.string(),
+    DATABASE_URL: z.string(),
   },
 
   /**
@@ -21,6 +22,7 @@ export const env = createEnv({
    */
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string().min(1),
+    NEXT_PUBLIC_NODE_ENV: z.string()
   },
 
   /**
@@ -33,6 +35,8 @@ export const env = createEnv({
     WEAVIATE_API_KEY: process.env.WEAVIATE_API_KEY,
     WEAVIATE_SCHEME: process.env.WEAVIATE_SCHEME,
     WEAVIATE_HOST: process.env.WEAVIATE_HOST,
+    DATABASE_URL: process.env.DATABASE_URL,
+    NEXT_PUBLIC_NODE_ENV: process.env.NODE_ENV
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

@@ -5,9 +5,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// https://github.com/prisma/prisma/discussions/3561
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 // Datamodelling
@@ -19,6 +21,9 @@ model Message {
   createdAt  DateTime @default(now())
   feedback   Feedback @relation(fields: [feedbackId], references: [id])
   feedbackId Int
+
+  // https://www.prisma.io/docs/concepts/components/prisma-schema/relations/relation-mode#indexes
+  @@index([feedbackId])
 }
 
 model Feedback {
