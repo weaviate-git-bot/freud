@@ -10,8 +10,14 @@ import weaviate from "weaviate-ts-client";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
+type metadataType = {
+  title: string,
+  author: string,
+  isbn: number,
+}
+
 // Define manual metadata
-const metadataDictionary = {
+const metadataDictionary: { [key: string]: metadataType } = {
   a_revolutionary_method_of_dynamic_psychotherapy: {
     title: "Lives Transformed: A Revolutionary Method of Dynamic Psychotherapy",
     author: "David H. Malan, David Malan, and Patricia Coughlin Della Selva",
@@ -104,8 +110,8 @@ export const vectorRouter = createTRPCRouter({
           .split(".")[0];
 
         // Add metadata to document
-        document.metadata.author = metadataDictionary[filename].author;
-        document.metadata.title = metadataDictionary[filename].title;
+        document.metadata.author = metadataDictionary[filename]!.author;
+        document.metadata.title = metadataDictionary[filename]!.title;
         document.metadata.pageNumber =
           document.metadata.loc && document.metadata.loc.pageNumber
             ? document.metadata.loc.pageNumber

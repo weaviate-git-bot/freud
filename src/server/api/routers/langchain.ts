@@ -52,7 +52,7 @@ const embeddings = new OpenAIEmbeddings();
 
 const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
   client,
-  indexName: "ISTDP_initial",
+  indexName: "ISTDP",
   metadataKeys: ["source", "author", "title", "pageNumber"],
 });
 
@@ -94,7 +94,7 @@ export const langchainRouter = createTRPCRouter({
         const res = await chain.call({ question });
 
         // Sources used for answering
-        const sources: Source[] = res.sourceDocuments.map((source) => {
+        const sources: Source[] = res.sourceDocuments.map((source: { metadata: { author: any; title: any; pageNumber: any; }; pageContent: any; }) => {
           return {
             author: source.metadata.author,
             title: source.metadata.title,
