@@ -154,17 +154,14 @@ export const vectorRouter = createTRPCRouter({
         .withClass(weaviateClassObj)
         .do()
         .then(async (res) => {
-          console.log(res);
           try {
             // Load documents
             // See https://js.langchain.com/docs/modules/indexes/document_loaders/examples/file_loaders/directory
-            console.debug("- Load documents");
+            console.debug(`- Load documents (${indexName})`);
             const sourceDirectoryPath = path.join(rootDirectoryPath, indexName);
             const loader = new DirectoryLoader(path.join(sourceDirectoryPath), {
               ".pdf": (sourceDirectoryPath) =>
                 new PDFLoader(sourceDirectoryPath, { splitPages: true }),
-              ".txt": (sourceDirectoryPath) =>
-                new TextLoader(sourceDirectoryPath),
               ".epub": (sourceDirectoryPath) =>
                 new EPubLoader(sourceDirectoryPath, {
                   splitChapters: false,
@@ -173,7 +170,7 @@ export const vectorRouter = createTRPCRouter({
             const docs = await loader.load();
 
             // Add custom metadata
-            console.debug("- Add custom metadata to documents");
+            console.debug(`- Add custom metadata to documents (${indexName})`);
 
             const validKeys = ["author", "title", "source", "pageNumber"];
             docs.forEach((document) => {
@@ -198,7 +195,7 @@ export const vectorRouter = createTRPCRouter({
             });
 
             // // Split the text into chunks
-            console.debug("- Split documents into chunks");
+            console.debug(`- Split documents into chunks (${indexName})`);
             const splitter = new RecursiveCharacterTextSplitter({
               chunkSize: 1536,
               chunkOverlap: 200,
@@ -206,7 +203,9 @@ export const vectorRouter = createTRPCRouter({
             const splits = await splitter.splitDocuments(docs);
 
             // Create the vector store
-            console.debug("- Create vector store (this may take a while...)");
+            console.debug(
+              `- Create vector store (this may take a while...) (${indexName})`
+            );
             await WeaviateStore.fromDocuments(splits, embeddings, {
               client,
               indexName: indexName,
@@ -220,9 +219,7 @@ export const vectorRouter = createTRPCRouter({
               ],
             });
 
-            console.debug("- Vector store created");
-
-            return;
+            console.debug(`- Vector store created (${indexName})`);
           } catch (error) {
             console.error(error);
           }

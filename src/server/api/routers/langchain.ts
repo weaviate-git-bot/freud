@@ -40,11 +40,9 @@ const SIMILARITY_THRESHOLD = 0.3;
 
 // Setup weaviate client
 const client = (weaviate as any).client({
-  scheme: process.env.WEAVIATE_SCHEME || "http",
-  host: process.env.WEAVIATE_HOST || "localhost:8080",
-  apiKey: new (weaviate as any).ApiKey(
-    process.env.WEAVIATE_API_KEY || "default-api-key"
-  ),
+  scheme: process.env.WEAVIATE_SCHEME,
+  host: process.env.WEAVIATE_HOST,
+  apiKey: new (weaviate as any).ApiKey(process.env.WEAVIATE_API_KEY),
 });
 
 // Connect to weaviate vector store
