@@ -142,8 +142,4 @@ export const langchainRouter = createTRPCRouter({
         console.error(error);
       }
     }),
-
-  dummy: publicProcedure.mutation(() => {
-    return "hello";
-  }),
 });

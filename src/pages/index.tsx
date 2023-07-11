@@ -45,12 +45,6 @@ export default function Home() {
     onSuccess: () => console.info("Data sent!"),
   });
 
-  const dummy_mutation = api.langchain.dummy.useMutation();
-
-  function dummyButton() {
-    console.log("dummy button");
-    dummy_mutation.mutate();
-  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -96,7 +90,6 @@ export default function Home() {
               <LogoWordmark color={colors.green750} />
             </div>
           </div>
-          <Button onClick={dummyButton}>Dummy button</Button>
           <div className="container text-2xl">
             {messages.map((message, idx) => {
               return (
