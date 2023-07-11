@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { ConsoleCallbackHandler } from "langchain/callbacks";
 import { ConversationalRetrievalQAChain } from "langchain/chains";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
@@ -48,8 +52,15 @@ const embeddings = new OpenAIEmbeddings();
 
 const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
   client,
-  indexName: "ISTDP_initial",
-  metadataKeys: ["source", "author", "title", "pageNumber"],
+  indexName: "ISTDP",
+  metadataKeys: [
+    "title",
+    "author",
+    "source",
+    "pageNumber",
+    "loc_lines_from",
+    "loc_lines_to",
+  ],
 });
 
 // Define TRPCRouter endpoint
@@ -96,8 +107,12 @@ export const langchainRouter = createTRPCRouter({
             title: source.metadata.title,
             location: {
               pageNr: source.metadata.pageNumber,
-              lineFrom: 0,
-              lineTo: 0,
+              lineFrom: source.metadata.loc_lines_from
+                ? source.metadata.loc_lines_from
+                : 0,
+              lineTo: source.metadata.loc_lines_to
+                ? source.metadata.loc_lines_to
+                : 0,
             },
             content: source.pageContent,
           };
