@@ -23,8 +23,8 @@ export default function Home() {
   const [isLoadingReply, setIsLoadingReply] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
 
-  const getAll = api.feedback.getAllData.useQuery()
-  console.log(getAll.data);
+  // const getAll = api.feedback.getAllData.useQuery()
+  // console.log(getAll.data);
 
   const mutation = api.langchain.conversation.useMutation({
     onError: (error) => {
@@ -44,6 +44,13 @@ export default function Home() {
     onError: (error: any) => console.error(error),
     onSuccess: () => console.info("Data sent!"),
   });
+
+  const dummy_mutation = api.langchain.dummy.useMutation();
+
+  function dummyButton() {
+    console.log("dummy button");
+    dummy_mutation.mutate();
+  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -70,12 +77,14 @@ export default function Home() {
         <link rel="icon" href="/sigmund_freud_avatar.png" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center bg-beige100">
-        {env.NEXT_PUBLIC_NODE_ENV == "development" && <SidebarFreud
-          showSettings={showSettings}
-          setShowSettings={setShowSettings}
-        >
-          <VectorStoreComponent />
-        </SidebarFreud>}
+        {env.NEXT_PUBLIC_NODE_ENV == "development" && (
+          <SidebarFreud
+            showSettings={showSettings}
+            setShowSettings={setShowSettings}
+          >
+            <VectorStoreComponent />
+          </SidebarFreud>
+        )}
 
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
           <div className="flex flex-row items-end gap-1">
@@ -87,6 +96,7 @@ export default function Home() {
               <LogoWordmark color={colors.green750} />
             </div>
           </div>
+          <Button onClick={dummyButton}>Dummy button</Button>
           <div className="container text-2xl">
             {messages.map((message, idx) => {
               return (
@@ -129,7 +139,7 @@ export default function Home() {
 
                       <div className="mb-3">
                         {message.sources == undefined ||
-                          message.sources?.length == 0 ? (
+                        message.sources?.length == 0 ? (
                           <p className="bold py-2 font-bold text-yellow550">
                             Fant ingen kilder til dette spørsmålet
                           </p>
