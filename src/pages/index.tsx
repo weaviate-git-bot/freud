@@ -13,7 +13,7 @@ import { InputField } from "~/components/inputField/InputField";
 
 import Image from "next/image";
 import FeedbackComponent from "~/components/feedbackComponent";
-import { type Feedback } from "~/interfaces/feedback";
+import { env } from "~/env.mjs";
 
 const AVATAR_IMAGE_SIZE = 50;
 
@@ -59,20 +59,6 @@ export default function Home() {
     mutation.mutate([...messages, message]);
   }
 
-  function testingDatabase() {
-    throw new Error();
-  }
-
-  function updatingDatabase() {
-    const feedback: Feedback = {
-      comment: "Dette var et bra svar!",
-      messages: [],
-      name: "David",
-    };
-    queryResult.mutate(feedback);
-    // queryResult.mutate();
-  }
-
   return (
     <>
       <Head>
@@ -81,12 +67,13 @@ export default function Home() {
         <link rel="icon" href="/sigmund_freud_avatar.png" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center bg-beige100">
-        <SidebarFreud
+        {env.NEXT_PUBLIC_NODE_ENV == "development" && <SidebarFreud
           showSettings={showSettings}
           setShowSettings={setShowSettings}
         >
           <VectorStoreComponent />
-        </SidebarFreud>
+        </SidebarFreud>}
+
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
           <div className="flex flex-row items-end gap-1">
             <h1 className="text-5xl font-extrabold tracking-tight text-green750 sm:text-[5rem]">
@@ -97,8 +84,6 @@ export default function Home() {
               <LogoWordmark color={colors.green750} />
             </div>
           </div>
-          <button onClick={testingDatabase}>Test Database</button>
-          <button onClick={updatingDatabase}>Update Database</button>
           <div className="container text-2xl">
             {messages.map((message, idx) => {
               return (
