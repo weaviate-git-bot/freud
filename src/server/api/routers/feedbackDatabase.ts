@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { Feedback } from "~/interfaces/feedback";
 import { Message } from "~/interfaces/message";
-import prisma from "~/../lib/prisma";
+import { prisma } from "~/../lib/prisma";
 
 export const feedbackRouter = createTRPCRouter({
     createNewFeedback: publicProcedure

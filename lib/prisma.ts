@@ -12,41 +12,12 @@
 // Docs about instantiating `PrismaClient` with Next.js:
 // https://pris.ly/d/help/next-js-best-practices
 
-import { PrismaClient } from '@prisma/client';
-import { env } from '~/env.mjs';
+import { PrismaClient } from '@prisma/client'
 
-let globalWithPrisma = global as typeof globalThis & {
-    prisma: PrismaClient;
-};
-
-
-let prisma: PrismaClient;
-
-if (process.env.NODE_ENV === "production") {
-    console.log("lager production client")
-    prisma = new PrismaClient(
-        {
-            datasources: {
-                db: {
-                    url: env.DATABASE_URL
-                }
-            }
-        }
-    );
-} else {
-    if (!globalWithPrisma.prisma) {
-        console.log("lager local prisma client")
-        globalWithPrisma.prisma = new PrismaClient(
-            {
-                datasources: {
-                    db: {
-                        url: env.LOCAL_DATABASE_URL
-                    }
-                }
-            }
-        );
-    }
-    prisma = globalWithPrisma.prisma;
+const globalForPrisma = globalThis as unknown as {
+    prisma: PrismaClient | undefined
 }
 
-export default prisma;
+export const prisma = globalForPrisma.prisma ?? new PrismaClient()
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
