@@ -15,10 +15,15 @@
 import { PrismaClient } from '@prisma/client';
 import { env } from '~/env.mjs';
 
+let globalWithPrisma = global as typeof globalThis & {
+    prisma: PrismaClient;
+};
+
 
 let prisma: PrismaClient;
 
 if (process.env.NODE_ENV === "production") {
+    console.log("lager production client")
     prisma = new PrismaClient(
         {
             datasources: {
@@ -29,11 +34,8 @@ if (process.env.NODE_ENV === "production") {
         }
     );
 } else {
-    let globalWithPrisma = global as typeof globalThis & {
-        prisma: PrismaClient;
-    };
-    //@ts-ignore
     if (!globalWithPrisma.prisma) {
+        console.log("lager local prisma client")
         globalWithPrisma.prisma = new PrismaClient(
             {
                 datasources: {
