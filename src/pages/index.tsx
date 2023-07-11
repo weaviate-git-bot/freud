@@ -1,5 +1,5 @@
 import Head from "next/head";
-import React, { type FormEvent } from "react";
+import React, { type FormEvent, useState } from "react";
 import { SidebarFreud } from "~/SidebarFreud";
 import { VectorStoreComponent } from "~/components/VectorStoreComponent";
 import { Button } from "~/components/button/Button";
@@ -18,10 +18,10 @@ import { type Feedback } from "~/interfaces/feedback";
 const AVATAR_IMAGE_SIZE = 50;
 
 export default function Home() {
-  const [query, setQuery] = React.useState("");
-  const [messages, setMessages] = React.useState<Message[]>([]);
-  const [isLoadingReply, setIsLoadingReply] = React.useState(false);
-  const [showSettings, setShowSettings] = React.useState(false);
+  const [query, setQuery] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoadingReply, setIsLoadingReply] = useState<boolean>(false);
+  const [showSettings, setShowSettings] = useState<boolean>(false);
 
   const mutation = api.langchain.conversation.useMutation({
     onError: (error) => {

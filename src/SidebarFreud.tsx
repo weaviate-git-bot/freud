@@ -2,7 +2,12 @@ import React from "react";
 import { Button } from "~/components/button/Button";
 import { Icon } from "~/components/icon/Icon";
 
-export const SidebarFreud = ({ children, showSettings, setShowSettings }) => {
+type props = {
+  showSettings: Boolean,
+  children: any,
+  setShowSettings: (bool: boolean) => void
+}
+export const SidebarFreud = ({ children, showSettings, setShowSettings }: props) => {
   const width = !showSettings ? "w-0" : "w-3/4";
 
   return (

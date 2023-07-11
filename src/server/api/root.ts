@@ -16,7 +16,7 @@ export const appRouter = createTRPCRouter({
   openai: openAIRouter,
   langchain: langchainRouter,
   vectorstore: vectorRouter,
-  // weaviate: weaviateRouter,
+  weaviate: weaviateRouter,
   feedback: feedbackRouter,
 });
 

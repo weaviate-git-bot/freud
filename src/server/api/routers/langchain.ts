@@ -50,18 +50,6 @@ const client = (weaviate as any).client({
 // Connect to weaviate vector store
 const embeddings = new OpenAIEmbeddings();
 
-const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
-  client,
-  indexName: "ISTDP",
-  metadataKeys: [
-    "title",
-    "author",
-    "source",
-    "pageNumber",
-    "loc_lines_from",
-    "loc_lines_to",
-  ],
-});
 
 // Define TRPCRouter endpoint
 export const langchainRouter = createTRPCRouter({
@@ -72,6 +60,20 @@ export const langchainRouter = createTRPCRouter({
 
     .mutation(async ({ input }) => {
       const question = input[input.length - 1]?.content;
+
+      const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
+        client,
+        indexName: "ISTDP",
+        metadataKeys: [
+          "title",
+          "author",
+          "source",
+          "pageNumber",
+          "loc_lines_from",
+          "loc_lines_to",
+        ],
+      });
+
 
       try {
         // Call to langchain Conversational Retriever QA
