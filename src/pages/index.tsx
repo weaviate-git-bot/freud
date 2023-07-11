@@ -139,7 +139,7 @@ export default function Home() {
 
                       <div className="mb-3">
                         {message.sources == undefined ||
-                        message.sources?.length == 0 ? (
+                          message.sources?.length == 0 ? (
                           <p className="bold py-2 font-bold text-yellow550">
                             Fant ingen kilder til dette spørsmålet
                           </p>

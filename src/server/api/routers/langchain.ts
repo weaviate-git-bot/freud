@@ -143,7 +143,7 @@ export const langchainRouter = createTRPCRouter({
       }
     }),
 
-  dummy: publicProcedure.input(z.any()).mutation(() => {
+  dummy: publicProcedure.mutation(() => {
     return "hello";
   }),
 });
