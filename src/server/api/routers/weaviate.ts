@@ -66,8 +66,12 @@ export const weaviateRouter = createTRPCRouter({
 
   /* Delete a schema */
   deleteSchema: publicProcedure
+
+    // Input validation
     .input(z.string())
-    .mutation(async ({ input }) => {
+
+    // Delete schema
+    .mutation(({ input }) => {
       console.debug("Deleting " + input);
       return client.schema
         .classDeleter()
@@ -75,6 +79,32 @@ export const weaviateRouter = createTRPCRouter({
         .do()
         .then((res: any) => {
           console.debug(res);
+        })
+        .catch((error: Error) => {
+          console.error(error);
+        });
+    }),
+
+  /* List objects contained in given schema */
+  listObjectsFromSchema: publicProcedure
+
+    // Input validation
+    .input(z.string())
+
+    // Get and return objects
+    .mutation(({ input }) => {
+      console.debug("Getting objects in: " + input);
+      return client.graphql
+        .aggregate()
+        .withClassName(input)
+        .withGroupBy(["title"])
+        .withFields("groupedBy { value }")
+        .do()
+        .then((res) => {
+          const titles: string[] = res.data.Aggregate[input].map((data) => {
+            return data.groupedBy.value;
+          });
+          return titles;
         })
         .catch((error: Error) => {
           console.error(error);
