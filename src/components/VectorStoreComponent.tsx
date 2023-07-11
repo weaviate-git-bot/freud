@@ -4,6 +4,8 @@ import { api } from "~/utils/api";
 
 export const VectorStoreComponent = () => {
   const [isCreatingDatabase, setIsCreatingDatabase] = React.useState(false);
+  const [showObjectsInDatabase, setShowObjectsInDatabase] = React.useState({});
+
   const vectorStoreSchemas = api.weaviate.listSchemas.useQuery();
 
   const vectorStoreCreation = api.vectorstore.create.useMutation({
@@ -19,6 +21,9 @@ export const VectorStoreComponent = () => {
 
   const vectorStoreClassDeletion = api.weaviate.deleteSchema.useMutation();
 
+  const vectorStoreListObjects =
+    api.weaviate.listObjectsFromSchema.useMutation();
+
   function createVectorStore() {
     vectorStoreCreation.mutate();
     setIsCreatingDatabase(true);
@@ -29,12 +34,29 @@ export const VectorStoreComponent = () => {
     vectorStoreClassDeletion.mutate(classname);
   }
 
+  function getObjectsFromClass(classname: string) {
+    console.debug("Get objects from " + classname);
+    vectorStoreListObjects.mutate(classname);
+  }
+
+  function addObjectsVisibilityKey(classname: string) {
+    if (classname in showObjectsInDatabase) {
+      return;
+    }
+
+    setShowObjectsInDatabase({
+      ...showObjectsInDatabase,
+      [classname]: false,
+    });
+  }
+
   return (
     <>
       <div className="p-10">
-        {vectorStoreSchemas.isLoading
+        {vectorStoreSchemas.isLoading || !vectorStoreSchemas.data
           ? "..."
           : vectorStoreSchemas.data.map((data, tidx) => {
+              addObjectsVisibilityKey(data.classname);
               return (
                 <div key={"schema-" + tidx.toString()}>
                   <h2 className="font-extrabold">{data.classname}</h2>
@@ -43,9 +65,7 @@ export const VectorStoreComponent = () => {
                   Indekseringsmetode: {data.vectorIndexType}
                   <br />
                   Distanse: {data.distanceMetric}
-                  <br />
-                  <br />
-                  <h3 className="font-bold">Metadata</h3>
+                  <h3 className="pt-5 font-bold">Metadata</h3>
                   <table className="border">
                     <tbody>
                       <tr className="border">
@@ -83,11 +103,40 @@ export const VectorStoreComponent = () => {
                   </table>
                   <br />
                   <Button
+                    size={"small"}
+                    onClick={() => {
+                      getObjectsFromClass(data.classname);
+                      setShowObjectsInDatabase({
+                        ...showObjectsInDatabase,
+                        [data.classname]:
+                          !showObjectsInDatabase[data.classname],
+                      });
+                    }}
+                  >
+                    Vis titler
+                  </Button>
+                  <div className="p-5">
+                    {vectorStoreListObjects.isLoading ||
+                    !vectorStoreListObjects.data ||
+                    !showObjectsInDatabase[data.classname] ? (
+                      ""
+                    ) : (
+                      <div className={data.classname + "-objects"}>
+                        <ul className="list-disc">
+                          {vectorStoreListObjects.data.map((obj, idx) => {
+                            return <li key={idx}>{obj}</li>;
+                          })}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                  <br />
+                  <Button
                     color={"red"}
                     size={"small"}
                     onClick={() => deleteVectorClass(data.classname)}
                   >
-                    Slett
+                    Slett fra database
                   </Button>
                 </div>
               );
