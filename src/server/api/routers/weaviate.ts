@@ -31,7 +31,7 @@ export const weaviateRouter = createTRPCRouter({
             description: c.description,
             vectorIndexType: c.vectorIndexType,
             distanceMetric: c.vectorIndexConfig.distance,
-            properties: []
+            properties: [],
           };
 
           // Array with properties of data in weaviate class
@@ -101,10 +101,15 @@ export const weaviateRouter = createTRPCRouter({
         .withFields("groupedBy { value }")
         .do()
         .then((res: any) => {
-          const titles: string[] = res.data.Aggregate[input].map((data: any) => {
-            return data.groupedBy.value;
-          });
-          return titles;
+          const titles: string[] = res.data.Aggregate[input].map(
+            (data: any) => {
+              return data.groupedBy.value;
+            }
+          );
+          return {
+            index: input,
+            titles: titles,
+          };
         })
         .catch((error: Error) => {
           console.error(error);
