@@ -23,6 +23,9 @@ export default function Home() {
   const [isLoadingReply, setIsLoadingReply] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
 
+  const getAll = api.feedback.getAllData.useQuery()
+  console.log(getAll.data);
+
   const mutation = api.langchain.conversation.useMutation({
     onError: (error) => {
       console.error(error);

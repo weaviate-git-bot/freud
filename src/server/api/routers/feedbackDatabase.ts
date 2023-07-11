@@ -56,7 +56,6 @@ export const feedbackRouter = createTRPCRouter({
     getAllData: publicProcedure
         .query(async () => {
             const output = await prisma.feedback.findMany();
-            // console.log(users);
             return output;
         }),
     sendValues: publicProcedure
