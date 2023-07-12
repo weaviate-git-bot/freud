@@ -15,6 +15,8 @@ import Image from "next/image";
 import FeedbackComponent from "~/components/feedbackComponent";
 import { env } from "~/env.mjs";
 
+import QuickAskComponent from "~/components/quickAskComponent";
+
 const AVATAR_IMAGE_SIZE = 50;
 
 export default function Home() {
@@ -22,6 +24,12 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingReply, setIsLoadingReply] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
+
+  const [suggestedQuestions, setSuggestedQuestions] = React.useState<string[]>([
+    "How can I help my patient with anxiety?",
+    "How do I assess trauma in a patient?",
+    "What do I do if my patient is very silent?",
+]);
 
   // const getAll = api.feedback.getAllData.useQuery()
   // console.log(getAll.data);
@@ -32,9 +40,11 @@ export default function Home() {
       setIsLoadingReply(false);
     },
     onSuccess: (message) => {
-      setMessages([...messages, message!]);
+      setMessages([...messages, message.reply]);
       setQuery("");
       setIsLoadingReply(false);
+
+      setSuggestedQuestions(message.generated_followup_questions);
     },
   });
   // const feedbacks = api.feedback.getAllData.useQuery();
@@ -45,6 +55,18 @@ export default function Home() {
     onSuccess: () => console.info("Data sent!"),
   });
 
+  function handleQuickSubmit(n: number) {
+    const some_string = suggestedQuestions[n] as string;
+    setQuery(some_string);
+
+    setIsLoadingReply(true);
+    const message = {
+      role: Role.User,
+      content: some_string,
+    };
+    setMessages([...messages, message]);
+    mutation.mutate([...messages, message]);
+  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -159,6 +181,13 @@ export default function Home() {
               );
             })}
           </div>
+        </div>
+        <div>
+          <QuickAskComponent
+            suggestedQuestions={suggestedQuestions}
+            onClick={handleQuickSubmit}
+            isLoadingReply={isLoadingReply}
+          />
         </div>
         <form onSubmit={handleSubmit} className="mb-0 flex flex-row gap-3">
           <InputField
