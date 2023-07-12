@@ -1,8 +1,6 @@
 import type { weaviateMetadataDictionary } from "~/types/weaviateMetadata";
 
-export const metadataDictionaryISTDP: {
-  [key: string]: weaviateMetadataDictionary;
-} = {
+export const metadataDictionaryISTDP: weaviateMetadataDictionary = {
   a_revolutionary_method_of_dynamic_psychotherapy: {
     title: "Lives Transformed: A Revolutionary Method of Dynamic Psychotherapy",
     author: "David H. Malan, David Malan, and Patricia Coughlin Della Selva",

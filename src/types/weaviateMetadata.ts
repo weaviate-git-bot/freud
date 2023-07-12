@@ -1,5 +1,7 @@
 export type weaviateMetadataDictionary = {
-  title: string;
-  author: string;
-  isbn: number;
+  [key: string]: {
+    title: string;
+    author: string;
+    isbn: number;
+  };
 };

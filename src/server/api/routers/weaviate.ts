@@ -13,19 +13,20 @@ import {
   type weaviateClass,
   type weaviateClassProperties,
 } from "~/types/vectorStore";
-import type { weaviateMetadataDictionary } from "~/types/weaviateMetadata";
+import type { Document } from "langchain/dist/document";
 import { metadataDictionaryISTDP } from "~/metadata/ISTDP";
 import { metadataDictionaryCBT } from "~/metadata/CBT";
+import { type weaviateMetadataDictionary } from "~/types/weaviateMetadata";
 
 // Combine metadata dictionaries into one dictionary
-const metadataDictionary = Object.assign(
+const metadataDictionary: weaviateMetadataDictionary = Object.assign(
   {},
   metadataDictionaryISTDP,
   metadataDictionaryCBT
 );
 
 // Define metadata for vetor store indexes
-const indexDescriptions = {
+const indexDescriptions: { [key: string]: string } = {
   ISTDP: "Initial batch of ISTDP works for Freud",
   Test: "Testing...",
 };
@@ -190,7 +191,9 @@ export const weaviateRouter = createTRPCRouter({
           console.debug(`Index ${indexName} already exists`);
 
           // Load document
-          const docs = await loadDocuments(indexName);
+          const docs: Document<Record<string, any>>[] = await loadDocuments(
+            indexName
+          );
 
           // Return early if no new documents
           if (docs?.length === 0) {
@@ -301,82 +304,86 @@ async function getExistingSchemas() {
 }
 
 async function loadDocuments(indexName: string) {
-  try {
-    // Load documents
-    // See https://js.langchain.com/docs/modules/indexes/document_loaders/examples/file_loaders/directory
-    console.debug(`- Load documents (${indexName})`);
-    const sourceDirectoryPath = path.join(rootDirectoryPath, indexName);
-    const loader = new DirectoryLoader(path.join(sourceDirectoryPath), {
-      ".pdf": (sourceDirectoryPath) =>
-        new PDFLoader(sourceDirectoryPath, {
-          splitPages: true,
-        }),
-      ".epub": (sourceDirectoryPath) =>
-        new EPubLoader(sourceDirectoryPath, {
-          splitChapters: false,
-        }),
-    });
-    const allDocs = await loader.load();
+  // Load documents
+  // See https://js.langchain.com/docs/modules/indexes/document_loaders/examples/file_loaders/directory
+  console.debug(`- Load documents (${indexName})`);
+  const sourceDirectoryPath = path.join(rootDirectoryPath, indexName);
+  const loader = new DirectoryLoader(path.join(sourceDirectoryPath), {
+    ".pdf": (sourceDirectoryPath) =>
+      new PDFLoader(sourceDirectoryPath, {
+        splitPages: true,
+      }),
+    ".epub": (sourceDirectoryPath) =>
+      new EPubLoader(sourceDirectoryPath, {
+        splitChapters: false,
+      }),
+  });
+  const allDocs = await loader.load();
 
-    // Add custom metadata
-    console.debug(`- Clean document list and add metadata (${indexName})`);
+  // Add custom metadata
+  console.debug(`- Clean document list and add metadata (${indexName})`);
 
-    const validKeys = ["author", "title", "source", "pageNumber"];
-    const docs = [];
+  const validKeys = ["author", "title", "source", "pageNumber"];
+  const docs: Array<Document<Record<string, any>>> = [];
 
-    // allDocs.forEach((document) => {
-    await Promise.all(
-      allDocs.map(async (document) => {
-        const filename = document.metadata.source
-          .split("/")
-          .pop()
-          .split(".")[0];
-        const title = metadataDictionary[filename].title;
+  // allDocs.forEach((document) => {
+  await Promise.all(
+    allDocs.map(async (document) => {
+      const filename: string = document.metadata.source
+        .split("/")
+        .pop()
+        .split(".")[0];
 
-        const objectExists = await isObjectInIndex(indexName, title);
-        if (objectExists) {
-          // console.debug(`-> ${title} already exists in ${indexName}`);
-          return;
-        }
-
-        // console.debug(`-> Added ${filename} to ${indexName}`);
-
-        // Add metadata to document
-        document.metadata.author = metadataDictionary[filename].author;
-        document.metadata.title = title;
-        document.metadata.pageNumber =
-          document.metadata.loc && document.metadata.loc.pageNumber
-            ? document.metadata.loc.pageNumber
-            : 0;
-
-        // Remove remainding metadata
-        Object.keys(document.metadata).forEach(
-          (key) => validKeys.includes(key) || delete document.metadata[key]
+      if (metadataDictionary[filename] === undefined) {
+        console.error(
+          `Error: missing metadata for ${filename} in ${indexName}`
         );
+        return;
+      }
 
-        // Push to cleaned document array
-        docs.push(document);
-      })
-    );
+      const title: string = metadataDictionary[filename]!.title;
 
-    // Return early if there are no new documents
-    if (docs.length === 0) {
-      console.debug("-> No new documents in " + indexName);
-      return [];
-    }
+      const objectExists = await isObjectInIndex(indexName, title);
+      if (objectExists) {
+        // console.debug(`-> ${title} already exists in ${indexName}`);
+        return;
+      }
 
-    // Split the text into chunks
-    console.debug(`- Split documents into chunks (${indexName})`);
-    const splitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 1536,
-      chunkOverlap: 200,
-    });
+      // console.debug(`-> Added ${filename} to ${indexName}`);
 
-    const splits = await splitter.splitDocuments(docs);
-    return splits;
-  } catch (error) {
-    console.error(error);
+      // Add metadata to document
+      document.metadata.author = metadataDictionary[filename]!.author;
+      document.metadata.title = title;
+      document.metadata.pageNumber =
+        document.metadata.loc && document.metadata.loc.pageNumber
+          ? document.metadata.loc.pageNumber
+          : 0;
+
+      // Remove remainding metadata
+      Object.keys(document.metadata).forEach(
+        (key) => validKeys.includes(key) || delete document.metadata[key]
+      );
+
+      // Push to cleaned document array
+      docs.push(document);
+    })
+  );
+
+  // Return early if there are no new documents
+  if (docs.length === 0) {
+    console.debug("-> No new documents in " + indexName);
+    return docs;
   }
+
+  // Split the text into chunks
+  console.debug(`- Split documents into chunks (${indexName})`);
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 1536,
+    chunkOverlap: 200,
+  });
+
+  const splits = await splitter.splitDocuments(docs);
+  return splits;
 }
 
 async function isObjectInIndex(indexName: string, title: string) {
@@ -394,7 +401,7 @@ async function isObjectInIndex(indexName: string, title: string) {
     .then((res: any) => {
       return res.data.Get[indexName].length > 0;
     })
-    .catch((error) => {
+    .catch((error: Error) => {
       console.error(error);
     });
 

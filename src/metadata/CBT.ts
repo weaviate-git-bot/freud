@@ -1,8 +1,6 @@
 import type { weaviateMetadataDictionary } from "~/types/weaviateMetadata";
 
-export const metadataDictionaryCBT: {
-  [key: string]: weaviateMetadataDictionary;
-} = {
+export const metadataDictionaryCBT: weaviateMetadataDictionary = {
   cognitive_behavioral_therapy_of_addictive_disorders: {
     title: "Cognitive-Behavioral Therapy of Addictive Disorders",
     author: "Bruce S. Liese, Aaron T., M.D. Beck",

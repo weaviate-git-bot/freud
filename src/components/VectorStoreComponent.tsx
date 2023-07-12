@@ -142,11 +142,11 @@ export const VectorStoreComponent = () => {
                       ""
                     ) : (
                       <div className={data.classname + "-objects"}>
-                        {weaviateClassObjects[data.classname].length === 0 ? (
+                        {weaviateClassObjects[data.classname]?.length === 0 ? (
                           "Ingen dokumenter"
                         ) : (
                           <ul className="list-disc">
-                            {weaviateClassObjects[data.classname].map(
+                            {weaviateClassObjects[data.classname]?.map(
                               (obj: any, idx: number) => {
                                 return <li key={idx}>{obj}</li>;
                               }
