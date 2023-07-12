@@ -177,7 +177,7 @@ Three follow-up questions on the strict form: '1. Follow-up question one.\n2. Fo
         generated_followup_questions.forEach((element) => {
             letterCount += element.length;
         });
-        if (letterCount < 34) { // Because it should give one word questions if answer is bad!
+        if (letterCount < 50) { // Because it should give one word questions if answer is bad!
             generated_followup_questions = [
                 "How can I help my patient with anxiety?",
                 "How do I assess trauma in a patient?",
