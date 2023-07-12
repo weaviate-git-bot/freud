@@ -24,9 +24,9 @@ function textToFollowUps(str: string | undefined): string[] {
     let start_found = false;
     let start_index = 0;
     for (let j = 0; j < str.length ; j++ ){
-      if (str[j] == i.toString()){
-        start_found = true;
+      if (str[j] == i.toString() && !start_found){
         start_index = j + 3;
+        start_found = true;
       } 
       if (str[j] == "?" && start_found) {
         question = str.substring(start_index, j + 1);
