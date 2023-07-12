@@ -1,4 +1,5 @@
 import { readdirSync } from "fs";
+import type { Document } from "langchain/dist/document";
 import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
 import { EPubLoader } from "langchain/document_loaders/fs/epub";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
@@ -6,16 +7,15 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { WeaviateStore } from "langchain/vectorstores/weaviate";
 import path from "path";
-import weaviate from "weaviate-ts-client";
+import weaviate, {
+  type WeaviateObject,
+  type WeaviateSchema,
+} from "weaviate-ts-client";
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import {
-  type weaviateClass,
-  type weaviateClassProperties,
-} from "~/types/vectorStore";
-import type { Document } from "langchain/dist/document";
-import { metadataDictionaryISTDP } from "~/metadata/ISTDP";
+import { env } from "~/env.mjs";
 import { metadataDictionaryCBT } from "~/metadata/CBT";
+import { metadataDictionaryISTDP } from "~/metadata/ISTDP";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { type weaviateMetadataDictionary } from "~/types/weaviateMetadata";
 
 // Combine metadata dictionaries into one dictionary
@@ -28,31 +28,30 @@ const metadataDictionary: weaviateMetadataDictionary = Object.assign(
 // Define metadata for vetor store indexes
 const indexDescriptions: { [key: string]: string } = {
   ISTDP: "Initial batch of ISTDP works for Freud",
-  Test: "Testing...",
+  CBT: "CBT documents to test framework comparisons in Freud",
 };
 
 // Root directory containing source documents
 const rootDirectoryPath = path.join(process.cwd(), "documents");
 
 // Setup weaviate client
-const client = (weaviate as any).client({
-  scheme: process.env.WEAVIATE_SCHEME,
-  host: process.env.WEAVIATE_HOST,
-  apiKey: new (weaviate as any).ApiKey(process.env.WEAVIATE_API_KEY),
+const client = weaviate.client({
+  scheme: env.WEAVIATE_SCHEME,
+  host: env.WEAVIATE_HOST,
+  apiKey: new weaviate.ApiKey(env.WEAVIATE_API_KEY),
 });
 
 // Use OpenAI embeddings
 const embeddings = new OpenAIEmbeddings();
 
 /* tRPC router
-
 - createSchema
 - listSchemas
 - deleteSchema
 - listObjectsFromSchema
 - generateVectorStoreFromDisk
-
 */
+
 export const weaviateRouter = createTRPCRouter({
   /* Create schema */
   createSchema: publicProcedure
@@ -64,53 +63,12 @@ export const weaviateRouter = createTRPCRouter({
     .mutation(async ({ input }) => createIndex(input)),
 
   /* List all schemas */
-  listSchemas: publicProcedure.query(() => {
-    // The final response is an array with weaviateClass objects
-    const response: weaviateClass[] = [];
-
-    // Make request
-    return client.schema
-      .getter()
-      .do()
-      .then((res: any) => {
-        // Iterate through classes
-        res.classes.map((c: any) => {
-          const weaviateClass: weaviateClass = {
-            classname: c.class,
-            description: c.description,
-            vectorIndexType: c.vectorIndexType,
-            distanceMetric: c.vectorIndexConfig.distance,
-            properties: [],
-          };
-
-          // Array with properties of data in weaviate class
-          const classProperties: weaviateClassProperties[] = [];
-
-          // Get properties of each data type in weaviate class
-          c.properties.map((p: any) => {
-            const classProperty: weaviateClassProperties = {
-              dataType: p.dataType,
-              description: p.description,
-              indexFilterable: p.indexFilterable,
-              indexSearchable: p.indexSearchable,
-              name: p.name,
-            };
-
-            // Push properties of data type to array
-            classProperties.push(classProperty);
-          });
-
-          // Append array of properties to weaviate class object
-          weaviateClass.properties = classProperties;
-
-          // Append weaviate class object to array
-          response.push(weaviateClass);
-        });
-        return response;
-      })
-      .catch((error: Error) => {
-        console.error(error);
-      });
+  listSchemas: publicProcedure.query(async () => {
+    try {
+      return await client.schema.getter().do();
+    } catch (error) {
+      console.error(error);
+    }
   }),
 
   /* Delete a schema */
@@ -120,18 +78,13 @@ export const weaviateRouter = createTRPCRouter({
     .input(z.string())
 
     // Delete schema
-    .mutation(({ input }) => {
+    .mutation(async ({ input }) => {
       console.debug("Deleting " + input);
-      return client.schema
-        .classDeleter()
-        .withClassName(input)
-        .do()
-        .then((res: any) => {
-          console.debug(res);
-        })
-        .catch((error: Error) => {
-          console.error(error);
-        });
+      try {
+        await client.schema.classDeleter().withClassName(input).do();
+      } catch (error) {
+        console.error(error);
+      }
     }),
 
   /* List objects contained in given schema, grouped by title */
@@ -141,101 +94,93 @@ export const weaviateRouter = createTRPCRouter({
     .input(z.string())
 
     // Get and return objects
-    .mutation(({ input }) => {
+    .mutation(async ({ input }) => {
       console.debug("Getting objects in: " + input);
-      return client.graphql
-        .aggregate()
-        .withClassName(input)
-        .withGroupBy(["title"])
-        .withFields("groupedBy { value }")
-        .do()
-        .then((res: any) => {
-          const titles: string[] = res.data.Aggregate[input].map(
-            (data: any) => {
-              return data.groupedBy.value;
-            }
-          );
-          return {
-            index: input,
-            titles: titles,
-          };
-        })
-        .catch((error: Error) => {
-          console.error(error);
-        });
+      try {
+        const titles = await getDocumentsFromSchema(input);
+
+        return {
+          index: input,
+          titles: titles,
+        };
+      } catch (error) {
+        console.error(error);
+      }
     }),
 
-  /* For each directory with documents:
+  /*
+   * For each directory with documents:
    * - Create a new index per directory (unless it already exists)
    * - Add documents contained in directory to the index (unless already added)
-   *   */
-  generateVectorStoreFromDisk: publicProcedure
+   */
+  generateVectorStoreFromDisk: publicProcedure.mutation(async () => {
+    console.debug("Called create vector store procedure");
 
-    //
-    .mutation(async () => {
-      console.debug("Called create vector store procedure");
+    // Find existing classes
+    const existingSchemas: string[] = await getExistingSchemas();
 
-      // Find existing classes
-      const existingSchemas: string[] = await getExistingSchemas();
+    // Iterate through directories on disk
+    // Each directory represents an index
+    const indexesFromDirectories: string[] = readdirSync(rootDirectoryPath, {
+      withFileTypes: true,
+    })
+      .filter((dirent) => dirent.isDirectory())
+      .map((dirent) => dirent.name);
 
-      // Iterate through directories on disk
-      // Each directory represents an index
-      const indexesFromDirectories: string[] = readdirSync(rootDirectoryPath, {
-        withFileTypes: true,
-      })
-        .filter((dirent) => dirent.isDirectory())
-        .map((dirent) => dirent.name);
+    for (const indexName of indexesFromDirectories) {
+      if (existingSchemas.includes(indexName)) {
+        console.debug(`Index ${indexName} already exists`);
 
-      indexesFromDirectories.forEach(async (indexName) => {
-        if (existingSchemas.includes(indexName)) {
-          console.debug(`Index ${indexName} already exists`);
+        // Load document
+        const docs = await loadDocuments(indexName);
+
+        // Return early if no new documents
+        if (docs?.length === 0) {
+          continue;
+        }
+
+        try {
+          // Create vector store from documents
+          await createVectorStoreFromDocuments(indexName, docs, embeddings);
+        } catch (error) {
+          console.error(error);
+        }
+      } else {
+        console.debug(`Creating index ${indexName}`);
+        try {
+          // Create index
+          await createIndex(indexName);
 
           // Load document
-          const docs: Document<Record<string, any>>[] = await loadDocuments(
-            indexName
-          );
+          const docs = await loadDocuments(indexName);
 
           // Return early if no new documents
           if (docs?.length === 0) {
-            return;
+            continue;
           }
 
-          // Create vector store from documents
-          return createVectorStoreFromDocuments(indexName, docs, embeddings);
-        } else {
-          console.debug(`Creating index ${indexName}`);
-          createIndex(indexName)
-            .then(async () => {
-              // Load document
-              const docs = await loadDocuments(indexName);
+          // Add documents to vector store
+          await createVectorStoreFromDocuments(indexName, docs, embeddings);
 
-              // Return early if no new documents
-              if (docs?.length === 0) {
-                return;
-              }
-
-              // Add documents to vector store
-              return createVectorStoreFromDocuments(
-                indexName,
-                docs,
-                embeddings
-              );
-            })
-            .catch((error: Error) => {
-              console.error(`Failed to create index: ${indexName}`);
-              console.error(error);
-            });
+          console.debug(`Index ${indexName} updated`);
+        } catch (error) {
+          console.error(`Failed to create index: ${indexName}`);
+          console.error(error);
         }
-      });
-    }),
+      }
+    }
+  }),
 });
 
-/* Helper functions
-
-- createIndex()
-- loadDocuments()
-- createVectorStoreFromDocuments()
-*/
+/*
+ * Helper functions
+ * - createIndex()
+ * - getExistingSchemas()
+ * - getDocumentsFromSchema()
+ * - loadDocuments()
+ * - isObjectInIndex()
+ * - createVectorStoreFromDocuments()
+ */
 
 async function createIndex(indexName: string) {
   const weaviateClassObj = {
@@ -293,13 +238,48 @@ async function getExistingSchemas() {
   return await client.schema
     .getter()
     .do()
-    .then((res: any) => {
-      res.classes.map((c: any) => {
+    .then((res: WeaviateSchema) => {
+      res.classes?.map((c) => {
+        if (c.class === undefined) {
+          throw new Error("Corrupted Weaviate class schema (class undefined)");
+        }
         existingSchemas.push(c.class);
       });
     })
     .then(() => {
       return existingSchemas;
+    })
+    .catch((error: Error) => {
+      console.error(error);
+      throw new Error("Failed to get existing schemas");
+    });
+}
+
+async function getDocumentsFromSchema(schema: string) {
+  return client.graphql
+    .aggregate()
+    .withClassName(schema)
+    .withGroupBy(["title"])
+    .withFields("groupedBy { value }")
+    .do()
+    .then(
+      (res: {
+        data: {
+          Aggregate: {
+            [classname: string]: Array<{ groupedBy: { value: string } }>;
+          };
+        };
+      }) => {
+        const documents: string[] =
+          res.data.Aggregate[schema]?.map((obj) => {
+            return obj.groupedBy.value;
+          }) ?? [];
+
+        return documents;
+      }
+    )
+    .catch((error: Error) => {
+      console.error(error);
     });
 }
 
@@ -326,25 +306,30 @@ async function loadDocuments(indexName: string) {
   const validKeys = ["author", "title", "source", "pageNumber"];
   const docs: Array<Document<Record<string, any>>> = [];
 
-  // allDocs.forEach((document) => {
   await Promise.all(
     allDocs.map(async (document) => {
-      const filename: string = document.metadata.source
-        .split("/")
-        .pop()
-        .split(".")[0];
+      if (
+        document.metadata?.source === undefined ||
+        typeof document.metadata?.source !== "string"
+      ) {
+        console.error(document);
+        throw new Error("Missing or corrupted source metadata");
+      }
+
+      const filename: string =
+        document.metadata?.source?.split("/").pop()?.split(".")[0] ?? "";
 
       if (metadataDictionary[filename] === undefined) {
-        console.error(
-          `Error: missing metadata for ${filename} in ${indexName}`
+        throw new Error(
+          `Missing metadata in dictionary for ${filename} in ${indexName}`
         );
-        return;
       }
 
       const title: string = metadataDictionary[filename]!.title;
 
-      const objectExists = await isObjectInIndex(indexName, title);
-      if (objectExists) {
+      const existingDocuments = await getDocumentsFromSchema(indexName);
+
+      if (!existingDocuments || existingDocuments.includes(title)) {
         // console.debug(`-> ${title} already exists in ${indexName}`);
         return;
       }
@@ -355,9 +340,7 @@ async function loadDocuments(indexName: string) {
       document.metadata.author = metadataDictionary[filename]!.author;
       document.metadata.title = title;
       document.metadata.pageNumber =
-        document.metadata.loc && document.metadata.loc.pageNumber
-          ? document.metadata.loc.pageNumber
-          : 0;
+        (document.metadata.loc as { pageNumber?: number })?.pageNumber ?? 0;
 
       // Remove remainding metadata
       Object.keys(document.metadata).forEach(
@@ -387,30 +370,36 @@ async function loadDocuments(indexName: string) {
 }
 
 async function isObjectInIndex(indexName: string, title: string) {
-  const exists = await client.graphql
+  return await client.graphql
     .get()
     .withClassName(indexName)
     .withFields("title")
-    // .withConsistencyLevel("ONE")
     .withWhere({
       operator: "Equal",
       path: ["title"],
       valueText: title,
     })
+    .withLimit(1)
     .do()
-    .then((res: any) => {
-      return res.data.Get[indexName].length > 0;
-    })
+    .then(
+      (res: {
+        data: {
+          Get: {
+            [classname: string]: Array<WeaviateObject>;
+          };
+        };
+      }) => {
+        return res.data.Get[indexName]!.length > 0;
+      }
+    )
     .catch((error: Error) => {
       console.error(error);
     });
-
-  return exists;
 }
 
 async function createVectorStoreFromDocuments(
   indexName: string,
-  splits: Array<Document<Record<string, any>>>,
+  splits: Document<Record<string, any>>[],
   embeddings: OpenAIEmbeddings
 ) {
   // Create the vector store
@@ -428,7 +417,9 @@ async function createVectorStoreFromDocuments(
       "loc_lines_from",
       "loc_lines_to",
     ],
-  });
-
-  console.debug(`- Vector store created (${indexName})`);
+  })
+    .then(() => {
+      console.debug(`- Vector store created (${indexName})`);
+    })
+    .catch((error: Error) => console.error(error));
 }
