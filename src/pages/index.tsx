@@ -40,11 +40,11 @@ export default function Home() {
       setIsLoadingReply(false);
     },
     onSuccess: (message) => {
-      setMessages([...messages, message.reply]);
+      setMessages([...messages, message!.reply]);
       setQuery("");
       setIsLoadingReply(false);
 
-      setSuggestedQuestions(message.generated_followup_questions);
+      setSuggestedQuestions(message!.generated_followup_questions);
     },
   });
   // const feedbacks = api.feedback.getAllData.useQuery();
