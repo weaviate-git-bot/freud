@@ -29,7 +29,7 @@ export default function Home() {
     "How can I help my patient with anxiety?",
     "How do I assess trauma in a patient?",
     "What do I do if my patient is very silent?",
-]);
+  ]);
 
   // const getAll = api.feedback.getAllData.useQuery()
   // console.log(getAll.data);
@@ -56,13 +56,16 @@ export default function Home() {
   });
 
   function handleQuickSubmit(n: number) {
-    const some_string = suggestedQuestions[n] as string;
-    setQuery(some_string);
+    const question = suggestedQuestions[n];
+    if (!question) {
+      throw new Error("Index of clicked question is out of bounds")
+    }
+    setQuery(question);
 
     setIsLoadingReply(true);
     const message = {
       role: Role.User,
-      content: some_string,
+      content: question,
     };
     setMessages([...messages, message]);
     mutation.mutate([...messages, message]);
