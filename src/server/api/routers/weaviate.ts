@@ -13,68 +13,16 @@ import {
   type weaviateClass,
   type weaviateClassProperties,
 } from "~/types/vectorStore";
+import type { weaviateMetadataDictionary } from "~/types/weaviateMetadata";
+import { metadataDictionaryISTDP } from "~/metadata/ISTDP";
+import { metadataDictionaryCBT } from "~/metadata/CBT";
 
-// Define manual metadata for books
-const metadataDictionary: { [key: string]: metadataType } = {
-  a_revolutionary_method_of_dynamic_psychotherapy: {
-    title: "Lives Transformed: A Revolutionary Method of Dynamic Psychotherapy",
-    author: "David H. Malan, David Malan, and Patricia Coughlin Della Selva",
-    isbn: 1855753782,
-  },
-  attachment_in_psychotherapy: {
-    title: "Attachment in Psychotherapy",
-    author: "David J. Wallin",
-    isbn: 1593854560,
-  },
-  co_creating_creating_change_effective_dynamic_therapy_techniques: {
-    title: "Co-Creating Change: Effective Dynamic Therapy Techniques",
-    author: "Jon Frederickson",
-    isbn: 9780988378841,
-  },
-  istd_psychotherapy_theory_and_technique: {
-    title:
-      "Intensive Short Term Dynamic Psychotherapy: Theory and Technique Synopsis",
-    author: "Patricia Coughlin Della Selva",
-    isbn: 1855753022,
-  },
-  its_not_always_depression: {
-    title: "It's Not Always Depression",
-    author: "Hilary Jacobs Hendel",
-    isbn: 399588140,
-  },
-  maximizing_effectiveness_in_dynamic_psychotherapy: {
-    title: "Maximizing Effectiveness in Dynamic Psychotherapy",
-    author: "Patricia Coughlin",
-    isbn: 9781138824966,
-  },
-  psychoanalytic_case_formulation: {
-    title: "Psychoanalytic Case Formulation",
-    author: "Nancy McWilliams",
-    isbn: 1572304626,
-  },
-  psychoanalytic_psychotherapy_a_practitioners_guide: {
-    title: "Psychoanalytic Psychotherapy: A Practitioner's Guide",
-    author: "Nancy McWilliams",
-    isbn: 9781606235829,
-  },
-  reaching_through_resistance_advanced_psyc: {
-    title: "Reaching Through Resistance: Advanced Psychotherapy Techniques",
-    author: "Allan Abbass",
-    isbn: 988378868,
-  },
-  understanding_personality_structure_in_the_clinical_process: {
-    title:
-      "Psychoanalytic Diagnosis: Understanding Personality Structure in the Clinical Process",
-    author: "Nancy McWilliams",
-    isbn: 1609184947,
-  },
-};
-
-type metadataType = {
-  title: string;
-  author: string;
-  isbn: number;
-};
+// Combine metadata dictionaries into one dictionary
+const metadataDictionary = Object.assign(
+  {},
+  metadataDictionaryISTDP,
+  metadataDictionaryCBT
+);
 
 // Define metadata for vetor store indexes
 const indexDescriptions = {
@@ -108,14 +56,14 @@ export const weaviateRouter = createTRPCRouter({
   /* Create schema */
   createSchema: publicProcedure
 
-    //
+    // Input validation
     .input(z.string())
 
-    //
+    // Create index
     .mutation(async ({ input }) => createIndex(input)),
 
   /* List all schemas */
-  listSchemas: publicProcedure.query(async () => {
+  listSchemas: publicProcedure.query(() => {
     // The final response is an array with weaviateClass objects
     const response: weaviateClass[] = [];
 
@@ -216,6 +164,10 @@ export const weaviateRouter = createTRPCRouter({
         });
     }),
 
+  /* For each directory with documents:
+   * - Create a new index per directory (unless it already exists)
+   * - Add documents contained in directory to the index (unless already added)
+   *   */
   generateVectorStoreFromDisk: publicProcedure
 
     //
@@ -280,7 +232,6 @@ export const weaviateRouter = createTRPCRouter({
 - createIndex()
 - loadDocuments()
 - createVectorStoreFromDocuments()
-- addDocumentsToVectorStore()
 */
 
 async function createIndex(indexName: string) {
@@ -362,7 +313,7 @@ async function loadDocuments(indexName: string) {
         }),
       ".epub": (sourceDirectoryPath) =>
         new EPubLoader(sourceDirectoryPath, {
-          splitChapters: true,
+          splitChapters: false,
         }),
     });
     const allDocs = await loader.load();
@@ -473,12 +424,4 @@ async function createVectorStoreFromDocuments(
   });
 
   console.debug(`- Vector store created (${indexName})`);
-}
-
-function addDocumentsToVectorStore(
-  indexName: string,
-  splits: Array<Document<Record<string, any>>>,
-  embeddings: OpenAIEmbeddings
-) {
-  return;
 }
