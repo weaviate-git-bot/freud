@@ -13,7 +13,7 @@ export const VectorStoreComponent = () => {
 
   const vectorStoreSchemas = api.weaviate.listSchemas.useQuery();
 
-  const vectorStoreCreation = api.vectorstore.create.useMutation({
+  const vectorStoreCreation = api.weaviate.generateVectorStoreFromDisk.useMutation({
     onError: (error) => {
       console.error(error);
       setIsCreatingDatabase(false);
