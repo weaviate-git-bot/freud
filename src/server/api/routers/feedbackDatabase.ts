@@ -4,10 +4,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import prisma from "db";
 import { Feedback } from "~/interfaces/feedback";
 import { Message } from "~/interfaces/message";
-
+import { prisma } from "~/../lib/prisma";
 
 export const feedbackRouter = createTRPCRouter({
     createNewFeedback: publicProcedure
@@ -57,7 +56,6 @@ export const feedbackRouter = createTRPCRouter({
     getAllData: publicProcedure
         .query(async () => {
             const output = await prisma.feedback.findMany();
-            // console.log(users);
             return output;
         }),
     sendValues: publicProcedure

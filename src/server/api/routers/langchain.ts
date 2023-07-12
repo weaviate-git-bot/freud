@@ -13,10 +13,35 @@ import { z } from "zod";
 import { Message, Role, type Source } from "~/interfaces/message";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
+// Function for retrieving an array of the three questions that chatGPT returns
+function textToFollowUps(str: string | undefined): string[] {
+  if (str == undefined) {
+    return [];
+  }
+  const followUpQuestions: string[] = [];
+  for (let i = 1; i < 4 ; i++){
+    let question = "";
+    let start_found = false;
+    let start_index = 0;
+    for (let j = 0; j < str.length ; j++ ){
+      if (str[j] == i.toString() && !start_found){
+        start_index = j + 3;
+        start_found = true;
+      } 
+      if (str[j] == "?" && start_found) {
+        question = str.substring(start_index, j + 1);
+        followUpQuestions.push(question);
+        break;
+      }
+    }
+  }
+  return followUpQuestions;
+}
+
 // Specify language model, embeddings and prompts
 const model = new OpenAI({
   callbacks: [new ConsoleCallbackHandler()],
-});
+}); 
 
 const CONDENSE_PROMPT = `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
 
@@ -50,19 +75,6 @@ const client = (weaviate as any).client({
 // Connect to weaviate vector store
 const embeddings = new OpenAIEmbeddings();
 
-const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
-  client,
-  indexName: "ISTDP",
-  metadataKeys: [
-    "title",
-    "author",
-    "source",
-    "pageNumber",
-    "loc_lines_from",
-    "loc_lines_to",
-  ],
-});
-
 // Define TRPCRouter endpoint
 export const langchainRouter = createTRPCRouter({
   conversation: publicProcedure
@@ -72,6 +84,19 @@ export const langchainRouter = createTRPCRouter({
 
     .mutation(async ({ input }) => {
       const question = input[input.length - 1]?.content;
+
+      const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
+        client,
+        indexName: "ISTDP",
+        metadataKeys: [
+          "title",
+          "author",
+          "source",
+          "pageNumber",
+          "loc_lines_from",
+          "loc_lines_to",
+        ],
+      });
 
       try {
         // Call to langchain Conversational Retriever QA
@@ -101,22 +126,33 @@ export const langchainRouter = createTRPCRouter({
         const res = await chain.call({ question });
 
         // Sources used for answering
-        const sources: Source[] = res.sourceDocuments.map((source) => {
-          return {
-            author: source.metadata.author,
-            title: source.metadata.title,
-            location: {
-              pageNr: source.metadata.pageNumber,
-              lineFrom: source.metadata.loc_lines_from
-                ? source.metadata.loc_lines_from
-                : 0,
-              lineTo: source.metadata.loc_lines_to
-                ? source.metadata.loc_lines_to
-                : 0,
-            },
-            content: source.pageContent,
-          };
-        });
+        const sources: Source[] = res.sourceDocuments.map(
+          (source: {
+            metadata: {
+              author: any;
+              title: any;
+              pageNumber: any;
+              loc_lines_from: any;
+              loc_lines_to: any;
+            };
+            pageContent: any;
+          }) => {
+            return {
+              author: source.metadata.author,
+              title: source.metadata.title,
+              location: {
+                pageNr: source.metadata.pageNumber,
+                lineFrom: source.metadata.loc_lines_from
+                  ? source.metadata.loc_lines_from
+                  : 0,
+                lineTo: source.metadata.loc_lines_to
+                  ? source.metadata.loc_lines_to
+                  : 0,
+              },
+              content: source.pageContent,
+            };
+          }
+        );
 
         // Reply
         const reply: Message = {
@@ -125,8 +161,32 @@ export const langchainRouter = createTRPCRouter({
           sources: sources,
         };
 
+        // Follow-up code
+        const FOLLOWUP_PROMPT = `Based on the following, previous answer to a question, create three follow-up questions that are asked as if you were a professional psychiatrist asking another professional for guidance or info. You should only give the the three questions and nothing else.
+
+Previous answer: ${reply.content}
+
+Exception: However, if the answer says 'I don't know', or 'I don't understand', or 'not related to context', or if it is a question, or similar; then give one word questions only.
+
+Three follow-up questions on the strict form: '1. Follow-up question one.\n2. Follow-up question two.\n3. Follow-up question three.'`;
+        const questions_response = await model.call(FOLLOWUP_PROMPT);
+        let generated_followup_questions = textToFollowUps(questions_response);
+        console.log(generated_followup_questions);
+
+        let letterCount = 0;
+        generated_followup_questions.forEach((element) => {
+            letterCount += element.length;
+        });
+        if (letterCount < 50) { // Because it should give one word questions if answer is bad!
+            generated_followup_questions = [
+                "How can I help my patient with anxiety?",
+                "How do I assess trauma in a patient?",
+                "What do I do if my patient is very silent?",
+            ];
+        }
+
         // Return reply
-        return reply;
+        return {reply, generated_followup_questions};
       } catch (error) {
         console.error(error);
       }
