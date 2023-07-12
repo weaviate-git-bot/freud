@@ -13,16 +13,17 @@ export const VectorStoreComponent = () => {
 
   const vectorStoreSchemas = api.weaviate.listSchemas.useQuery();
 
-  const vectorStoreCreation = api.weaviate.generateVectorStoreFromDisk.useMutation({
-    onError: (error) => {
-      console.error(error);
-      setIsCreatingDatabase(false);
-    },
-    onSuccess: () => {
-      console.info("Vector store create request submitted");
-      setIsCreatingDatabase(false);
-    },
-  });
+  const vectorStoreCreation =
+    api.weaviate.generateVectorStoreFromDisk.useMutation({
+      onError: (error) => {
+        console.error(error);
+        setIsCreatingDatabase(false);
+      },
+      onSuccess: () => {
+        console.info("Vector store create request submitted");
+        setIsCreatingDatabase(false);
+      },
+    });
 
   const vectorStoreClassDeletion = api.weaviate.deleteSchema.useMutation();
 
@@ -141,13 +142,17 @@ export const VectorStoreComponent = () => {
                       ""
                     ) : (
                       <div className={data.classname + "-objects"}>
-                        <ul className="list-disc">
-                          {weaviateClassObjects[data.classname].map(
-                            (obj: any, idx: number) => {
-                              return <li key={idx}>{obj}</li>;
-                            }
-                          )}
-                        </ul>
+                        {weaviateClassObjects[data.classname].length === 0 ? (
+                          "Ingen dokumenter"
+                        ) : (
+                          <ul className="list-disc">
+                            {weaviateClassObjects[data.classname].map(
+                              (obj: any, idx: number) => {
+                                return <li key={idx}>{obj}</li>;
+                              }
+                            )}
+                          </ul>
+                        )}
                       </div>
                     )}
                   </div>
@@ -156,7 +161,7 @@ export const VectorStoreComponent = () => {
                     size={"small"}
                     onClick={() => deleteVectorClass(data.classname)}
                   >
-                    Slett indeks
+                    Slett {data.classname}
                   </Button>
                 </div>
               );

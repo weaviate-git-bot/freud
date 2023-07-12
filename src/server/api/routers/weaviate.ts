@@ -1,18 +1,18 @@
 import { readdirSync } from "fs";
-import path from "path";
 import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
 import { EPubLoader } from "langchain/document_loaders/fs/epub";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import weaviate from "weaviate-ts-client";
 import { WeaviateStore } from "langchain/vectorstores/weaviate";
+import path from "path";
+import weaviate from "weaviate-ts-client";
+import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import {
   type weaviateClass,
   type weaviateClassProperties,
 } from "~/types/vectorStore";
-import { z } from "zod";
 
 // Define manual metadata for books
 const metadataDictionary: { [key: string]: metadataType } = {
@@ -82,7 +82,6 @@ const indexDescriptions = {
   Test: "Testing...",
 };
 
-
 // Root directory containing source documents
 const rootDirectoryPath = path.join(process.cwd(), "documents");
 
@@ -109,11 +108,11 @@ export const weaviateRouter = createTRPCRouter({
   /* Create schema */
   createSchema: publicProcedure
 
-  //
-  .input(z.string())
+    //
+    .input(z.string())
 
-  //
-  .mutation(async ({input}) => createIndex(input)),
+    //
+    .mutation(async ({ input }) => createIndex(input)),
 
   /* List all schemas */
   listSchemas: publicProcedure.query(async () => {
@@ -219,42 +218,62 @@ export const weaviateRouter = createTRPCRouter({
 
   generateVectorStoreFromDisk: publicProcedure
 
-  //
-  .mutation(async () => {
-    console.debug("Called create vector store procedure");
+    //
+    .mutation(async () => {
+      console.debug("Called create vector store procedure");
 
-    // Find existing classes
-    const existingSchemas: string[] = await getExistingSchemas()
+      // Find existing classes
+      const existingSchemas: string[] = await getExistingSchemas();
 
-    // Iterate through directories on disk
-    // Each directory represents an index
-    const indexesFromDirectories: string[] = readdirSync(rootDirectoryPath, {
-      withFileTypes: true,
-    })
-      .filter((dirent) => dirent.isDirectory())
-      .map((dirent) => dirent.name);
+      // Iterate through directories on disk
+      // Each directory represents an index
+      const indexesFromDirectories: string[] = readdirSync(rootDirectoryPath, {
+        withFileTypes: true,
+      })
+        .filter((dirent) => dirent.isDirectory())
+        .map((dirent) => dirent.name);
 
-    indexesFromDirectories.forEach(async (indexName) => {
-      const docs = await loadDocuments(indexName)
-      
-      if (existingSchemas.includes(indexName)) {
-        console.debug(`Index ${indexName} already exists`)
-        return createVectorStoreFromDocuments(indexName, docs, embeddings)
-      } else {
-        console.debug(`Creating index ${indexName}`)
-        createIndex(indexName)
-        .then(() => {
-          return createVectorStoreFromDocuments(indexName, docs, embeddings)
-        })
-        .catch((error: Error) => {
-          console.error(`Failed to create index: ${indexName}`)
-          console.error(error)
-        })
-      }
-    });
-  }),
+      indexesFromDirectories.forEach(async (indexName) => {
+        if (existingSchemas.includes(indexName)) {
+          console.debug(`Index ${indexName} already exists`);
+
+          // Load document
+          const docs = await loadDocuments(indexName);
+
+          // Return early if no new documents
+          if (docs?.length === 0) {
+            return;
+          }
+
+          // Create vector store from documents
+          return createVectorStoreFromDocuments(indexName, docs, embeddings);
+        } else {
+          console.debug(`Creating index ${indexName}`);
+          createIndex(indexName)
+            .then(async () => {
+              // Load document
+              const docs = await loadDocuments(indexName);
+
+              // Return early if no new documents
+              if (docs?.length === 0) {
+                return;
+              }
+
+              // Add documents to vector store
+              return createVectorStoreFromDocuments(
+                indexName,
+                docs,
+                embeddings
+              );
+            })
+            .catch((error: Error) => {
+              console.error(`Failed to create index: ${indexName}`);
+              console.error(error);
+            });
+        }
+      });
+    }),
 });
-
 
 /* Helper functions
 
@@ -315,19 +334,19 @@ async function createIndex(indexName: string) {
 }
 
 async function getExistingSchemas() {
-  const existingSchemas: string[] = []
-  
+  const existingSchemas: string[] = [];
+
   return await client.schema
-  .getter()
-  .do()
-  .then((res: any) => {
-    res.classes.map((c: any) => {
-      existingSchemas.push(c.class)
+    .getter()
+    .do()
+    .then((res: any) => {
+      res.classes.map((c: any) => {
+        existingSchemas.push(c.class);
+      });
     })
-  })
-  .then(() => {
-    return existingSchemas
-  })
+    .then(() => {
+      return existingSchemas;
+    });
 }
 
 async function loadDocuments(indexName: string) {
@@ -338,34 +357,62 @@ async function loadDocuments(indexName: string) {
     const sourceDirectoryPath = path.join(rootDirectoryPath, indexName);
     const loader = new DirectoryLoader(path.join(sourceDirectoryPath), {
       ".pdf": (sourceDirectoryPath) =>
-        new PDFLoader(sourceDirectoryPath, { splitPages: true }),
+        new PDFLoader(sourceDirectoryPath, {
+          splitPages: true,
+        }),
       ".epub": (sourceDirectoryPath) =>
         new EPubLoader(sourceDirectoryPath, {
-          splitChapters: false,
+          splitChapters: true,
         }),
     });
-    const docs = await loader.load();
+    const allDocs = await loader.load();
 
     // Add custom metadata
-    console.debug(`- Add custom metadata to documents (${indexName})`);
+    console.debug(`- Clean document list and add metadata (${indexName})`);
 
     const validKeys = ["author", "title", "source", "pageNumber"];
-    docs.forEach((document) => {
-      const filename = document.metadata.source.split("/").pop().split(".")[0];
+    const docs = [];
 
-      // Add metadata to document
-      document.metadata.author = metadataDictionary[filename].author;
-      document.metadata.title = metadataDictionary[filename].title;
-      document.metadata.pageNumber =
-        document.metadata.loc && document.metadata.loc.pageNumber
-          ? document.metadata.loc.pageNumber
-          : 0;
+    // allDocs.forEach((document) => {
+    await Promise.all(
+      allDocs.map(async (document) => {
+        const filename = document.metadata.source
+          .split("/")
+          .pop()
+          .split(".")[0];
+        const title = metadataDictionary[filename].title;
 
-      // Remove remainding metadata
-      Object.keys(document.metadata).forEach(
-        (key) => validKeys.includes(key) || delete document.metadata[key]
-      );
-    });
+        const objectExists = await isObjectInIndex(indexName, title);
+        if (objectExists) {
+          // console.debug(`-> ${title} already exists in ${indexName}`);
+          return;
+        }
+
+        // console.debug(`-> Added ${filename} to ${indexName}`);
+
+        // Add metadata to document
+        document.metadata.author = metadataDictionary[filename].author;
+        document.metadata.title = title;
+        document.metadata.pageNumber =
+          document.metadata.loc && document.metadata.loc.pageNumber
+            ? document.metadata.loc.pageNumber
+            : 0;
+
+        // Remove remainding metadata
+        Object.keys(document.metadata).forEach(
+          (key) => validKeys.includes(key) || delete document.metadata[key]
+        );
+
+        // Push to cleaned document array
+        docs.push(document);
+      })
+    );
+
+    // Return early if there are no new documents
+    if (docs.length === 0) {
+      console.debug("-> No new documents in " + indexName);
+      return [];
+    }
 
     // Split the text into chunks
     console.debug(`- Split documents into chunks (${indexName})`);
@@ -373,12 +420,34 @@ async function loadDocuments(indexName: string) {
       chunkSize: 1536,
       chunkOverlap: 200,
     });
-    const splits = await splitter.splitDocuments(docs);
 
+    const splits = await splitter.splitDocuments(docs);
     return splits;
   } catch (error) {
     console.error(error);
   }
+}
+
+async function isObjectInIndex(indexName: string, title: string) {
+  const exists = await client.graphql
+    .get()
+    .withClassName(indexName)
+    .withFields("title")
+    // .withConsistencyLevel("ONE")
+    .withWhere({
+      operator: "Equal",
+      path: ["title"],
+      valueText: title,
+    })
+    .do()
+    .then((res: any) => {
+      return res.data.Get[indexName].length > 0;
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+
+  return exists;
 }
 
 async function createVectorStoreFromDocuments(
