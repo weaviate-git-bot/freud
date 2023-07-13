@@ -170,6 +170,8 @@ export const VectorStoreSettings = () => {
                     <Button
                       color={"red"}
                       size={"small"}
+                      loading={vectorStoreClassDeletion.isLoading}
+                      disabled={vectorStoreClassDeletion.isLoading}
                       onClick={() => deleteVectorClass(data.class!)}
                     >
                       Slett {data.class}

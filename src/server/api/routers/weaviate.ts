@@ -81,7 +81,13 @@ export const weaviateRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       console.debug("Deleting " + input);
       try {
-        await client.schema.classDeleter().withClassName(input).do();
+        await client.schema
+          .classDeleter()
+          .withClassName(input)
+          .do()
+          .then(() => {
+            console.debug("Deleted " + input);
+          });
       } catch (error) {
         console.error(error);
       }
