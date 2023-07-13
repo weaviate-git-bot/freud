@@ -226,6 +226,11 @@ async function createIndex(indexName: string) {
         dataType: ["int"],
         description: "Text split end",
       },
+      {
+        name: "splitCount",
+        dataType: ["int"],
+        description: "Original number of splits",
+      }
     ],
   };
 
@@ -260,19 +265,22 @@ async function getDocumentsFromSchema(schema: string) {
     .aggregate()
     .withClassName(schema)
     .withGroupBy(["title"])
-    .withFields("groupedBy { value }")
+    .withFields("groupedBy { value } meta {count} ")
     .do()
     .then(
       (res: {
         data: {
           Aggregate: {
-            [classname: string]: Array<{ groupedBy: { value: string } }>;
+            [classname: string]: Array<{ groupedBy: { value: string }, meta: { count: number } }>;
           };
         };
       }) => {
-        const documents: string[] =
+        const documents: { title: string, splitCount: number }[]  =
           res.data.Aggregate[schema]?.map((obj) => {
-            return obj.groupedBy.value;
+            return {
+              title: obj.groupedBy.value,
+              splitCount: obj.meta.count
+            }
           }) ?? [];
 
         return documents;
@@ -303,8 +311,14 @@ async function loadDocuments(indexName: string) {
   // Add custom metadata
   console.debug(`- Clean document list and add metadata (${indexName})`);
 
-  const validKeys = ["author", "title", "source", "pageNumber"];
-  const docs: Array<Document<Record<string, any>>> = [];
+  const validKeys = ["author", "title", "source", "pageNumber", "splitCount"];
+  let splits: Array<Document<Record<string, any>>> = [];
+
+  // Define splitter
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 1536,
+    chunkOverlap: 200,
+  });
 
   await Promise.all(
     allDocs.map(async (document) => {
@@ -327,16 +341,20 @@ async function loadDocuments(indexName: string) {
 
       const title: string = metadataDictionary[filename]!.title;
 
-      const existingDocuments = await getDocumentsFromSchema(indexName);
+      const existingDocuments = await getDocumentsFromSchema(indexName)
 
-      if (!existingDocuments || existingDocuments.includes(title)) {
+      if (!existingDocuments || existingDocuments.some( doc => doc.title === title)) {
         // console.debug(`-> ${title} already exists in ${indexName}`);
         return;
       }
 
+      // Split document
+      const split = await splitter.splitDocuments([document]);
+
       // console.debug(`-> Added ${filename} to ${indexName}`);
 
       // Add metadata to document
+      document.metadata.splitCount = split.length;
       document.metadata.author = metadataDictionary[filename]!.author;
       document.metadata.title = title;
       document.metadata.pageNumber =
@@ -348,24 +366,15 @@ async function loadDocuments(indexName: string) {
       );
 
       // Push to cleaned document array
-      docs.push(document);
+      splits = [...splits, ...split];
     })
   );
 
   // Return early if there are no new documents
-  if (docs.length === 0) {
+  if (splits.length === 0) {
     console.debug("-> No new documents in " + indexName);
-    return docs;
   }
 
-  // Split the text into chunks
-  console.debug(`- Split documents into chunks (${indexName})`);
-  const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 1536,
-    chunkOverlap: 200,
-  });
-
-  const splits = await splitter.splitDocuments(docs);
   return splits;
 }
 
@@ -416,6 +425,7 @@ async function createVectorStoreFromDocuments(
       "pageNumber",
       "loc_lines_from",
       "loc_lines_to",
+      "splitCount",
     ],
   })
     .then(() => {

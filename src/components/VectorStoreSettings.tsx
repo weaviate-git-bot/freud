@@ -7,7 +7,7 @@ export const VectorStoreSettings = () => {
     [key: string]: boolean;
   }>({});
   const [weaviateClassObjects, setWeaviateClassObjects] = React.useState<{
-    [key: string]: string[];
+    [key: string]: { title: string, splitCount: number}[];
   }>({});
 
   const vectorStoreSchemas = api.weaviate.listSchemas.useQuery();
@@ -154,7 +154,7 @@ export const VectorStoreSettings = () => {
                             <ul className="list-disc">
                               {weaviateClassObjects[data.class]?.map(
                                 (obj, idx: number) => {
-                                  return <li key={idx}>{obj}</li>;
+                                  return <li key={idx}>{obj.title} ({obj.splitCount})</li>;
                                 }
                               )}
                             </ul>
