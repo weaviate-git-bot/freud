@@ -12,15 +12,15 @@ type Props = {
 
 const QuickAskComponent = ({ suggestedQuestions, onClick, isLoadingReply }: Props) => {
     return (
-        <div>
+        <div className='w-[50%]'>
             {suggestedQuestions.map((question: string, index: number) => (
                 <div key={index}>
-                    <Button 
+                    <Button
                         onClick={() => onClick(index)}
                         color={"white"}
                         withBorder={true}
                         disabled={isLoadingReply}
-                        className='mb-[0.4rem] mt-1 w-[64rem]'
+                        className='mb-[0.4rem] mt-1 w-full'
                     >
                         {question}
                     </Button>
