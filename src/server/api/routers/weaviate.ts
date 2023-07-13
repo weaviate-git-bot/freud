@@ -230,7 +230,7 @@ async function createIndex(indexName: string) {
         name: "splitCount",
         dataType: ["int"],
         description: "Original number of splits",
-      }
+      },
     ],
   };
 
@@ -271,16 +271,19 @@ async function getDocumentsFromSchema(schema: string) {
       (res: {
         data: {
           Aggregate: {
-            [classname: string]: Array<{ groupedBy: { value: string }, meta: { count: number } }>;
+            [classname: string]: Array<{
+              groupedBy: { value: string };
+              meta: { count: number };
+            }>;
           };
         };
       }) => {
-        const documents: { title: string, splitCount: number }[]  =
+        const documents: { title: string; splitCount: number }[] =
           res.data.Aggregate[schema]?.map((obj) => {
             return {
               title: obj.groupedBy.value,
-              splitCount: obj.meta.count
-            }
+              splitCount: obj.meta.count,
+            };
           }) ?? [];
 
         return documents;
@@ -341,20 +344,19 @@ async function loadDocuments(indexName: string) {
 
       const title: string = metadataDictionary[filename]!.title;
 
-      const existingDocuments = await getDocumentsFromSchema(indexName)
+      const existingDocuments = await getDocumentsFromSchema(indexName);
 
-      if (!existingDocuments || existingDocuments.some( doc => doc.title === title)) {
+      if (
+        !existingDocuments ||
+        existingDocuments.some((doc) => doc.title === title)
+      ) {
         // console.debug(`-> ${title} already exists in ${indexName}`);
         return;
       }
 
-      // Split document
-      const split = await splitter.splitDocuments([document]);
-
       // console.debug(`-> Added ${filename} to ${indexName}`);
 
       // Add metadata to document
-      document.metadata.splitCount = split.length;
       document.metadata.author = metadataDictionary[filename]!.author;
       document.metadata.title = title;
       document.metadata.pageNumber =
@@ -363,6 +365,15 @@ async function loadDocuments(indexName: string) {
       // Remove remainding metadata
       Object.keys(document.metadata).forEach(
         (key) => validKeys.includes(key) || delete document.metadata[key]
+      );
+
+      // Split document
+      const split = await splitter.splitDocuments([document]);
+
+      // Add splitCount metadata to each split
+      const splitCount = split.length;
+      split.forEach(
+        (textSplit) => (textSplit.metadata.splitCount = splitCount)
       );
 
       // Push to cleaned document array
