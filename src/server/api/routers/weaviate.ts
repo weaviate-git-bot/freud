@@ -129,13 +129,14 @@ export const weaviateRouter = createTRPCRouter({
 
     for (const indexName of indexesFromDirectories) {
       if (existingSchemas.includes(indexName)) {
-        console.debug(`Index ${indexName} already exists`);
+        console.debug(`-> Index ${indexName} already exists`);
 
         // Load document
         const docs = await loadDocuments(indexName);
 
         // Return early if no new documents
         if (docs?.length === 0) {
+          console.debug(`** Ending procedure for ${indexName}`);
           continue;
         }
 
@@ -146,7 +147,7 @@ export const weaviateRouter = createTRPCRouter({
           console.error(error);
         }
       } else {
-        console.debug(`Creating index ${indexName}`);
+        console.debug(`** Creating index ${indexName}`);
         try {
           // Create index
           await createIndex(indexName);
@@ -162,9 +163,9 @@ export const weaviateRouter = createTRPCRouter({
           // Add documents to vector store
           await createVectorStoreFromDocuments(indexName, docs, embeddings);
 
-          console.debug(`Index ${indexName} updated`);
+          console.debug(`** Index ${indexName} updated`);
         } catch (error) {
-          console.error(`Failed to create index: ${indexName}`);
+          console.error(`** Failed to create index: ${indexName}`);
           console.error(error);
         }
       }
@@ -265,7 +266,7 @@ async function getDocumentsFromSchema(schema: string) {
     .aggregate()
     .withClassName(schema)
     .withGroupBy(["title"])
-    .withFields("groupedBy { value } meta {count} ")
+    .withFields("groupedBy { value } meta {count} splitCount {minimum} ")
     .do()
     .then(
       (res: {
@@ -274,15 +275,21 @@ async function getDocumentsFromSchema(schema: string) {
             [classname: string]: Array<{
               groupedBy: { value: string };
               meta: { count: number };
+              splitCount: { minimum: number };
             }>;
           };
         };
       }) => {
-        const documents: { title: string; splitCount: number }[] =
+        const documents: {
+          title: string;
+          dbCount: number;
+          splitCount: number;
+        }[] =
           res.data.Aggregate[schema]?.map((obj) => {
             return {
               title: obj.groupedBy.value,
-              splitCount: obj.meta.count,
+              dbCount: obj.meta.count,
+              splitCount: obj.splitCount.minimum,
             };
           }) ?? [];
 
@@ -302,7 +309,7 @@ async function loadDocuments(indexName: string) {
   const loader = new DirectoryLoader(path.join(sourceDirectoryPath), {
     ".pdf": (sourceDirectoryPath) =>
       new PDFLoader(sourceDirectoryPath, {
-        splitPages: true,
+        splitPages: false,
       }),
     ".epub": (sourceDirectoryPath) =>
       new EPubLoader(sourceDirectoryPath, {
@@ -322,6 +329,10 @@ async function loadDocuments(indexName: string) {
     chunkSize: 1536,
     chunkOverlap: 200,
   });
+
+  // Retrieve the titles of the existing documents in the index
+  // Only documents with non-existing titles are added
+  const existingDocuments = await getDocumentsFromSchema(indexName);
 
   await Promise.all(
     allDocs.map(async (document) => {
@@ -343,8 +354,6 @@ async function loadDocuments(indexName: string) {
       }
 
       const title: string = metadataDictionary[filename]!.title;
-
-      const existingDocuments = await getDocumentsFromSchema(indexName);
 
       if (
         !existingDocuments ||
