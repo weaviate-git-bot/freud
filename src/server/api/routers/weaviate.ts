@@ -334,6 +334,8 @@ async function loadDocuments(indexName: string) {
   // Only documents with non-existing titles are added
   const existingDocuments = await getDocumentsFromSchema(indexName);
 
+  const pathSeparator = path.sep;
+
   await Promise.all(
     allDocs.map(async (document) => {
       if (
@@ -345,7 +347,7 @@ async function loadDocuments(indexName: string) {
       }
 
       const filename: string =
-        document.metadata?.source?.split("/").pop()?.split(".")[0] ?? "";
+        document.metadata?.source?.split(pathSeparator).pop()?.split(".")[0] ?? "";
 
       if (metadataDictionary[filename] === undefined) {
         throw new Error(
