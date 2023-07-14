@@ -18,6 +18,8 @@ import { env } from "~/env.mjs";
 import QuickAskComponent from "~/components/quickAskComponent";
 import { TextArea } from "~/components/textArea/TextArea";
 import useAutosizeTextArea from "~/components/useAutosizeTextArea";
+import { UL } from "~/components/basic/UL";
+import { LI } from "~/components/basic/LI";
 
 const AVATAR_IMAGE_SIZE = 50;
 
@@ -145,7 +147,7 @@ export default function Home() {
         {/* get content in center at start */}
         <div></div>
         <div></div>
-        <div className="container flex flex-col items-center gap-12 px-4 py-16 mx-8">
+        <div className="container flex flex-col items-center gap-4 lg:gap-12 px-4 py-8 lg:py-16 mx-8">
           <div className="flex flex-row items-end gap-1">
             <h1 className="text-5xl font-extrabold tracking-tight text-green750 sm:text-[5rem]">
               Freud
@@ -156,10 +158,15 @@ export default function Home() {
             </div>
           </div>
 
-          <h3 className={`text-xl text-center text-gray700 transition-[opacity,transform] duration-[0.5s] overflow-hidden ${messages.length > 0 ? "opacity-0 scale-y-0" : "opacity-100 scale-y-1"}`}>Freud er en chatbot som kan henvise til fagstoff innenfor psykologi. Still den et egendefinert spørsmål eller prøv forslagene nederst og få et svar som er koblet til kildehenvisningene.
-            Freud er fremdeles i en testing-fase og vil ikke alltid gi faktuelle eller gode svar.
-            Foreløpig er den kun tilpasset å kunne gi svar på engelsk.
-            Trykk på mail-ikonet for å gi en tilbakemelding på hva som kan forbedres.</h3>
+          <UL className={`list-disc list-inside text-xl text-gray700 transition-[opacity,max-height] duration-[0.5s] overflow-hidden ${messages.length > 0 ? "opacity-0 max-h-0" : "opacity-100 max-h-[50rem]"}`}>
+
+            <LI>Freud er en chatbot som kan henvise til fagstoff innenfor psykologi.</LI>
+            <LI>Still den et spørsmål eller prøv forslagene nederst og få et svar som er knyttet til kildehenvisningene.</LI>
+            <LI>Freud er fremdeles i en testing-fase og vil ikke alltid gi faktuelle eller gode svar.</LI>
+            <LI>Foreløpig er den kun tilpasset å kunne gi svar på engelsk.</LI>
+            <LI>Trykk på mail-ikonet for å gi en tilbakemelding på hva som kan forbedres.</LI>
+
+          </UL>
         </div>
 
 
