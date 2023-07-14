@@ -94,14 +94,13 @@ export default function Home() {
   }
 
 
-  // autosize textarea
+  // Autosize textarea (grow height with input)
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   useAutosizeTextArea(textAreaRef.current, query);
 
 
-  //auto scrolldown
+  //Auto scrolldown on new messages
   const bottomRef = useRef<null | HTMLDivElement>(null);
-
   useEffect(() => {
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({
@@ -114,8 +113,8 @@ export default function Home() {
 
 
 
+  // Used for textarea commit on enter. Shift-enter is new line.
   const myFormRef = createRef<HTMLFormElement>()
-
   const onEnterPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && e.shiftKey == false) {
       e.preventDefault();
