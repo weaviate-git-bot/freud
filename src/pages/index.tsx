@@ -1,5 +1,5 @@
 import Head from "next/head";
-import React, { type FormEvent, useState, useRef, useEffect } from "react";
+import React, { type FormEvent, useState, useRef, useEffect, createRef } from "react";
 import { SidebarFreud } from "~/SidebarFreud";
 import { VectorStoreComponent } from "~/components/VectorStoreComponent";
 import { Button } from "~/components/button/Button";
@@ -108,6 +108,20 @@ export default function Home() {
       });
     }
   }, [messages]);
+
+
+
+
+  const myFormRef = createRef<HTMLFormElement>()
+
+  const onEnterPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && e.shiftKey == false) {
+      e.preventDefault();
+      myFormRef.current?.dispatchEvent(
+        new Event("submit", { cancelable: true, bubbles: true })
+      );
+    }
+  }
 
 
 
@@ -226,12 +240,13 @@ export default function Home() {
             onClick={handleQuickSubmit}
             isLoadingReply={isLoadingReply}
           />
-          <form onSubmit={handleSubmit} className="mb-0 flex flex-row gap-3 w-[50%] mt-8">
+          <form onSubmit={handleSubmit} className="mb-0 flex flex-row gap-3 w-[50%] mt-8" ref={myFormRef}>
             <TextArea
               disabled={isLoadingReply}
               value={query}
               ref={textAreaRef}
               rows={1}
+              onKeyDown={onEnterPress}
               onChange={(event) => {
                 setQuery(event.target.value);
               }}
