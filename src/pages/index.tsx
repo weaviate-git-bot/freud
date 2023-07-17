@@ -15,7 +15,6 @@ import { api } from "~/utils/api";
 import { Role, type Message } from "~/interfaces/message";
 import SourceComponent from "~/components/sourceComponent";
 import { LogoWordmark } from "~/components/logo/LogoWordmark";
-import { InputField } from "~/components/inputField/InputField";
 import { Spinner } from "~/components/icon/icons/Spinner";
 
 import Image from "next/image";
@@ -25,8 +24,6 @@ import { env } from "~/env.mjs";
 import QuickAskComponent from "~/components/quickAskComponent";
 import { TextArea } from "~/components/textArea/TextArea";
 import useAutosizeTextArea from "~/components/useAutosizeTextArea";
-import { UL } from "~/components/basic/UL";
-import { LI } from "~/components/basic/LI";
 
 const AVATAR_IMAGE_SIZE = 50;
 
@@ -149,8 +146,8 @@ export default function Home() {
           </SidebarFreud>
         )}
         {/* get content in center at start */}
-        <div></div>
-        <div></div>
+        <div />
+        <div />
         <div className="container mx-8 flex flex-col items-center gap-4 px-4 py-8 lg:gap-12 lg:py-16">
           <div className="flex flex-row items-end gap-1">
             <h1 className="text-5xl font-extrabold tracking-tight text-green750 sm:text-[5rem]">
@@ -162,30 +159,30 @@ export default function Home() {
             </div>
           </div>
 
-          <UL
+          <ul
             className={`list-inside list-disc overflow-hidden text-xl text-gray700 transition-[opacity,max-height] duration-[0.5s] ${messages.length > 0
-                ? "max-h-0 opacity-0"
-                : "max-h-[50rem] opacity-100"
+              ? "max-h-0 opacity-0"
+              : "max-h-[50rem] opacity-100"
               }`}
           >
-            <LI>
+            <li>
               Freud er en chatbot som kan henvise til fagstoff innenfor
               psykologi.
-            </LI>
-            <LI>
+            </li>
+            <li>
               Still den et spørsmål eller prøv forslagene nederst og få et svar
               som er knyttet til kildehenvisningene.
-            </LI>
-            <LI>
+            </li>
+            <li>
               Freud er fremdeles i en testing-fase og vil ikke alltid gi
               faktuelle eller gode svar.
-            </LI>
-            <LI>Foreløpig er den kun tilpasset å kunne gi svar på engelsk.</LI>
-            <LI>
+            </li>
+            <li>Foreløpig er den kun tilpasset å kunne gi svar på engelsk.</li>
+            <li>
               Trykk på mail-ikonet for å gi en tilbakemelding på hva som kan
               forbedres.
-            </LI>
-          </UL>
+            </li>
+          </ul>
         </div>
 
         <div
