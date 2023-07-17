@@ -24,6 +24,7 @@ import { env } from "~/env.mjs";
 import QuickAskComponent from "~/components/quickAskComponent";
 import { TextArea } from "~/components/textArea/TextArea";
 import useAutosizeTextArea from "~/components/useAutosizeTextArea";
+import Header from "~/components/Header";
 
 const AVATAR_IMAGE_SIZE = 50;
 
@@ -148,43 +149,7 @@ export default function Home() {
         {/* get content in center at start */}
         <div />
         <div />
-        <div className="container mx-8 flex flex-col items-center gap-4 px-4 py-8 lg:gap-12 lg:py-16">
-          <div className="flex flex-row items-end gap-1">
-            <h1 className="text-5xl font-extrabold tracking-tight text-green750 sm:text-[5rem]">
-              Freud
-            </h1>
-            <p className="pb-[0.3rem] text-green750">by</p>
-            <div className="h-6 w-16">
-              <LogoWordmark color={colors.green750} />
-            </div>
-          </div>
-
-          <ul
-            className={`list-inside list-disc overflow-hidden text-xl text-gray700 transition-[opacity,max-height] duration-[0.5s] ${messages.length > 0
-              ? "max-h-0 opacity-0"
-              : "max-h-[50rem] opacity-100"
-              }`}
-          >
-            <li>
-              Freud er en chatbot som kan henvise til fagstoff innenfor
-              psykologi.
-            </li>
-            <li>
-              Still den et spørsmål eller prøv forslagene nederst og få et svar
-              som er knyttet til kildehenvisningene.
-            </li>
-            <li>
-              Freud er fremdeles i en testing-fase og vil ikke alltid gi
-              faktuelle eller gode svar.
-            </li>
-            <li>Foreløpig er den kun tilpasset å kunne gi svar på engelsk.</li>
-            <li>
-              Trykk på mail-ikonet for å gi en tilbakemelding på hva som kan
-              forbedres.
-            </li>
-          </ul>
-        </div>
-
+        <Header chatStarted = {messages.length > 0} />
         <div
           className={`min-h-[1rem] w-full text-2xl transition-all duration-1000 ${messages.length > 0 ? "grow" : ""
             } flex flex-col items-center`}
