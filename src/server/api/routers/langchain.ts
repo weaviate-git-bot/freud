@@ -4,16 +4,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { ConsoleCallbackHandler } from "langchain/callbacks";
 import { ConversationalRetrievalQAChain } from "langchain/chains";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { BufferMemory } from "langchain/memory";
-import { WeaviateStore } from "langchain/vectorstores/weaviate";
-import weaviate from "weaviate-ts-client";
 import { z } from "zod";
-import { env } from "~/env.mjs";
 import { Message, Role, type Source } from "~/interfaces/message";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { WeaviateMergerRetriever } from "~/server/WeaviateMergerRetriever";
+import { getFullRetriever } from "~/utils/weaviate/fullRetriever";
 
 // Function for retrieving an array of the three questions that chatGPT returns
 function textToFollowUps(str: string | undefined): string[] {
@@ -65,15 +61,7 @@ Helpful answer:`;
 const NUM_SOURCES = 5;
 const SIMILARITY_THRESHOLD = 0.3;
 
-// Setup weaviate client
-const client = weaviate.client({
-  scheme: env.WEAVIATE_SCHEME,
-  host: env.WEAVIATE_HOST,
-  apiKey: new weaviate.ApiKey(env.WEAVIATE_API_KEY),
-});
-
 // Connect to weaviate vector store
-const embeddings = new OpenAIEmbeddings();
 
 // Define TRPCRouter endpoint
 export const langchainRouter = createTRPCRouter({
@@ -84,37 +72,9 @@ export const langchainRouter = createTRPCRouter({
 
     .mutation(async ({ input }) => {
       const question = input[input.length - 1]?.content;
-
-      const vectorStoreISTDP = await WeaviateStore.fromExistingIndex(
-        embeddings,
-        {
-          client,
-          indexName: "ISTDP",
-          metadataKeys: [
-            "title",
-            "author",
-            "pageNumber",
-            "loc_lines_from",
-            "loc_lines_to",
-          ],
-        }
-      );
-
-      const vectorStoreCBT = await WeaviateStore.fromExistingIndex(embeddings, {
-        client,
-        indexName: "CBT",
-        metadataKeys: [
-          "title",
-          "author",
-          "pageNumber",
-          "loc_lines_from",
-          "loc_lines_to",
-        ],
-      });
-
-      const retriever = new WeaviateMergerRetriever(
-        [vectorStoreISTDP, vectorStoreCBT],
-        5
+      const retriever = await getFullRetriever(
+        NUM_SOURCES,
+        SIMILARITY_THRESHOLD
       );
 
       try {
@@ -185,7 +145,8 @@ Three follow-up questions on the strict form: '1. Follow-up question one.\n2. Fo
         generated_followup_questions.forEach((element) => {
           letterCount += element.length;
         });
-        if (letterCount < 50) { // Because it should give one word questions if answer is bad!
+        if (letterCount < 50) {
+          // Because it should give one word questions if answer is bad!
           generated_followup_questions = [
             "How can I help my patient with anxiety?",
             "How do I assess trauma in a patient?",
