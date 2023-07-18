@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import { Button } from './button/Button'
-import { Icon } from './icon/Icon'
 import Modal from 'react-modal';
-import { InputField } from './inputField/InputField';
-import { TextArea } from './textArea/TextArea';
 import { type Message } from '~/interfaces/message';
-import { Label } from './label/Label';
 import { api } from "~/utils/api";
 import { Feedback } from '~/interfaces/feedback';
+import { Button } from './ui/button/Button';
+import { Icon } from './ui/icon/Icon';
+import { InputField } from './ui/inputField/InputField';
+import { Label } from './ui/label/Label';
+import { TextArea } from './ui/textArea/TextArea';
 
 Modal.setAppElement('#__next');
 

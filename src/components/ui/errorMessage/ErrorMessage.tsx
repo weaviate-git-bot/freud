@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { CSS, styled } from '../../stitches';
+import { CSS, styled } from '../../../stitches';
 import { Icon } from '../icon/Icon';
 import { iconClassName } from '../icon/constants';
 

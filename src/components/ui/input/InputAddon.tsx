@@ -1,4 +1,4 @@
-import { styled } from '../../stitches';
+import { styled } from '~/stitches';
 import { buttonClassName } from '../button/constants';
 
 export const InputAddon = styled('div', {

@@ -1,3 +1,4 @@
-import { styled } from '../../stitches';
+import { styled } from "~/stitches";
+
 
 export const Div = styled('div');

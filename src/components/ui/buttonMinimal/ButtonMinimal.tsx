@@ -1,4 +1,4 @@
-import { styled } from '../../stitches';
+import { styled } from '../../../stitches';
 
 // A button with minimal styling.
 // Useful as a starting point for custom button components

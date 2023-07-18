@@ -2,7 +2,7 @@ import React from 'react'
 import Image from 'next/image';
 import { type Message, Role } from '~/interfaces/message';
 import { colors } from '~/stitches/colors';
-import SourceComponent from './sourceComponent';
+import SourceComponent from './SourceItem';
 
 type Prop = {
   message: Message,
@@ -49,7 +49,7 @@ const MessageComponent = ({ message, children }: Prop) => {
 
           <div className="mb-3">
             {message.sources == undefined ||
-            message.sources?.length == 0 ? (
+              message.sources?.length == 0 ? (
               <p className="bold py-2 font-bold text-yellow550">
                 Fant ingen kilder til dette spørsmålet
               </p>

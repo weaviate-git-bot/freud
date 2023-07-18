@@ -9,7 +9,7 @@ type Props = {
 };
 
 
-const QuickAskComponent = ({ suggestedQuestions, onClick, isLoadingReply }: Props) => {
+const QuickAsk = ({ suggestedQuestions, onClick, isLoadingReply }: Props) => {
     return (
         <div className='w-[50%]'>
             {suggestedQuestions.map((question: string, index: number) => (
@@ -36,4 +36,4 @@ const QuickAskComponent = ({ suggestedQuestions, onClick, isLoadingReply }: Prop
 
 };
 
-export default QuickAskComponent;
+export default QuickAsk;

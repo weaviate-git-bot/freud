@@ -1,4 +1,4 @@
-import { styled } from '../../stitches';
+import { styled } from '~/stitches';
 
 export const HelpText = styled('label', {
   display: 'inline-block',

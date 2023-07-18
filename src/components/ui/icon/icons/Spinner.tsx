@@ -1,4 +1,5 @@
-import { styled, keyframes } from '../../../stitches';
+import { keyframes, styled } from "~/stitches";
+
 
 const spin = keyframes({
   '100%': {

@@ -1,4 +1,5 @@
-import { styled } from '../../stitches';
+import { styled } from "~/stitches";
+
 import { iconClassName } from '../icon/constants';
 
 import { buttonClassName } from './constants';

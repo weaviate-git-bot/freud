@@ -1,7 +1,7 @@
-import { colors } from '../../stitches/colors';
-import { sizes } from '../../stitches/sizes';
-import { LiteralUnion } from '../../types/literalUnion';
-import { hasKey } from '../../utils/hasKey';
+import { colors } from '../../../stitches/colors';
+import { sizes } from '../../../stitches/sizes';
+import { LiteralUnion } from '../../../types/literalUnion';
+import { hasKey } from '../../../utils/hasKey';
 
 import { iconClassName } from './constants';
 import { Archive } from './icons/Archive';

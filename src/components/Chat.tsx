@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import { type Message, Role } from "~/interfaces/message";
 import { colors } from "~/stitches/colors";
-import QuickAskComponent from "./quickAskComponent";
 import { api } from "~/utils/api";
 import useAutosizeTextArea from "./useAutosizeTextArea";
 import MessageList from "./MessageList";
@@ -17,6 +16,7 @@ import { Button } from "./ui/button/Button";
 import { Icon } from "./ui/icon/Icon";
 import { Spinner } from "./ui/icon/icons/Spinner";
 import { TextArea } from "./ui/textArea/TextArea";
+import QuickAsk from "./QuickAsk";
 
 type Prop = {
   messages: Message[];
@@ -121,7 +121,7 @@ const Chat = ({ messages, setMessages }: Prop) => {
       </div>
 
       <div className="align-center flex w-[100%] flex-col items-center">
-        <QuickAskComponent
+        <QuickAsk
           suggestedQuestions={suggestedQuestions}
           onClick={handleQuickSubmit}
           isLoadingReply={isLoadingReply}
@@ -137,8 +137,8 @@ const Chat = ({ messages, setMessages }: Prop) => {
             ref={textAreaRef}
             rows={1}
             onKeyDown={onEnterPress}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              setQuery(event.target.value);
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+              setQuery(e.target.value);
             }}
             style={{
               resize: "none",
