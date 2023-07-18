@@ -1,4 +1,4 @@
-import { styled } from '../../stitches';
+import { styled } from '~/stitches';
 import { iconClassName } from '../icon/constants';
 
 const ICON_MARGIN = '$4';

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 
-import { styled, theme } from '../../stitches';
+import { styled, theme } from '~/stitches';
 
 import { SidebarItemGroup } from './ItemGroup';
 import { SidebarSeparator } from './Separator';

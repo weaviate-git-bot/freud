@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { CSS } from '../../stitches';
+import { CSS } from '~/stitches';
 import { Div } from '../basic/Div';
 
 import { StyledSwitch, StyledThumb } from './StyledSwitch';

@@ -1,6 +1,6 @@
 import * as RadixCheckbox from '@radix-ui/react-checkbox';
 
-import { keyframes, styled } from '../../stitches';
+import { keyframes, styled } from '~/stitches';
 
 const shrink = keyframes({
   '50%': { transform: 'scale(.9)' },

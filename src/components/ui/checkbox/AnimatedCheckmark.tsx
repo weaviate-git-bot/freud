@@ -1,4 +1,4 @@
-import { keyframes, styled } from '../../stitches';
+import { keyframes, styled } from '~/stitches';
 
 const Svg = styled('svg');
 

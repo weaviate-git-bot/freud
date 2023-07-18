@@ -1,7 +1,7 @@
 import * as RadixCheckbox from '@radix-ui/react-checkbox';
 import React from 'react';
 
-import { CSS } from '../../stitches';
+import { CSS } from '~/stitches';
 import { Div } from '../basic/Div';
 
 import { AnimatedCheckmark } from './AnimatedCheckmark';

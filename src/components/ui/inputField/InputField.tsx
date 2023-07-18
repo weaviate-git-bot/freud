@@ -1,8 +1,8 @@
 import { PropertyValue } from '@stitches/react';
 import React from 'react';
 
-import { CSS } from '../../stitches';
-import { LiteralUnion } from '../../types/literalUnion';
+import { CSS } from '~/stitches';
+import { LiteralUnion } from '~/types/literalUnion';
 import { Div } from '../basic/Div';
 import { ErrorMessage } from '../errorMessage/ErrorMessage';
 import { Input } from '../input/Input';

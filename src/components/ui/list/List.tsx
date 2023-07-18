@@ -1,4 +1,4 @@
-import { styled } from '../../stitches';
+import { styled } from '~/stitches';
 import { Div } from '../basic/Div';
 import { Button } from '../button/Button';
 import { Icon } from '../icon/Icon';

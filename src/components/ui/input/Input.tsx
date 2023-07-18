@@ -1,7 +1,8 @@
 import { PropertyValue } from '@stitches/react';
 import React from 'react';
+import { LiteralUnion } from '~/types/literalUnion';
 
-import { LiteralUnion } from '../../types/literalUnion';
+
 
 import { InputAddon } from './InputAddon';
 import { InputWrap as Wrap } from './InputWrap';
@@ -18,13 +19,13 @@ export type InputProps = Omit<
   prefixStyle?: 'none' | 'border' | 'borderless' | 'button';
   suffixStyle?: 'none' | 'border' | 'borderless' | 'button';
   type?:
-    | 'text'
-    | 'password'
-    | 'tel'
-    | 'email'
-    | 'integer'
-    | 'date'
-    | 'datetime-local';
+  | 'text'
+  | 'password'
+  | 'tel'
+  | 'email'
+  | 'integer'
+  | 'date'
+  | 'datetime-local';
   width?: LiteralUnion<PropertyValue<'width'>, string>;
 };
 

@@ -1,4 +1,4 @@
-import { styled } from '../../stitches';
+import { styled } from '~/stitches';
 import {
   AVATAR_PARENT_CLASSNAME,
   AVATAR_PARENT_SELECTED_CLASSNAME,
@@ -45,9 +45,8 @@ export const Item = ({
           selected={selected}
           disabled={disabled}
           onClick={disabled ? undefined : onClick}
-          className={`${AVATAR_PARENT_CLASSNAME} ${
-            selected ? AVATAR_PARENT_SELECTED_CLASSNAME : ''
-          }`}
+          className={`${AVATAR_PARENT_CLASSNAME} ${selected ? AVATAR_PARENT_SELECTED_CLASSNAME : ''
+            }`}
         >
           {!!prefix && (
             <div className={selectionListClassName.PREFIX}>{prefix}</div>

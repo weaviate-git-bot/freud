@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { styled } from '../../stitches';
+import { styled } from '~/stitches';
 import { Div } from '../basic/Div';
 import { Icon } from '../icon/Icon';
 

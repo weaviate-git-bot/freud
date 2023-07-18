@@ -1,4 +1,4 @@
-import { CSS } from '../../stitches';
+import { CSS } from '~/stitches';
 import { A } from '../basic/A';
 import { Div } from '../basic/Div';
 import { Icon, IconName } from '../icon/Icon';

@@ -1,6 +1,6 @@
 import * as RadixScrollArea from '@radix-ui/react-scroll-area';
 
-import { styled } from '../../stitches';
+import { styled } from '~/stitches';
 
 const SCROLLBAR_SIZE = 10;
 

@@ -1,4 +1,4 @@
-import { styled } from '../../stitches';
+import { styled } from '~/stitches';
 
 import { headingSizeVariant } from './utils';
 

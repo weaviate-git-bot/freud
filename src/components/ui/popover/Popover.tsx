@@ -1,6 +1,6 @@
 import * as RadixPopover from '@radix-ui/react-popover';
 
-import { CSS } from '../../stitches';
+import { CSS } from '~/stitches'
 import { Icon } from '../icon/Icon';
 
 import {

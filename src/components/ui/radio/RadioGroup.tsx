@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { CSS } from '../../stitches';
+import { CSS } from '~/stitches';
 
 import { StyledRadioGroup } from './StyledRadioGroup';
 

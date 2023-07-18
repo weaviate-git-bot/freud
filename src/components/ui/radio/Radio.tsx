@@ -1,7 +1,7 @@
 import * as RadixRadio from '@radix-ui/react-radio-group';
 import React from 'react';
 
-import { CSS } from '../../stitches';
+import { CSS } from '~/stitches';
 import { Div } from '../basic/Div';
 
 import { StyledRadio } from './StyledRadio';

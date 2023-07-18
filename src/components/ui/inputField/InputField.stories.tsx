@@ -1,7 +1,7 @@
 import { Meta } from '@storybook/react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
-import { styled } from '../../stitches';
+import { styled } from '~/stitches';
 import { Button } from '../button/Button';
 import { Icon } from '../icon/Icon';
 

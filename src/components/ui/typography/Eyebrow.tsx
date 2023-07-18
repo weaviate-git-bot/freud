@@ -1,4 +1,4 @@
-import { styled } from '../../stitches';
+import { styled } from '~/stitches';
 
 export const Eyebrow = styled('div', {
   color: '$gray400',

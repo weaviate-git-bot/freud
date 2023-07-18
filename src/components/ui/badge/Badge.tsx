@@ -1,4 +1,5 @@
-import { styled } from '../../stitches';
+import { styled } from "~/stitches";
+
 
 export const Badge = styled('div', {
   borderRadius: '$full',

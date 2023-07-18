@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import React from 'react';
 
-import { styled } from '../../../stitches';
+import { styled } from '~/stitches';
 
 type Props = {
   children: React.ReactNode;

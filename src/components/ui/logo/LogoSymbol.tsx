@@ -1,6 +1,6 @@
-import { styled } from '../../stitches';
-import { colors } from '../../stitches/colors';
-import { LiteralUnion } from '../../types/literalUnion';
+import { styled } from '~/stitches';
+import { colors } from '~/stitches/colors';
+import { LiteralUnion } from '~/types/literalUnion';
 
 const Svg = styled('svg');
 

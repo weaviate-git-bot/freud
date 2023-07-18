@@ -1,6 +1,6 @@
 import * as RadixSwitch from '@radix-ui/react-switch';
 
-import { styled } from '../../stitches';
+import { styled } from '~/stitches';
 
 const TRANSITION_SPEED = '100ms';
 const THUMB_PADDING = '2px';

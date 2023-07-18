@@ -1,4 +1,4 @@
-import { CSS } from '../../stitches';
+import { CSS } from '~/stitches';
 import { Div } from '../basic/Div';
 
 type Props = {

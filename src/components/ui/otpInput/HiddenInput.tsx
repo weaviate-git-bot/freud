@@ -1,4 +1,4 @@
-import { styled } from '../../stitches';
+import { styled } from '~/stitches';
 
 export const HiddenInput = styled('input', {
   // Set the width and height of the input

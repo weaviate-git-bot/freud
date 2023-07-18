@@ -1,4 +1,4 @@
-import { styled } from '../../stitches';
+import { styled } from '~/stitches';
 import { iconClassName } from '../icon/constants';
 
 export const StyledLink = styled('a', {
