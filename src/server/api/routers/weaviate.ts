@@ -244,7 +244,7 @@ async function createIndex(indexName: string) {
   return await client.schema.classCreator().withClass(weaviateClassObj).do();
 }
 
-async function getExistingSchemas() {
+export async function getExistingSchemas() {
   const existingSchemas: string[] = [];
 
   return await client.schema
