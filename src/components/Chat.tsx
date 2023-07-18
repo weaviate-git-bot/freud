@@ -32,6 +32,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
     "How do I assess trauma in a patient?",
     "What do I do if my patient is very silent?",
   ]);
+  const [isLoadingFollowUps, setIsLoadingFollowUps] = useState(false);
   const [query, setQuery] = useState("");
 
   // Autosize textarea (grow height with input)
@@ -60,6 +61,20 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
     }
   }, [messages]);
 
+  const makeFollowUps = api.followup.makeFollowUps.useMutation({
+    onError: (error) => {
+      console.error(error);
+      setIsLoadingFollowUps(false);
+    },
+    onSuccess: (followUpQuestions) => {
+      if (!followUpQuestions) {
+        return;
+      }
+      setSuggestedQuestions(followUpQuestions);
+      setIsLoadingFollowUps(false);
+    },
+  });
+
   const mutation = api.langchain.conversation.useMutation({
     onError: (error) => {
       console.error(error);
@@ -69,11 +84,12 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
       if (!message) {
         return;
       }
-      setMessages([...messages, message.reply]);
+      setMessages([...messages, message]);
       setQuery("");
       setIsLoadingReply(false);
-
-      setSuggestedQuestions(message.generated_followup_questions);
+      
+      // Call followUp api
+      makeFollowUps.mutate(message.content);
     },
   });
 
@@ -85,6 +101,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
     setQuery(question);
 
     setIsLoadingReply(true);
+    setIsLoadingFollowUps(true);
     const message = {
       role: Role.User,
       content: question,
@@ -127,6 +144,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
           suggestedQuestions={suggestedQuestions}
           onClick={handleQuickSubmit}
           isLoadingReply={isLoadingReply}
+          isLoadingFollowUps={isLoadingFollowUps}
         />
         <form
           onSubmit={handleSubmit}
