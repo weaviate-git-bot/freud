@@ -1,6 +1,5 @@
 import React from 'react';
-import { Button } from './button/Button';
-import { type FormEvent } from 'react';
+import { Button } from './ui/button/Button';
 
 
 type Props = {

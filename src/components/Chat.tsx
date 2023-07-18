@@ -9,14 +9,14 @@ import React, {
 } from "react";
 import { type Message, Role } from "~/interfaces/message";
 import { colors } from "~/stitches/colors";
-import { Button } from "./button/Button";
-import { Icon } from "./icon/Icon";
-import { Spinner } from "./icon/icons/Spinner";
 import QuickAskComponent from "./quickAskComponent";
-import { TextArea } from "./textArea/TextArea";
 import { api } from "~/utils/api";
 import useAutosizeTextArea from "./useAutosizeTextArea";
 import MessageList from "./MessageList";
+import { Button } from "./ui/button/Button";
+import { Icon } from "./ui/icon/Icon";
+import { Spinner } from "./ui/icon/icons/Spinner";
+import { TextArea } from "./ui/textArea/TextArea";
 
 type Prop = {
   messages: Message[];
@@ -111,9 +111,8 @@ const Chat = ({ messages, setMessages }: Prop) => {
   return (
     <>
       <div
-        className={`min-h-[1rem] w-full text-2xl transition-all duration-1000 ${
-          messages.length > 0 ? "grow" : ""
-        } flex flex-col items-center`}
+        className={`min-h-[1rem] w-full text-2xl transition-all duration-1000 ${messages.length > 0 ? "grow" : ""
+          } flex flex-col items-center`}
       >
         <MessageList messages={messages} />
         {isLoadingReply && (
@@ -138,7 +137,7 @@ const Chat = ({ messages, setMessages }: Prop) => {
             ref={textAreaRef}
             rows={1}
             onKeyDown={onEnterPress}
-            onChange={(event) => {
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
               setQuery(event.target.value);
             }}
             style={{

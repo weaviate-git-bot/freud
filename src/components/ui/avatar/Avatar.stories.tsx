@@ -1,6 +1,6 @@
 import { Meta } from '@storybook/react';
 
-import { styled } from '../../stitches';
+import { styled } from '../../../stitches';
 import { Div } from '../basic/Div';
 import { H6 } from '../typography/H6';
 import { P } from '../typography/P';

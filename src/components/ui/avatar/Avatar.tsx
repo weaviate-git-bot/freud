@@ -1,6 +1,6 @@
 import Image, { StaticImageData } from 'next/image';
 
-import { CSS, styled } from '../../stitches';
+import { CSS, styled } from '../../../stitches';
 import { Div } from '../basic/Div';
 import { Icon } from '../icon/Icon';
 import { ImageBorder } from '../imageBorder/ImageBorder';
