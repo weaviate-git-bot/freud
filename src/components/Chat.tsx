@@ -17,13 +17,15 @@ import { Icon } from "./ui/icon/Icon";
 import { Spinner } from "./ui/icon/icons/Spinner";
 import { TextArea } from "./ui/textArea/TextArea";
 import QuickAsk from "./QuickAsk";
+import { Categories } from "~/pages";
 
 type Prop = {
   messages: Message[];
   setMessages: Dispatch<SetStateAction<Message[]>>;
+  categories: Categories;
 };
 
-const Chat = ({ messages, setMessages }: Prop) => {
+const Chat = ({ messages, setMessages, categories }: Prop) => {
   const [isLoadingReply, setIsLoadingReply] = useState(false);
   const [suggestedQuestions, setSuggestedQuestions] = React.useState<string[]>([
     "How can I help my patient with anxiety?",

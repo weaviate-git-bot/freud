@@ -10,7 +10,7 @@ export const VectorStoreSettings = () => {
     [key: string]: { title: string; dbCount: number; splitCount: number }[];
   }>({});
 
-  const vectorStoreSchemas = api.weaviate.listSchemas.useQuery();
+  const vectorStoreSchemas = api.weaviate.listSchemas.useMutation();
 
   const vectorStoreCreation =
     api.weaviate.generateVectorStoreFromDisk.useMutation({

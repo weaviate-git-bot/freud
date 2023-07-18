@@ -1,5 +1,5 @@
 import Head from "next/head";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SidebarFreud } from "~/SidebarFreud";
 import { VectorStoreSettings } from "~/components/VectorStoreSettings";
 import { type Message } from "~/interfaces/message";
@@ -7,10 +7,41 @@ import { type Message } from "~/interfaces/message";
 import { env } from "~/env.mjs";
 import Header from "~/components/Header";
 import Chat from "~/components/Chat";
+import SelectCategories from "~/components/SelectCategories";
+import { api } from "~/utils/api";
+
+export type Categories = { [key: string]: { active: boolean } }
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [categories, setCategories] = useState<Categories>({});
+
+  const fetchedCategories = api.weaviate.listSchemas.useMutation({
+    onSuccess: (data) => {
+      console.log("data", data)
+      data?.classes?.map((item) => {
+        let name: string;
+        if (!item.class) {
+          name = "Kategori uten navn";
+        } else {
+          name = item.class
+        }
+
+        setCategories(prevState => ({
+          ...prevState,
+          [name]: { active: false }
+        }));
+
+      })
+    }
+  });
+
+  useEffect(() => {
+    fetchedCategories.mutate();
+  }, [])
+
+
 
   return (
     <>
@@ -34,7 +65,8 @@ export default function Home() {
         <div />
         <div />
         <Header chatStarted={messages.length > 0} />
-        <Chat messages={messages} setMessages={setMessages} />
+        <SelectCategories categories={categories} myfunc={setCategories} />
+        <Chat messages={messages} setMessages={setMessages} categories={categories} />
       </main>
     </>
   );

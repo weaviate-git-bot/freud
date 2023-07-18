@@ -63,7 +63,7 @@ export const weaviateRouter = createTRPCRouter({
     .mutation(async ({ input }) => createIndex(input)),
 
   /* List all schemas */
-  listSchemas: publicProcedure.query(async () => {
+  listSchemas: publicProcedure.mutation(async () => {
     try {
       return await client.schema.getter().do();
     } catch (error) {
