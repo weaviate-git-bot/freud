@@ -3,20 +3,18 @@ import type { Document } from "langchain/dist/document";
 import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
 import { EPubLoader } from "langchain/document_loaders/fs/epub";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { type OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { WeaviateStore } from "langchain/vectorstores/weaviate";
 import path from "path";
-import weaviate, {
-  type WeaviateObject,
-  type WeaviateSchema,
-} from "weaviate-ts-client";
+import { type WeaviateObject, type WeaviateSchema } from "weaviate-ts-client";
 import { z } from "zod";
-import { env } from "~/env.mjs";
 import { metadataDictionaryCBT } from "~/metadata/CBT";
 import { metadataDictionaryISTDP } from "~/metadata/ISTDP";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { type weaviateMetadataDictionary } from "~/types/weaviateMetadata";
+import { client } from "~/utils/weaviate/client";
+import { embeddings } from "~/utils/weaviate/embeddings";
 
 // Combine metadata dictionaries into one dictionary
 const metadataDictionary: weaviateMetadataDictionary = Object.assign(
@@ -34,15 +32,6 @@ const indexDescriptions: { [key: string]: string } = {
 // Root directory containing source documents
 const rootDirectoryPath = path.join(process.cwd(), "documents");
 
-// Setup weaviate client
-const client = weaviate.client({
-  scheme: env.WEAVIATE_SCHEME,
-  host: env.WEAVIATE_HOST,
-  apiKey: new weaviate.ApiKey(env.WEAVIATE_API_KEY),
-});
-
-// Use OpenAI embeddings
-const embeddings = new OpenAIEmbeddings();
 
 /* tRPC router
 - createSchema
