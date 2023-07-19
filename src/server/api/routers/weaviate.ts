@@ -32,7 +32,6 @@ const indexDescriptions: { [key: string]: string } = {
 // Root directory containing source documents
 const rootDirectoryPath = path.join(process.cwd(), "documents");
 
-
 /* tRPC router
 - createSchema
 - listSchemas
@@ -198,7 +197,7 @@ async function createIndex(indexName: string) {
         description: "Author of book",
       },
       {
-        name: "source",
+        name: "filename",
         dataType: ["string"],
         description: "Filename of source data",
       },
@@ -316,7 +315,7 @@ async function loadDocuments(indexName: string) {
   // Add custom metadata
   console.debug(`- Clean document list and add metadata (${indexName})`);
 
-  const validKeys = ["author", "title", "source", "pageNumber", "splitCount"];
+  const validKeys = ["author", "title", "filename", "pageNumber", "splitCount"];
   let splits: Array<Document<Record<string, any>>> = [];
 
   // Define splitter
@@ -342,7 +341,8 @@ async function loadDocuments(indexName: string) {
       }
 
       const filename: string =
-        document.metadata?.source?.split(pathSeparator).pop()?.split(".")[0] ?? "";
+        document.metadata?.source?.split(pathSeparator).pop()?.split(".")[0] ??
+        "";
 
       if (metadataDictionary[filename] === undefined) {
         throw new Error(
@@ -363,6 +363,9 @@ async function loadDocuments(indexName: string) {
       // console.debug(`-> Added ${filename} to ${indexName}`);
 
       // Add metadata to document
+      document.metadata.filename = document.metadata.source
+        ?.split(pathSeparator)
+        .pop();
       document.metadata.author = metadataDictionary[filename]!.author;
       document.metadata.title = title;
       document.metadata.pageNumber =

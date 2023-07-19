@@ -7,7 +7,8 @@ import { ConversationalRetrievalQAChain } from "langchain/chains";
 import { OpenAI } from "langchain/llms/openai";
 import { BufferMemory } from "langchain/memory";
 import { z } from "zod";
-import { Message, Role, type Source } from "~/interfaces/message";
+import { Message, Role } from "~/interfaces/message";
+import type { Source } from "~/interfaces/source";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { getFullRetriever } from "~/utils/weaviate/getRetriever";
 
@@ -97,13 +98,14 @@ export const langchainRouter = createTRPCRouter({
         const sources: Source[] = res.sourceDocuments.map(
           (source: {
             metadata: {
-              author: any;
-              title: any;
-              pageNumber: any;
-              loc_lines_from: any;
-              loc_lines_to: any;
+              author: string;
+              title: string;
+              pageNumber: number;
+              loc_lines_from: number;
+              loc_lines_to: number;
+              filename: string;
             };
-            pageContent: any;
+            pageContent: string;
           }) => {
             return {
               author: source.metadata.author,
@@ -118,6 +120,7 @@ export const langchainRouter = createTRPCRouter({
                   : 0,
               },
               content: source.pageContent,
+              filename: source.metadata.filename,
             };
           }
         );

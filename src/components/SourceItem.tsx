@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { type Source } from "~/interfaces/message";
+import { type Source } from "~/interfaces/source";
 import { SourceContent } from "./SourceContent";
 
 type Prop = {
@@ -17,6 +17,8 @@ const SourceItem = ({ source }: Prop) => {
       <span className="font-normal">{source.title}</span> av{" "}
       <span className="font-normal">{source.author}</span> (linje{" "}
       {source.location.lineFrom}-{source.location.lineTo})
+      <br />
+      <span>Fil: {source.filename}</span>
       {showContent && <SourceContent text={source.content} />}
     </div>
   );
