@@ -19,8 +19,10 @@ export default function Home() {
 
   const fetchedCategories = api.weaviate.listSchemas.useMutation({
     onSuccess: (data) => {
-      console.log("data", data)
-      data?.classes?.map((item) => {
+      if (!data) {
+        throw new Error("Data not defined in OnSuccess")
+      }
+      data.classes?.map((item) => {
         let name: string;
         if (!item.class) {
           name = "Kategori uten navn";
@@ -58,7 +60,7 @@ export default function Home() {
             showSettings={showSettings}
             setShowSettings={setShowSettings}
           >
-            <VectorStoreSettings />
+            <VectorStoreSettings vectorStoreSchemas={fetchedCategories} />
           </SidebarFreud>
         )}
         {/* get content in center at start */}

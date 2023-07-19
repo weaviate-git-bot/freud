@@ -2,15 +2,17 @@ import React from "react";
 import { api } from "~/utils/api";
 import { Button } from "./ui/button/Button";
 
-export const VectorStoreSettings = () => {
+type Props = {
+  vectorStoreSchemas: any;
+}
+
+export const VectorStoreSettings = ({ vectorStoreSchemas }: Props) => {
   const [showObjectsInDatabase, setShowObjectsInDatabase] = React.useState<{
     [key: string]: boolean;
   }>({});
   const [weaviateClassObjects, setWeaviateClassObjects] = React.useState<{
     [key: string]: { title: string; dbCount: number; splitCount: number }[];
   }>({});
-
-  const vectorStoreSchemas = api.weaviate.listSchemas.useMutation();
 
   const vectorStoreCreation =
     api.weaviate.generateVectorStoreFromDisk.useMutation({
@@ -72,7 +74,7 @@ export const VectorStoreSettings = () => {
           !vectorStoreSchemas.data ||
           !vectorStoreSchemas.data?.classes
           ? "..."
-          : vectorStoreSchemas.data.classes.map((data, tidx: number) => {
+          : vectorStoreSchemas.data.classes.map((data: any, tidx: number) => {
             if (data.class === undefined || typeof data.class !== "string") {
               return "";
             } else {
@@ -102,7 +104,7 @@ export const VectorStoreSettings = () => {
                         <th className="border">Filtrerbar</th>
                         <th className="border">Søkbar</th>
                       </tr>
-                      {data.properties?.map((property, ridx: number) => {
+                      {data.properties?.map((property: any, ridx: number) => {
                         return (
                           <tr
                             key={
