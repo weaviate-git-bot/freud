@@ -108,6 +108,19 @@ const Chat = ({ messages, setMessages }: Prop) => {
     mutation.mutate([...messages, message]);
   }
 
+
+
+  const sourcemutation = api.source.hello.useMutation({
+    onError: (error) => {
+      console.error(error);
+    },
+    onSuccess: (response) => {
+      console.log(response)
+    }
+  });
+
+
+
   return (
     <>
       <div
@@ -157,8 +170,15 @@ const Chat = ({ messages, setMessages }: Prop) => {
           >
             <Icon name={"arrowNarrowRight"} color={colors.green600}></Icon>
           </Button>
+
         </form>
         <div ref={bottomRef} />
+        <Button
+          onClick={() => { sourcemutation.mutate(query) }}
+          className="h-10 self-center"
+        >
+          Source
+        </Button>
       </div>
     </>
   );
