@@ -14,9 +14,11 @@ import { env } from "~/env.mjs";
 import { Message, Role, type Source } from "~/interfaces/message";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
+import { Categories } from "~/pages";
+
 // Specify language model, embeddings and prompts
 const model = new OpenAI({
-  callbacks: [new ConsoleCallbackHandler()],
+  callbacks: [new ConsoleCallbackHandler()], // TODO: Change model and maybe use verbose instead of this "ConsoleCallbackHandler"
 });
 
 const CONDENSE_PROMPT = `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
@@ -54,10 +56,12 @@ export const langchainRouter = createTRPCRouter({
   conversation: publicProcedure
 
     // Validate input
-    .input(z.array(Message))
+    .input(z.object({messages: z.array(Message), categories: Categories })) // TODO: 
 
     .mutation(async ({ input }) => {
-      const question = input[input.length - 1]?.content;
+      const question = input.messages[input.messages.length - 1]?.content;
+
+      console.log(input.categories);
 
       const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
         client,

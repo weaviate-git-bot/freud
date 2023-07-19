@@ -17,7 +17,7 @@ import { Icon } from "./ui/icon/Icon";
 import { Spinner } from "./ui/icon/icons/Spinner";
 import { TextArea } from "./ui/textArea/TextArea";
 import QuickAsk from "./QuickAsk";
-import { Categories } from "~/pages";
+import { type Categories } from "~/pages";
 
 type Prop = {
   messages: Message[];
@@ -107,7 +107,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
       content: question,
     };
     setMessages([...messages, message]);
-    mutation.mutate([...messages, message]);
+    mutation.mutate({messages: [...messages, message], categories: categories});
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -124,7 +124,8 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
       content: query,
     };
     setMessages([...messages, message]);
-    mutation.mutate([...messages, message]);
+    mutation.mutate({messages: [...messages, message], categories: categories});
+
   }
 
   return (
