@@ -15,13 +15,16 @@ const SelectCategories = ({ categories, myfunc }: Props) => {
 
 
     return (
-        <div>
-            <form action="" onSubmit={onSubmit} className="">
+        <div className='p-10'>
+            <h5>
+                Velg hvilke retninger du vil at kildene skal komme fra. Hvis ingen retning er valgt blir alle kildene brukt<br /> <br />
+            </h5>
+            <form action="" onSubmit={onSubmit} className="w-fit">
 
 
                 {Object.keys(categories).map((category, index) => {
                     return (
-                        <label htmlFor={category} className="flex flex-row gap-5 justify-between" key={index}>
+                        <label htmlFor={category} className="flex flex-row gap-5 pb-2 justify-between" key={index}>
                             {category}
                             <Checkbox name={category} id={category} onCheckedChange={(checked) => {
 

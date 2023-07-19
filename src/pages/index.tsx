@@ -57,19 +57,21 @@ export default function Home() {
       <main
         className={`flex min-h-screen flex-col items-center justify-between bg-beige100 px-8 pb-8`}
       >
-        {env.NEXT_PUBLIC_NODE_ENV == "development" && (
-          <SidebarFreud
-            showSettings={showSettings}
-            setShowSettings={setShowSettings}
-          >
-            <VectorStoreSettings vectorStoreSchemas={fetchedCategories} />
-          </SidebarFreud>
-        )}
+        <SidebarFreud
+          showSettings={showSettings}
+          setShowSettings={setShowSettings}
+        >
+          <>
+            <SelectCategories categories={categories} myfunc={setCategories} />
+            {env.NEXT_PUBLIC_NODE_ENV == "development" && (
+              <VectorStoreSettings vectorStoreSchemas={fetchedCategories} />
+            )}
+          </>
+        </SidebarFreud>
         {/* get content in center at start */}
         <div />
         <div />
         <Header chatStarted={messages.length > 0} />
-        <SelectCategories categories={categories} myfunc={setCategories} />
         <Chat
           messages={messages}
           setMessages={setMessages}
