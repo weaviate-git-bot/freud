@@ -1,26 +1,27 @@
 import React, { useState } from "react";
 import { type Source } from "~/interfaces/message";
+import { Button } from "./ui/button/Button";
 
 type Prop = {
   source: Source;
 };
 
-//Component with button for hiding and showing 'content'
 const SourceItem = ({ source }: Prop) => {
-  const [shown, setShown] = useState(false);
+  const [showContent, setShowContent] = useState(false);
   return (
-    <li
-      className="my-2 cursor-pointer rounded-md bg-gray50"
-      onClick={() => {
-        setShown(!shown);
-      }}
+    <div
+      className="m-3 w-fit cursor-pointer list-disc rounded-lg bg-gray100 pb-3 pl-5 pr-5 pt-3 text-base font-light"
+      onClick={() => setShowContent(!showContent)}
     >
-      {source.title} av {source.author}, s. {source.location.pageNr} (linje{" "}
+      <span className="font-normal">{source.title}</span> av{" "}
+      <span className="font-normal">{source.author}</span> (linje{" "}
       {source.location.lineFrom}-{source.location.lineTo})
       <br />
-      <button className="text-blue">{shown ? "Skjul" : "Vis mer"}</button>
-      <p>{shown ? source.content : ""}</p>
-    </li>
+      <Button size={"small"} withBorder={false} color={"gray"}>
+        {showContent ? "Skjul" : "Vis mer"}
+      </Button>
+      <p>{showContent ? source.content : ""}</p>
+    </div>
   );
 };
 

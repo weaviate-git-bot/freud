@@ -8,17 +8,18 @@ type Prop = {
 
 const SourceList = ({ sources }: Prop) => {
   return (
-    <div className="mb-3">
+    <div className="mb-3 mt-8 rounded-lg bg-gray150 p-2">
       {sources == undefined || sources?.length == 0 ? (
         <p className="bold py-2 font-bold text-yellow550">
           Fant ingen kilder til dette spørsmålet
         </p>
       ) : (
-        <ul>
+        <div>
+          <p className="ml-3 text-lg font-bold">Kilder</p>
           {sources.map((source, idx) => (
             <SourceItem source={source} key={idx} />
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
