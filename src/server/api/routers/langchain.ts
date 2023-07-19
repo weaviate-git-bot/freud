@@ -2,20 +2,21 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { ConsoleCallbackHandler } from "langchain/callbacks";
 import { ConversationalRetrievalQAChain } from "langchain/chains";
 import { OpenAI } from "langchain/llms/openai";
 import { BufferMemory } from "langchain/memory";
 import { z } from "zod";
 import { Message, Role, type Source } from "~/interfaces/message";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { getFullRetriever } from "~/utils/weaviate/getRetriever";
+import { getRetrieverFromIndex } from "~/utils/weaviate/getRetriever";
 
 import { Categories } from "~/pages";
+import { type WeaviateStore } from "langchain/vectorstores/weaviate";
+import { MergerRetriever } from "~/utils/weaviate/MergerRetriever";
 
 // Specify language model, embeddings and prompts
 const model = new OpenAI({
-  callbacks: [new ConsoleCallbackHandler()], // TODO: Change model and maybe use verbose instead of this "ConsoleCallbackHandler"
+  modelName: "gpt-3.5-turbo",
 });
 
 const CONDENSE_PROMPT = `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
@@ -38,21 +39,33 @@ Helpful answer:`;
 const NUM_SOURCES = 5;
 const SIMILARITY_THRESHOLD = 0.3;
 
-// Connect to weaviate vector store
-
 // Define TRPCRouter endpoint
 export const langchainRouter = createTRPCRouter({
   conversation: publicProcedure
 
     // Validate input
-    .input(z.object({messages: z.array(Message), categories: Categories })) // TODO: 
+    .input(z.object({ messages: z.array(Message), categories: Categories }))
 
     .mutation(async ({ input }) => {
       const question = input.messages[input.messages.length - 1]?.content;
 
-      console.log(input.categories);
+      const arrayOfActiveCategories: string[] = [];
+      for (const key in input.categories) {
+        if (input.categories[key]?.active) {
+          arrayOfActiveCategories.push(key);
+        }
+      }
+      const useAllCategories: boolean = arrayOfActiveCategories.length == 0;
 
-      const retriever = await getFullRetriever(
+      const arrayOfVectorStores: WeaviateStore[] = [];
+      for (const key in input.categories) {
+        if (input.categories[key]?.active || useAllCategories) {
+          arrayOfVectorStores.push(await getRetrieverFromIndex(key));
+        }
+      }
+
+      const retriever = new MergerRetriever(
+        arrayOfVectorStores,
         NUM_SOURCES,
         SIMILARITY_THRESHOLD
       );
