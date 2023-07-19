@@ -13,7 +13,7 @@ const metadataKeys: string[] = [
   "loc_lines_to",
 ];
 
-function getVectorStoreFromIndex(indexName: string) {
+export function getRetrieverFromIndex(indexName: string) {
   return WeaviateStore.fromExistingIndex(embeddings, {
     client,
     indexName,
@@ -26,7 +26,7 @@ export async function getFullRetriever(
   similarityThreshold: number
 ) {
   const vectorStores = await Promise.all(
-    indexes.map((indexName) => getVectorStoreFromIndex(indexName))
+    indexes.map((indexName) => getRetrieverFromIndex(indexName))
   );
 
   return new MergerRetriever(vectorStores, numSources, similarityThreshold);

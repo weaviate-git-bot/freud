@@ -9,7 +9,7 @@ import { BufferMemory } from "langchain/memory";
 import { z } from "zod";
 import { Message, Role, type Source } from "~/interfaces/message";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { getFullRetriever } from "~/utils/weaviate/fullRetriever";
+import { getFullRetriever } from "~/utils/weaviate/getRetriever";
 
 // Function for retrieving an array of the three questions that chatGPT returns
 function textToFollowUps(str: string | undefined): string[] {

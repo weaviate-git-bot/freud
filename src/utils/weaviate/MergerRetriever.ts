@@ -30,7 +30,6 @@ export class MergerRetriever extends BaseRetriever {
   async getRelevantDocuments(query: string): Promise<Document[]> {
     const results = await Promise.all(
       this.vectorStores.map(async (vectorStore) => {
-        console.debug(query);
         try {
           return await vectorStore.similaritySearchWithScore(
             query,
