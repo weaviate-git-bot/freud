@@ -16,9 +16,11 @@ const SourceList = ({ sources }: Prop) => {
       ) : (
         <div>
           <p className="ml-3 text-lg font-bold">Kilder</p>
-          {sources.map((source: Source, idx) => (
-            <SourceItem source={source} key={idx} />
-          ))}
+          <div className="w-fit">
+            {sources.map((source: Source, idx) => (
+              <SourceItem source={source} key={idx} />
+            ))}
+          </div>
         </div>
       )}
     </div>
