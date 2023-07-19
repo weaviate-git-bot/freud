@@ -8,7 +8,7 @@ type Prop = {
 
 const SourceList = ({ sources }: Prop) => {
   return (
-    <div className="mb-3 mt-8 rounded-lg bg-gray150 p-2">
+    <div className="mb-3 mt-8 rounded-lg bg-gray200 p-2">
       {sources == undefined || sources?.length == 0 ? (
         <p className="bold py-2 font-bold text-yellow550">
           Fant ingen kilder til dette spørsmålet
