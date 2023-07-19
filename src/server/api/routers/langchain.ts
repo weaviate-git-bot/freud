@@ -2,21 +2,21 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { ConsoleCallbackHandler } from "langchain/callbacks";
 import { ConversationalRetrievalQAChain } from "langchain/chains";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { BufferMemory } from "langchain/memory";
-import { WeaviateStore } from "langchain/vectorstores/weaviate";
-import weaviate from "weaviate-ts-client";
 import { z } from "zod";
-import { env } from "~/env.mjs";
 import { Message, Role, type Source } from "~/interfaces/message";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { getRetrieverFromIndex } from "~/utils/weaviate/getRetriever";
+
+import { Categories } from "~/pages";
+import { type WeaviateStore } from "langchain/vectorstores/weaviate";
+import { MergerRetriever } from "~/utils/weaviate/MergerRetriever";
 
 // Specify language model, embeddings and prompts
 const model = new OpenAI({
-  callbacks: [new ConsoleCallbackHandler()],
+  modelName: "gpt-3.5-turbo",
 });
 
 const CONDENSE_PROMPT = `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
@@ -39,63 +39,50 @@ Helpful answer:`;
 const NUM_SOURCES = 5;
 const SIMILARITY_THRESHOLD = 0.3;
 
-// Setup weaviate client
-const client = weaviate.client({
-  scheme: env.WEAVIATE_SCHEME,
-  host: env.WEAVIATE_HOST,
-  apiKey: new weaviate.ApiKey(env.WEAVIATE_API_KEY),
-});
-
-// Connect to weaviate vector store
-const embeddings = new OpenAIEmbeddings();
-
 // Define TRPCRouter endpoint
 export const langchainRouter = createTRPCRouter({
   conversation: publicProcedure
 
     // Validate input
-    .input(z.array(Message))
+    .input(z.object({ messages: z.array(Message), categories: Categories }))
 
     .mutation(async ({ input }) => {
-      const question = input[input.length - 1]?.content;
+      const question = input.messages[input.messages.length - 1]?.content;
 
-      const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
-        client,
-        indexName: "ISTDP",
-        metadataKeys: [
-          "title",
-          "author",
-          "source",
-          "pageNumber",
-          "loc_lines_from",
-          "loc_lines_to",
-        ],
-      });
+      const arrayOfActiveCategories: string[] = [];
+      for (const key in input.categories) {
+        if (input.categories[key]?.active) {
+          arrayOfActiveCategories.push(key);
+        }
+      }
+      const useAllCategories: boolean = arrayOfActiveCategories.length == 0;
+
+      const arrayOfVectorStores: WeaviateStore[] = [];
+      for (const key in input.categories) {
+        if (input.categories[key]?.active || useAllCategories) {
+          arrayOfVectorStores.push(await getRetrieverFromIndex(key));
+        }
+      }
+
+      const retriever = new MergerRetriever(
+        arrayOfVectorStores,
+        NUM_SOURCES,
+        SIMILARITY_THRESHOLD
+      );
 
       try {
         // Call to langchain Conversational Retriever QA
         // For filtering, see https://weaviate.io/developers/weaviate/api/graphql/filters
-        const chain = ConversationalRetrievalQAChain.fromLLM(
-          model,
-          vectorStore.asRetriever(NUM_SOURCES, {
-            distance: SIMILARITY_THRESHOLD,
-            where: {
-              operator: "NotEqual",
-              path: ["author"],
-              valueText: "Aslak",
-            },
+        const chain = ConversationalRetrievalQAChain.fromLLM(model, retriever, {
+          memory: new BufferMemory({
+            memoryKey: "chat_history", // Must be set to "chat_history"
+            inputKey: "memoryKey",
+            outputKey: "text",
           }),
-          {
-            memory: new BufferMemory({
-              memoryKey: "chat_history", // Must be set to "chat_history"
-              inputKey: "memoryKey",
-              outputKey: "text",
-            }),
-            returnSourceDocuments: true,
-            qaTemplate: QA_PROMPT,
-            questionGeneratorTemplate: CONDENSE_PROMPT,
-          }
-        );
+          returnSourceDocuments: true,
+          qaTemplate: QA_PROMPT,
+          questionGeneratorTemplate: CONDENSE_PROMPT,
+        });
 
         const res = await chain.call({ question });
 

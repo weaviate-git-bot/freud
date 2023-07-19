@@ -9,8 +9,13 @@ import Header from "~/components/Header";
 import Chat from "~/components/Chat";
 import SelectCategories from "~/components/SelectCategories";
 import { api } from "~/utils/api";
+import { z } from "zod";
 
-export type Categories = { [key: string]: { active: boolean } }
+export const Categories = z.record(z.string(), z.object({ active: z.boolean() }));
+
+export type Categories = z.infer<typeof Categories>;
+
+// export type Categories = { [key: string]: { active: boolean } };
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -27,23 +32,20 @@ export default function Home() {
         if (!item.class) {
           name = "Kategori uten navn";
         } else {
-          name = item.class
+          name = item.class;
         }
 
-        setCategories(prevState => ({
+        setCategories((prevState) => ({
           ...prevState,
-          [name]: { active: false }
+          [name]: { active: false },
         }));
-
-      })
-    }
+      });
+    },
   });
 
   useEffect(() => {
     fetchedCategories.mutate();
-  }, [])
-
-
+  }, []);
 
   return (
     <>
@@ -68,7 +70,11 @@ export default function Home() {
         <div />
         <Header chatStarted={messages.length > 0} />
         <SelectCategories categories={categories} myfunc={setCategories} />
-        <Chat messages={messages} setMessages={setMessages} categories={categories} />
+        <Chat
+          messages={messages}
+          setMessages={setMessages}
+          categories={categories}
+        />
       </main>
     </>
   );
