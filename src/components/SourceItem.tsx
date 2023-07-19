@@ -18,8 +18,14 @@ const SourceItem = ({ source }: Prop) => {
       <span className="font-normal">{source.author}</span> (linje{" "}
       {source.location.lineFrom}-{source.location.lineTo})
       <br />
-      <span>Fil: {source.filename}</span>
-      {showContent && <SourceContent text={source.content} />}
+      <span>Filnavn: {source.filename}</span>
+      {showContent && (
+        <SourceContent
+          content={source.content}
+          filename={source.filename}
+          filetype={source.filetype}
+        />
+      )}
     </div>
   );
 };

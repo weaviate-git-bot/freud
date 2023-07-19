@@ -10,6 +10,8 @@ export const Source = z.object({
   }),
   content: z.string(),
   filename: z.string(),
+  filetype: z.string(),
+  category: z.string(),
 });
 
 export type Source = z.infer<typeof Source>;

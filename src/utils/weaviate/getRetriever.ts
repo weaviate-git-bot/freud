@@ -7,11 +7,14 @@ const indexes: string[] = ["CBT", "ISTDP"];
 
 const metadataKeys: string[] = [
   "author",
+  "category",
   "filename",
-  "title",
-  "pageNumber",
+  "filetype",
   "loc_lines_from",
   "loc_lines_to",
+  "splitCount",
+  "pageNumber",
+  "title",
 ];
 
 export function getRetrieverFromIndex(indexName: string) {

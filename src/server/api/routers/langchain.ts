@@ -97,18 +97,24 @@ export const langchainRouter = createTRPCRouter({
         // Sources used for answering
         const sources: Source[] = res.sourceDocuments.map(
           (source: {
+            pageContent: string;
             metadata: {
               author: string;
-              title: string;
-              pageNumber: number;
+              category: string;
+              filename: string;
+              filetype: string;
               loc_lines_from: number;
               loc_lines_to: number;
-              filename: string;
+              pageNumber: number;
+              title: string;
             };
-            pageContent: string;
           }) => {
             return {
+              content: source.pageContent,
               author: source.metadata.author,
+              category: source.metadata.category,
+              filename: source.metadata.filename,
+              filetype: source.metadata.filetype,
               title: source.metadata.title,
               location: {
                 pageNr: source.metadata.pageNumber,
@@ -119,8 +125,6 @@ export const langchainRouter = createTRPCRouter({
                   ? source.metadata.loc_lines_to
                   : 0,
               },
-              content: source.pageContent,
-              filename: source.metadata.filename,
             };
           }
         );

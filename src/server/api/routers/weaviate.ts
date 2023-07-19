@@ -199,12 +199,22 @@ async function createIndex(indexName: string) {
       {
         name: "filename",
         dataType: ["string"],
-        description: "Filename of source data",
+        description: "Name of source document",
+      },
+      {
+        name: "filetype",
+        dataType: ["string"],
+        description: "Type of source document",
+      },
+      {
+        name: "category",
+        dataType: ["string"],
+        description: "Psychotherapy framework",
       },
       {
         name: "text",
         dataType: ["text"],
-        description: "Text split",
+        description: "Text content",
       },
       {
         name: "pageNumber",
@@ -315,7 +325,15 @@ async function loadDocuments(indexName: string) {
   // Add custom metadata
   console.debug(`- Clean document list and add metadata (${indexName})`);
 
-  const validKeys = ["author", "title", "filename", "pageNumber", "splitCount"];
+  const validKeys = [
+    "author",
+    "category",
+    "filename",
+    "filetype",
+    "splitCount",
+    "pageNumber",
+    "title",
+  ];
   let splits: Array<Document<Record<string, any>>> = [];
 
   // Define splitter
@@ -340,9 +358,11 @@ async function loadDocuments(indexName: string) {
         throw new Error("Missing or corrupted source metadata");
       }
 
-      const filename: string =
-        document.metadata?.source?.split(pathSeparator).pop()?.split(".")[0] ??
-        "";
+      const file: string =
+        document.metadata?.source?.split(pathSeparator).pop() ?? "";
+
+      const filename = file.split(".")[0] ?? "";
+      const filetype = file.split(".")[1] ?? "";
 
       if (metadataDictionary[filename] === undefined) {
         throw new Error(
@@ -363,10 +383,10 @@ async function loadDocuments(indexName: string) {
       // console.debug(`-> Added ${filename} to ${indexName}`);
 
       // Add metadata to document
-      document.metadata.filename = document.metadata.source
-        ?.split(pathSeparator)
-        .pop();
       document.metadata.author = metadataDictionary[filename]!.author;
+      document.metadata.category = indexName;
+      document.metadata.filename = file;
+      document.metadata.filetype = filetype;
       document.metadata.title = title;
       document.metadata.pageNumber =
         (document.metadata.loc as { pageNumber?: number })?.pageNumber ?? 0;
