@@ -2,7 +2,7 @@ import React from 'react'
 import Image from 'next/image';
 import { type Message, Role } from '~/interfaces/message';
 import { colors } from '~/stitches/colors';
-import SourceComponent from './SourceItem';
+import SourceList from "./SourceList";
 
 type Prop = {
   message: Message,
@@ -47,29 +47,8 @@ const MessageComponent = ({ message, children }: Prop) => {
             </p>
           </div>
 
-          <div className="mb-3">
-            {message.sources == undefined ||
-              message.sources?.length == 0 ? (
-              <p className="bold py-2 font-bold text-yellow550">
-                Fant ingen kilder til dette spørsmålet
-              </p>
-            ) : (
-              <div>
-                <p className="bold py-2 font-bold">Kilder</p>
-
-                <ul>
-                  {message.sources.map((source, sourceIdx) => {
-                    return (
-                      <SourceComponent
-                        key={sourceIdx}
-                        source={source}
-                      />
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
           </div>
+          <SourceList sources={message.sources} />
         </div>
       )}
     </div>
