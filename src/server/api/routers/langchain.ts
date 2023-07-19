@@ -4,15 +4,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { ConsoleCallbackHandler } from "langchain/callbacks";
 import { ConversationalRetrievalQAChain } from "langchain/chains";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { BufferMemory } from "langchain/memory";
-import { WeaviateStore } from "langchain/vectorstores/weaviate";
-import weaviate from "weaviate-ts-client";
 import { z } from "zod";
-import { env } from "~/env.mjs";
 import { Message, Role, type Source } from "~/interfaces/message";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { getFullRetriever } from "~/utils/weaviate/getRetriever";
 
 // Function for retrieving an array of the three questions that chatGPT returns
 function textToFollowUps(str: string | undefined): string[] {
@@ -64,15 +61,7 @@ Helpful answer:`;
 const NUM_SOURCES = 5;
 const SIMILARITY_THRESHOLD = 0.3;
 
-// Setup weaviate client
-const client = weaviate.client({
-  scheme: env.WEAVIATE_SCHEME,
-  host: env.WEAVIATE_HOST,
-  apiKey: new weaviate.ApiKey(env.WEAVIATE_API_KEY),
-});
-
 // Connect to weaviate vector store
-const embeddings = new OpenAIEmbeddings();
 
 // Define TRPCRouter endpoint
 export const langchainRouter = createTRPCRouter({
@@ -83,44 +72,24 @@ export const langchainRouter = createTRPCRouter({
 
     .mutation(async ({ input }) => {
       const question = input[input.length - 1]?.content;
-
-      const vectorStore = await WeaviateStore.fromExistingIndex(embeddings, {
-        client,
-        indexName: "ISTDP",
-        metadataKeys: [
-          "title",
-          "author",
-          "source",
-          "pageNumber",
-          "loc_lines_from",
-          "loc_lines_to",
-        ],
-      });
+      const retriever = await getFullRetriever(
+        NUM_SOURCES,
+        SIMILARITY_THRESHOLD
+      );
 
       try {
         // Call to langchain Conversational Retriever QA
         // For filtering, see https://weaviate.io/developers/weaviate/api/graphql/filters
-        const chain = ConversationalRetrievalQAChain.fromLLM(
-          model,
-          vectorStore.asRetriever(NUM_SOURCES, {
-            distance: SIMILARITY_THRESHOLD,
-            where: {
-              operator: "NotEqual",
-              path: ["author"],
-              valueText: "Aslak",
-            },
+        const chain = ConversationalRetrievalQAChain.fromLLM(model, retriever, {
+          memory: new BufferMemory({
+            memoryKey: "chat_history", // Must be set to "chat_history"
+            inputKey: "memoryKey",
+            outputKey: "text",
           }),
-          {
-            memory: new BufferMemory({
-              memoryKey: "chat_history", // Must be set to "chat_history"
-              inputKey: "memoryKey",
-              outputKey: "text",
-            }),
-            returnSourceDocuments: true,
-            qaTemplate: QA_PROMPT,
-            questionGeneratorTemplate: CONDENSE_PROMPT,
-          }
-        );
+          returnSourceDocuments: true,
+          qaTemplate: QA_PROMPT,
+          questionGeneratorTemplate: CONDENSE_PROMPT,
+        });
 
         const res = await chain.call({ question });
 
@@ -176,7 +145,8 @@ Three follow-up questions on the strict form: '1. Follow-up question one.\n2. Fo
         generated_followup_questions.forEach((element) => {
           letterCount += element.length;
         });
-        if (letterCount < 50) { // Because it should give one word questions if answer is bad!
+        if (letterCount < 50) {
+          // Because it should give one word questions if answer is bad!
           generated_followup_questions = [
             "How can I help my patient with anxiety?",
             "How do I assess trauma in a patient?",
