@@ -10,7 +10,7 @@ type Prop = {
 
 const CopyButton = ({ message }: Prop) => {
   const [buttonIcon, setButtonIcon] = useState("copy"); // Either copy, checkmarkSolid, or printer
-  const [timeoutId, setTimeoutId] = useState<Timeout>(null);
+  const [timeoutId, setTimeoutId] = useState<any>(null);
 
   const copyToClipboard = async (): Promise<boolean> => {
     try {
