@@ -17,15 +17,15 @@ const SourceItem = ({ source }: Prop) => {
       >
         <span className="font-normal">{source.title}</span> av{" "}
         <span className="font-normal">{source.author}</span>
-        {source.filetype === "pdf" && (
+        {/* {source.filetype === "pdf" && (
           <span> (s. {source.location.pageNr})</span>
         )}
         {source.filetype === "epub" && (
           <>
             <br />
-            {/* <span>{source.location.chapter}</span> */}
+            <span>{source.location.chapter}</span>
           </>
-        )}
+        )} */}
       </div>
       <div>
         {showContent && (
