@@ -6,10 +6,11 @@ type Props = {
     suggestedQuestions: string[],
     onClick: (n: number) => void,
     isLoadingReply: boolean,
+    isLoadingFollowUps: boolean,
 };
 
 
-const QuickAsk = ({ suggestedQuestions, onClick, isLoadingReply }: Props) => {
+const QuickAsk = ({ suggestedQuestions, onClick, isLoadingReply, isLoadingFollowUps }: Props) => {
     return (
         <div className='w-[50%]'>
             {suggestedQuestions.map((question: string, index: number) => (
@@ -18,7 +19,7 @@ const QuickAsk = ({ suggestedQuestions, onClick, isLoadingReply }: Props) => {
                         onClick={() => onClick(index)}
                         color={"white"}
                         withBorder={true}
-                        disabled={isLoadingReply}
+                        disabled={isLoadingReply || isLoadingFollowUps}
                         className='mb-[0.4rem] mt-1 w-full'
                     >
                         {question}
