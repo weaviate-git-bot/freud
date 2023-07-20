@@ -101,6 +101,7 @@ export const langchainRouter = createTRPCRouter({
             metadata: {
               author: string;
               category: string;
+              chapter: string;
               filename: string;
               filetype: string;
               loc_lines_from: number;
@@ -117,6 +118,7 @@ export const langchainRouter = createTRPCRouter({
               filetype: source.metadata.filetype,
               title: source.metadata.title,
               location: {
+                chapter: source.metadata.chapter,
                 pageNr: source.metadata.pageNumber,
                 lineFrom: source.metadata.loc_lines_from
                   ? source.metadata.loc_lines_from

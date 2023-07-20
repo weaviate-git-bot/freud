@@ -6,16 +6,24 @@ import "react-pdf/dist/esm/Page/TextLayer.css";
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 type Prop = {
+  category: string;
   filename: string;
+  location: {
+    pageNr: number;
+    lineFrom: number;
+    lineTo: number;
+  };
 };
 
-export const ViewPDF = ({ filename }: Prop) => {
+export const ViewPDF = ({ category, filename, location }: Prop) => {
   const [numPages, setNumPages] = React.useState(null);
-  const [pageNumber, setPageNumber] = React.useState(1);
+  const [pageNumber, setPageNumber] = React.useState(location.pageNr);
+
+  const file = `/documents/${category}/${filename}`;
 
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
-    setPageNumber(1);
+    setPageNumber(location.pageNr);
   }
 
   function changePage(offset: number) {
@@ -32,7 +40,7 @@ export const ViewPDF = ({ filename }: Prop) => {
 
   return (
     <>
-      <Document file={"./sample.pdf"} onLoadSuccess={onDocumentLoadSuccess}>
+      <Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
         <Page pageNumber={pageNumber} renderTextLayer={true} />
       </Document>
       <div className="flex items-center justify-center">

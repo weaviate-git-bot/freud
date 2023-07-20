@@ -8,6 +8,7 @@ const indexes: string[] = ["CBT", "ISTDP"];
 const metadataKeys: string[] = [
   "author",
   "category",
+  "chapter",
   "filename",
   "filetype",
   "loc_lines_from",

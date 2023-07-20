@@ -219,7 +219,12 @@ async function createIndex(indexName: string) {
       {
         name: "pageNumber",
         dataType: ["int"],
-        description: "Page number of text split",
+        description: "Page number of text split (only PDF)",
+      },
+      {
+        name: "chapter",
+        dataType: ["string"],
+        description: "Chapter of text split (only Epub)",
       },
       {
         name: "loc_lines_from",
@@ -313,11 +318,11 @@ async function loadDocuments(indexName: string) {
   const loader = new DirectoryLoader(path.join(sourceDirectoryPath), {
     ".pdf": (sourceDirectoryPath) =>
       new PDFLoader(sourceDirectoryPath, {
-        splitPages: false,
+        splitPages: true,
       }),
     ".epub": (sourceDirectoryPath) =>
       new EPubLoader(sourceDirectoryPath, {
-        splitChapters: false,
+        splitChapters: true,
       }),
   });
   const allDocs = await loader.load();
@@ -328,6 +333,7 @@ async function loadDocuments(indexName: string) {
   const validKeys = [
     "author",
     "category",
+    "chapter",
     "filename",
     "filetype",
     "splitCount",
@@ -385,6 +391,7 @@ async function loadDocuments(indexName: string) {
       // Add metadata to document
       document.metadata.author = metadataDictionary[filename]!.author;
       document.metadata.category = indexName;
+      document.metadata.chapter = (document.metadata?.chapter as string) ?? "";
       document.metadata.filename = file;
       document.metadata.filetype = filetype;
       document.metadata.title = title;

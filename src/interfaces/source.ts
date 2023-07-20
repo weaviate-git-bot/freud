@@ -4,6 +4,7 @@ export const Source = z.object({
   title: z.string(),
   author: z.string(),
   location: z.object({
+    chapter: z.optional(z.string()),
     pageNr: z.optional(z.number()),
     lineFrom: z.number(),
     lineTo: z.number(),
