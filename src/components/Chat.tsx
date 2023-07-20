@@ -17,19 +17,22 @@ import { Icon } from "./ui/icon/Icon";
 import { Spinner } from "./ui/icon/icons/Spinner";
 import { TextArea } from "./ui/textArea/TextArea";
 import QuickAsk from "./QuickAsk";
+import { type Categories } from "~/pages";
 
 type Prop = {
   messages: Message[];
   setMessages: Dispatch<SetStateAction<Message[]>>;
+  categories: Categories;
 };
 
-const Chat = ({ messages, setMessages }: Prop) => {
+const Chat = ({ messages, setMessages, categories }: Prop) => {
   const [isLoadingReply, setIsLoadingReply] = useState(false);
   const [suggestedQuestions, setSuggestedQuestions] = React.useState<string[]>([
     "How can I help my patient with anxiety?",
     "How do I assess trauma in a patient?",
     "What do I do if my patient is very silent?",
   ]);
+  const [isLoadingFollowUps, setIsLoadingFollowUps] = useState(false);
   const [query, setQuery] = useState("");
 
   // Autosize textarea (grow height with input)
@@ -58,6 +61,20 @@ const Chat = ({ messages, setMessages }: Prop) => {
     }
   }, [messages]);
 
+  const makeFollowUps = api.followup.makeFollowUps.useMutation({
+    onError: (error) => {
+      console.error(error);
+      setIsLoadingFollowUps(false);
+    },
+    onSuccess: (followUpQuestions) => {
+      if (!followUpQuestions) {
+        return;
+      }
+      setSuggestedQuestions(followUpQuestions);
+      setIsLoadingFollowUps(false);
+    },
+  });
+
   const mutation = api.source.ask.useMutation({
     onError: (error) => {
       console.error(error);
@@ -67,12 +84,12 @@ const Chat = ({ messages, setMessages }: Prop) => {
       if (!message) {
         return;
       }
-      console.log(message.reply)
-      setMessages([...messages, message.reply]);
+      setMessages([...messages, message]);
       setQuery("");
       setIsLoadingReply(false);
 
-      setSuggestedQuestions(message.followups);
+      // Call followUp api
+      makeFollowUps.mutate(message.content);
     },
   });
 
@@ -84,12 +101,13 @@ const Chat = ({ messages, setMessages }: Prop) => {
     setQuery(question);
 
     setIsLoadingReply(true);
+    setIsLoadingFollowUps(true);
     const message = {
       role: Role.User,
       content: question,
     };
     setMessages([...messages, message]);
-    mutation.mutate([...messages, message]);
+    mutation.mutate({ messages: [...messages, message], categories });
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -106,7 +124,8 @@ const Chat = ({ messages, setMessages }: Prop) => {
       content: query,
     };
     setMessages([...messages, message]);
-    mutation.mutate([...messages, message]);
+    mutation.mutate({ messages: [...messages, message], categories });
+
   }
 
 
@@ -139,6 +158,7 @@ const Chat = ({ messages, setMessages }: Prop) => {
           suggestedQuestions={suggestedQuestions}
           onClick={handleQuickSubmit}
           isLoadingReply={isLoadingReply}
+          isLoadingFollowUps={isLoadingFollowUps}
         />
         <form
           onSubmit={handleSubmit}
@@ -174,12 +194,6 @@ const Chat = ({ messages, setMessages }: Prop) => {
 
         </form>
         <div ref={bottomRef} />
-        <Button
-          onClick={() => { sourcemutation.mutate(messages) }}
-          className="h-10 self-center"
-        >
-          Source
-        </Button>
       </div>
     </>
   );

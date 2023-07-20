@@ -1,5 +1,5 @@
 import Head from "next/head";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SidebarFreud } from "~/SidebarFreud";
 import { VectorStoreSettings } from "~/components/VectorStoreSettings";
 import { type Message } from "~/interfaces/message";
@@ -7,10 +7,45 @@ import { type Message } from "~/interfaces/message";
 import { env } from "~/env.mjs";
 import Header from "~/components/Header";
 import Chat from "~/components/Chat";
+import SelectCategories from "~/components/SelectCategories";
+import { api } from "~/utils/api";
+import { z } from "zod";
+
+export const Categories = z.record(z.string(), z.object({ active: z.boolean() }));
+
+export type Categories = z.infer<typeof Categories>;
+
+// export type Categories = { [key: string]: { active: boolean } };
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [categories, setCategories] = useState<Categories>({});
+
+  const fetchedCategories = api.weaviate.listSchemas.useMutation({
+    onSuccess: (data) => {
+      if (!data) {
+        throw new Error("Data not defined in OnSuccess")
+      }
+      data.classes?.map((item) => {
+        let name: string;
+        if (!item.class) {
+          name = "Kategori uten navn";
+        } else {
+          name = item.class;
+        }
+
+        setCategories((prevState) => ({
+          ...prevState,
+          [name]: { active: false },
+        }));
+      });
+    },
+  });
+
+  useEffect(() => {
+    fetchedCategories.mutate();
+  }, []);
 
   return (
     <>
@@ -22,19 +57,26 @@ export default function Home() {
       <main
         className={`flex min-h-screen flex-col items-center justify-between bg-beige100 px-8 pb-8`}
       >
-        {env.NEXT_PUBLIC_NODE_ENV == "development" && (
-          <SidebarFreud
-            showSettings={showSettings}
-            setShowSettings={setShowSettings}
-          >
-            <VectorStoreSettings />
-          </SidebarFreud>
-        )}
+        <SidebarFreud
+          showSettings={showSettings}
+          setShowSettings={setShowSettings}
+        >
+          <>
+            <SelectCategories categories={categories} myfunc={setCategories} />
+            {env.NEXT_PUBLIC_NODE_ENV == "development" && (
+              <VectorStoreSettings vectorStoreSchemas={fetchedCategories} />
+            )}
+          </>
+        </SidebarFreud>
         {/* get content in center at start */}
         <div />
         <div />
         <Header chatStarted={messages.length > 0} />
-        <Chat messages={messages} setMessages={setMessages} />
+        <Chat
+          messages={messages}
+          setMessages={setMessages}
+          categories={categories}
+        />
       </main>
     </>
   );
