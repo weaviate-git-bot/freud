@@ -10,9 +10,9 @@ export const Source = z.object({
     lineTo: z.number(),
   }),
   content: z.string(),
-  filename: z.string(),
-  filetype: z.string(),
-  category: z.string(),
+  // filename: z.string(),
+  // filetype: z.string(),
+  // category: z.string(),
 });
 
 export type Source = z.infer<typeof Source>;

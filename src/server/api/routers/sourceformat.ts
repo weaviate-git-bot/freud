@@ -1,14 +1,12 @@
 import { WeaviateStore } from "langchain/vectorstores/weaviate";
 import { z } from "zod";
-import { Message, Role, Source } from "~/interfaces/message";
+import { Message, Role } from "~/interfaces/message";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { client } from "~/utils/weaviate/client";
 import { embeddings } from "~/utils/weaviate/embeddings";
-import { getRetrieverFromIndex } from "~/utils/weaviate/getRetriever";
-import { ChatGPTAPI } from 'chatgpt'
-import { env } from "~/env.mjs";
 import { Configuration, OpenAIApi } from "openai";
 import { Categories } from "~/pages";
+import { Source } from "~/interfaces/source";
 
 const metadataKeys: string[] = [
     "author",
