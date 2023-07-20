@@ -6,7 +6,8 @@ import { ConversationalRetrievalQAChain } from "langchain/chains";
 import { OpenAI } from "langchain/llms/openai";
 import { BufferMemory } from "langchain/memory";
 import { z } from "zod";
-import { Message, Role, type Source } from "~/interfaces/message";
+import { Message, Role } from "~/interfaces/message";
+import type { Source } from "~/interfaces/source";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { getRetrieverFromIndex } from "~/utils/weaviate/getRetriever";
 
@@ -89,19 +90,28 @@ export const langchainRouter = createTRPCRouter({
         // Sources used for answering
         const sources: Source[] = res.sourceDocuments.map(
           (source: {
+            pageContent: string;
             metadata: {
-              author: any;
-              title: any;
-              pageNumber: any;
-              loc_lines_from: any;
-              loc_lines_to: any;
+              author: string;
+              category: string;
+              // chapter: string;
+              filename: string;
+              filetype: string;
+              loc_lines_from: number;
+              loc_lines_to: number;
+              pageNumber: number;
+              title: string;
             };
-            pageContent: any;
           }) => {
             return {
+              content: source.pageContent,
               author: source.metadata.author,
+              category: source.metadata.category,
+              filename: source.metadata.filename,
+              filetype: source.metadata.filetype,
               title: source.metadata.title,
               location: {
+                // chapter: source.metadata.chapter,
                 pageNr: source.metadata.pageNumber,
                 lineFrom: source.metadata.loc_lines_from
                   ? source.metadata.loc_lines_from
@@ -110,7 +120,6 @@ export const langchainRouter = createTRPCRouter({
                   ? source.metadata.loc_lines_to
                   : 0,
               },
-              content: source.pageContent,
             };
           }
         );

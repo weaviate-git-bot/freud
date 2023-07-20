@@ -1,14 +1,13 @@
-import React from 'react'
-import Image from 'next/image';
-import { type Message, Role } from '~/interfaces/message';
-import { colors } from '~/stitches/colors';
-import SourceComponent from './SourceItem';
-import Link from 'next/link';
+import React from "react";
+import Image from "next/image";
+import { type Message, Role } from "~/interfaces/message";
+import { colors } from "~/stitches/colors";
+import SourceList from "./FreudSource/SourceList";
 
 type Prop = {
-  message: Message,
-  children: React.ReactNode,
-}
+  message: Message;
+  children: React.ReactNode;
+};
 
 const AVATAR_IMAGE_SIZE = 50;
 
@@ -61,9 +60,7 @@ const MessageComponent = ({ message, children }: Prop) => {
 
 
   return (
-    <div
-      className="container border-b-2 border-gray900 py-10"
-    >
+    <div className="container border-b-2 border-gray900 py-10">
       {message.role === Role.User ? (
         <div className="flex items-start space-x-4">
           <Image
@@ -88,41 +85,13 @@ const MessageComponent = ({ message, children }: Prop) => {
               height={AVATAR_IMAGE_SIZE}
             />
             {children}
-            <p
-              color={colors.beige400}
-              className="whitespace-pre-wrap"
-            >
-              {formatLinks(message.content)}
-            </p>
+            {formatLinks(message.content)}
           </div>
-
-          <div className="mb-3">
-            {message.sources == undefined ||
-              message.sources?.length == 0 ? (
-              <p className="bold py-2 font-bold text-yellow550">
-                Fant ingen kilder til dette spørsmålet
-              </p>
-            ) : (
-              <div>
-                <p className="bold py-2 font-bold">Kilder</p>
-
-                <ul>
-                  {message.sources.map((source, sourceIdx) => {
-                    return (
-                      <SourceComponent
-                        key={sourceIdx}
-                        source={source}
-                      />
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
-          </div>
+          <SourceList sources={message.sources ?? []} />
         </div>
       )}
     </div>
   );
-}
+};
 
-export default MessageComponent
+export default MessageComponent;
