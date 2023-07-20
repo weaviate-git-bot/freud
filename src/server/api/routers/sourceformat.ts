@@ -8,6 +8,7 @@ import { getRetrieverFromIndex } from "~/utils/weaviate/getRetriever";
 import { ChatGPTAPI } from 'chatgpt'
 import { env } from "~/env.mjs";
 import { Configuration, OpenAIApi } from "openai";
+import { Categories } from "~/pages";
 
 const metadataKeys: string[] = [
     "author",
@@ -34,9 +35,9 @@ const weaviateStore = await WeaviateStore.fromExistingIndex(embeddings, {
 
 export const sourceRouter = createTRPCRouter({
     ask: publicProcedure
-        .input(z.array(Message))
+        .input(z.object({ messages: z.array(Message), categories: Categories }))
         .mutation(async ({ input }) => {
-            const question = input[input.length - 1]?.content;
+            const question = input.messages[input.messages.length - 1]?.content;
 
 
             if (!question) {
@@ -68,8 +69,6 @@ export const sourceRouter = createTRPCRouter({
             const response = completion.data.choices[0]?.message?.content
 
 
-            const followups = ["Why?", "What?", "Dafuq?"]
-
             if (!response) {
                 throw new Error("Reply is not defined")
             }
@@ -99,9 +98,8 @@ export const sourceRouter = createTRPCRouter({
                 sources: sources,
             };
 
-            console.log(reply)
 
 
-            return { reply, followups };
+            return reply;
         }),
 })
