@@ -3,9 +3,11 @@ import React, { useState } from "react";
 import { Button } from "./ui/button/Button";
 import { Icon, IconName } from "./ui/icon/Icon";
 import { Message } from "~/interfaces/message";
+
 type Prop = {
   message: Message;
 };
+
 const CopyButton = ({ message }: Prop) => {
   const [buttonIcon, setButtonIcon] = useState("copy"); // Either copy, checkmarkSolid, or printer
   const [timeoutId, setTimeoutId] = useState<Timeout>(null);
