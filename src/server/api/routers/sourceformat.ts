@@ -1,6 +1,6 @@
 import { WeaviateStore } from "langchain/vectorstores/weaviate";
 import { z } from "zod";
-import { Source } from "~/interfaces/message";
+import { Message, Role, Source } from "~/interfaces/message";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { client } from "~/utils/weaviate/client";
 import { embeddings } from "~/utils/weaviate/embeddings";
@@ -25,38 +25,83 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
+const weaviateStore = await WeaviateStore.fromExistingIndex(embeddings, {
+    client,
+    indexName: "ISTDP",
+    metadataKeys,
+});
 
 
 export const sourceRouter = createTRPCRouter({
-    hello: publicProcedure
-        .input(z.string())
+    ask: publicProcedure
+        .input(z.array(Message))
         .mutation(async ({ input }) => {
+            const question = input[input.length - 1]?.content;
 
-            const weaviateStore = await WeaviateStore.fromExistingIndex(embeddings, {
-                client,
-                indexName: "ISTDP",
-                metadataKeys,
-            });
 
-            const documents = await weaviateStore.similaritySearch(input, 5)
+            if (!question) {
+                throw new Error("Question is undefined")
+            }
+
+            const documents = await weaviateStore.similaritySearchWithScore(question, 5)
+
+            documents.map((doc) => {
+                console.log(doc[0].metadata, doc[1])
+            })
 
             let stuffString = "";
 
             documents.map(((doc, index) => {
-                stuffString += "---\n Source " + (index + 1) + ": \n" + doc.pageContent + "\n---\n\n"
+                stuffString += "---\nSource " + (index + 1) + ": \n" + doc[0].pageContent + "\n---\n\n"
             }))
 
             console.log(stuffString)
 
-            const response = await openai.createChatCompletion({
+            const completion = await openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
-                messages: [{ "role": "system", "content": `You are an expert psychiatrist that works as a mentor for a professional psychiatrist. They have a work-related question. Use the ${documents.length} sources below to answer the question, and if the question can't be answered based on the sources, say \"I don't know\". You must indicate when you have used each source. Show this with the number of the source in square brackets. \n\n${stuffString}\nQuestion: ${input}\nAnswer:` },
-                { role: "user", content: input }],
+                messages: [{ "role": "system", "content": `You are a chatbot used by a professional psychiatrist. They have a work-related question. Only use the ${documents.length} sources below to answer the question, and if the question can't be answered based on the sources, say \"I don't know\". Show usage of each source with in-text citations. Do this by including square brackets with only the number of the source. \n\n${stuffString}` },
+                { role: "user", content: question }],
                 temperature: 0,
+                // stream: true, For streaming: https://github.com/openai/openai-node/discussions/182
             });
 
-            const output = response.data.choices[0]?.message?.content
+            const response = completion.data.choices[0]?.message?.content
 
-            return output;
+
+            const followups = ["Why?", "What?", "Dafuq?"]
+
+            if (!response) {
+                throw new Error("Reply is not defined")
+            }
+
+            const sources: Source[] = documents.map(
+                (source) => {
+                    return {
+                        author: source[0].metadata.author,
+                        title: source[0].metadata.title,
+                        location: {
+                            pageNr: source[0].metadata.pageNumber,
+                            lineFrom: source[0].metadata.loc_lines_from
+                                ? source[0].metadata.loc_lines_from
+                                : 0,
+                            lineTo: source[0].metadata.loc_lines_to
+                                ? source[0].metadata.loc_lines_to
+                                : 0,
+                        },
+                        content: source[0].pageContent,
+                    };
+                }
+            );
+
+            const reply: Message = {
+                role: Role.Assistant,
+                content: response,
+                sources: sources,
+            };
+
+            console.log(reply)
+
+
+            return { reply, followups };
         }),
 })

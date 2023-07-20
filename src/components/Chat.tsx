@@ -58,7 +58,7 @@ const Chat = ({ messages, setMessages }: Prop) => {
     }
   }, [messages]);
 
-  const mutation = api.langchain.conversation.useMutation({
+  const mutation = api.source.ask.useMutation({
     onError: (error) => {
       console.error(error);
       setIsLoadingReply(false);
@@ -67,11 +67,12 @@ const Chat = ({ messages, setMessages }: Prop) => {
       if (!message) {
         return;
       }
+      console.log(message.reply)
       setMessages([...messages, message.reply]);
       setQuery("");
       setIsLoadingReply(false);
 
-      setSuggestedQuestions(message.generated_followup_questions);
+      setSuggestedQuestions(message.followups);
     },
   });
 
@@ -110,7 +111,7 @@ const Chat = ({ messages, setMessages }: Prop) => {
 
 
 
-  const sourcemutation = api.source.hello.useMutation({
+  const sourcemutation = api.source.ask.useMutation({
     onError: (error) => {
       console.error(error);
     },
@@ -174,7 +175,7 @@ const Chat = ({ messages, setMessages }: Prop) => {
         </form>
         <div ref={bottomRef} />
         <Button
-          onClick={() => { sourcemutation.mutate(query) }}
+          onClick={() => { sourcemutation.mutate(messages) }}
           className="h-10 self-center"
         >
           Source

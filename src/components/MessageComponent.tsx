@@ -12,6 +12,7 @@ type Prop = {
 const AVATAR_IMAGE_SIZE = 50;
 
 const MessageComponent = ({ message, children }: Prop) => {
+  console.log(message.content)
   return (
     <div
       className="container border-b-2 border-gray900 py-10"
@@ -25,7 +26,7 @@ const MessageComponent = ({ message, children }: Prop) => {
             width={AVATAR_IMAGE_SIZE}
             height={AVATAR_IMAGE_SIZE}
           />
-          <p className="pt-5">
+          <p className="pt-5 whitespace-pre-wrap">
             {message.content}
           </p>
         </div>
@@ -42,6 +43,7 @@ const MessageComponent = ({ message, children }: Prop) => {
             {children}
             <p
               color={colors.beige400}
+              className="whitespace-pre-wrap"
             >
               {message.content}
             </p>
