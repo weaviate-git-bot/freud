@@ -14,7 +14,7 @@ const MessageList = ({ messages }: Prop) => {
       {messages.map((message, idx) => (
         <MessageComponent message={message} key={idx}>
           <FeedbackComponent chat={messages} />
-          <CopyButton message={message}></CopyButton>
+          <CopyButton message={message} />
         </MessageComponent>
       ))}
     </div>
