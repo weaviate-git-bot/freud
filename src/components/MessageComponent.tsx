@@ -1,21 +1,19 @@
-import React from 'react'
-import Image from 'next/image';
-import { type Message, Role } from '~/interfaces/message';
-import { colors } from '~/stitches/colors';
-import SourceList from "./SourceList";
+import React from "react";
+import Image from "next/image";
+import { type Message, Role } from "~/interfaces/message";
+import { colors } from "~/stitches/colors";
+import SourceList from "./FreudSource/SourceList";
 
 type Prop = {
-  message: Message,
-  children: React.ReactNode,
-}
+  message: Message;
+  children: React.ReactNode;
+};
 
 const AVATAR_IMAGE_SIZE = 50;
 
 const MessageComponent = ({ message, children }: Prop) => {
   return (
-    <div
-      className="container border-b-2 border-gray900 py-10"
-    >
+    <div className="container border-b-2 border-gray900 py-10">
       {message.role === Role.User ? (
         <div className="flex items-start space-x-4">
           <Image
@@ -25,9 +23,7 @@ const MessageComponent = ({ message, children }: Prop) => {
             width={AVATAR_IMAGE_SIZE}
             height={AVATAR_IMAGE_SIZE}
           />
-          <p className="pt-5">
-            {message.content}
-          </p>
+          <p className="pt-5">{message.content}</p>
         </div>
       ) : (
         <div>
@@ -40,19 +36,13 @@ const MessageComponent = ({ message, children }: Prop) => {
               height={AVATAR_IMAGE_SIZE}
             />
             {children}
-            <p
-              color={colors.beige400}
-            >
-              {message.content}
-            </p>
-          </div>
-
+            <p color={colors.beige400}>{message.content}</p>
           </div>
           <SourceList sources={message.sources} />
         </div>
       )}
     </div>
   );
-}
+};
 
-export default MessageComponent
+export default MessageComponent;
