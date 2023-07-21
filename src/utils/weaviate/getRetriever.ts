@@ -11,6 +11,7 @@ const metadataKeys: string[] = [
   "chapter",
   "filename",
   "filetype",
+  "href",
   "loc_lines_from",
   "loc_lines_to",
   "splitCount",

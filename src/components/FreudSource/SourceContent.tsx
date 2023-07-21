@@ -9,6 +9,7 @@ type Prop = {
   filetype: string;
   location: {
     chapter?: string;
+    href?: string;
     pageNr?: number;
     lineFrom: number;
     lineTo: number;

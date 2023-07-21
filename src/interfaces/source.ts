@@ -5,6 +5,7 @@ export const Source = z.object({
   author: z.string(),
   location: z.object({
     chapter: z.optional(z.string()),
+    href: z.optional(z.string()),
     pageNr: z.optional(z.number()),
     lineFrom: z.number(),
     lineTo: z.number(),

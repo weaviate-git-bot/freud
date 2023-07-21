@@ -40,6 +40,7 @@ function textToFollowUps(str: string | undefined): string[] {
 // Specify language model, embeddings and prompts
 const model = new OpenAI({
   callbacks: [new ConsoleCallbackHandler()],
+  cache: true,
 });
 
 const CONDENSE_PROMPT = `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
@@ -104,6 +105,7 @@ export const langchainRouter = createTRPCRouter({
               chapter: string;
               filename: string;
               filetype: string;
+              href: string;
               loc_lines_from: number;
               loc_lines_to: number;
               pageNumber: number;
@@ -119,6 +121,7 @@ export const langchainRouter = createTRPCRouter({
               title: source.metadata.title,
               location: {
                 chapter: source.metadata.chapter,
+                href: source.metadata.href,
                 pageNr: source.metadata.pageNumber,
                 lineFrom: source.metadata.loc_lines_from
                   ? source.metadata.loc_lines_from

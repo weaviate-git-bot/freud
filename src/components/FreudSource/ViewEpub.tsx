@@ -6,29 +6,29 @@ type Prop = {
   filename: string;
   location: {
     chapter: string;
+    href: string;
     lineFrom: number;
     lineTo: number;
   };
 };
 
 export const ViewEpub = ({ category, filename, location }: Prop) => {
-  const [loc, setLocation] = React.useState(null);
+  const [currentLocation, setCurrentLocation] = React.useState(location.href);
   const locationChanged = (epubcifi) => {
     // epubcifi is a internal string used by epubjs to point to a location in an epub.
     // It looks like this: epubcfi(/6/6[titlepage]!/4/2/12[pgepubid00003]/3:0)
-    console.log("epubcifi: ", epubcifi);
-    setLocation(epubcifi);
+    setCurrentLocation(epubcifi);
   };
 
   const file = `/documents/${category}/${filename}`;
 
+  console.log(location);
+
   return (
     <div className="h-screen">
-      {location.chapter}
       <ReactReader
-        location={loc}
+        location={currentLocation}
         locationChanged={locationChanged}
-        // url="https://react-reader.metabits.no/files/alice.epub"
         url={file}
         epubOptions={{
           allowPopups: true, // Adds `allow-popups` to sandbox-attribute
