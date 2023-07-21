@@ -82,8 +82,6 @@ export const sourceRouter = createTRPCRouter({
                 stuffString += "Source " + (index + 1) + ":\n---\n" + doc.pageContent + "\n---\n\n"
             }))
 
-            console.log(stuffString)
-
             const formatedmessages = input.messages.map((message) => {
                 return {
                     role: message.role,
