@@ -151,7 +151,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
         />
         <form
           onSubmit={handleSubmit}
-          className="mb-0 mt-8 flex w-[50%] flex-row gap-3"
+          className="mb-0 mt-8 flex md:w-[50%] w-100% flex-row gap-3"
           ref={myFormRef}
         >
           <TextArea

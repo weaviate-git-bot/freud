@@ -55,7 +55,7 @@ export default function Home() {
         <link rel="icon" href="/sigmund_freud_avatar.png" />
       </Head>
       <main
-        className={`flex min-h-screen flex-col items-center justify-between bg-beige100 px-8 pb-8`}
+        className={`flex min-h-screen flex-col items-center justify-between bg-beige100 pb-8`}
       >
         <SidebarFreud
           showSettings={showSettings}

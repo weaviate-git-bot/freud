@@ -50,44 +50,51 @@ export const sourceRouter = createTRPCRouter({
             }
 
 
-            // const arrayOfActiveCategories: string[] = [];
-            // for (const key in input.categories) {
-            //     if (input.categories[key]?.active) {
-            //         arrayOfActiveCategories.push(key);
-            //     }
-            // }
-            // const useAllCategories: boolean = arrayOfActiveCategories.length == 0;
+            const arrayOfActiveCategories: string[] = [];
+            for (const key in input.categories) {
+                if (input.categories[key]?.active) {
+                    arrayOfActiveCategories.push(key);
+                }
+            }
+            const useAllCategories: boolean = arrayOfActiveCategories.length == 0;
 
-            // const arrayOfVectorStores: WeaviateStore[] = [];
-            // for (const key in input.categories) {
-            //     if (input.categories[key]?.active || useAllCategories) {
-            //         arrayOfVectorStores.push(await getRetrieverFromIndex(key));
-            //     }
-            // }
+            const arrayOfVectorStores: WeaviateStore[] = [];
+            for (const key in input.categories) {
+                if (input.categories[key]?.active || useAllCategories) {
+                    arrayOfVectorStores.push(await getRetrieverFromIndex(key));
+                }
+            }
 
-            // const retriever = new MergerRetriever(
-            //     arrayOfVectorStores,
-            //     NUM_SOURCES,
-            //     SIMILARITY_THRESHOLD
-            // );
+            const retriever = new MergerRetriever(
+                arrayOfVectorStores,
+                NUM_SOURCES,
+                SIMILARITY_THRESHOLD
+            );
 
-            // const documents = await retriever.getRelevantDocuments(question)
+            const documents = await retriever.getRelevantDocuments(question)
 
-            const documents = await weaviateStore.similaritySearch(question, 5)
+            // const documents = await weaviateStore.similaritySearch(question, 5)
 
 
             let stuffString = "";
 
             documents.map(((doc, index) => {
-                stuffString += "---\nSource " + (index + 1) + ": \n" + doc.pageContent + "\n---\n\n"
+                stuffString += "Source " + (index + 1) + ":\n---\n" + doc.pageContent + "\n---\n\n"
             }))
 
             console.log(stuffString)
 
+            const formatedmessages = input.messages.map((message) => {
+                return {
+                    role: message.role,
+                    content: message.content
+                }
+            })
+
             const completion = await openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
-                messages: [{ role: "system", content: `You are a chatbot used by a professional psychiatrist. They have a work-related question. Only use the ${documents.length} sources below to answer the question, and if the question can't be answered based on the sources, say \"I don't know\". Show usage of each source with in-text citations. Do this by including square brackets with only the number of the source. \n\n${stuffString}` },
-                ...input.messages],
+                messages: [{ role: "system", content: `You are a chatbot used by a professional psychiatrist. They have a work-related question. Only use the ${documents.length} sources below to answer the question, and if the question can't be answered based on the sources, say \"I don't know\". Show usage of each source with in-text citations. Do this with square brackets with ONLY the number of the source. \n\n${stuffString}` },
+                ...formatedmessages],
                 temperature: 0,
                 // stream: true, For streaming: https://github.com/openai/openai-node/discussions/182
             });

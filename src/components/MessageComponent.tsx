@@ -27,6 +27,10 @@ const MessageComponent = ({ message, children }: Prop) => {
 
       const splittext = goodspaces.split(' ');
 
+      if (splittext.length == 0) {
+        throw new Error("Ingen kilder har blitt brukt. Dette kan skyldes at gpt skriver [Source 1] istedet for [1]")
+      }
+
       let outputlist: any[] = []
 
       let mystring = "";
@@ -52,13 +56,13 @@ const MessageComponent = ({ message, children }: Prop) => {
         {outputlist}
       </p>
 
-
       return output;
     }
-    catch {
+    catch (error) {
       //Code above is bad. So if it breaks, sources wont be clickable.
       console.log("Error in formatting sources")
-      return <p>input</p>
+      console.log(error)
+      return <p>{input}</p>
     }
   }
 

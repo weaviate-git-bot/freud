@@ -8,7 +8,7 @@ type Prop = {
 
 const Header = ({ chatStarted }: Prop) => {
   return (
-    <div className="container mx-8 flex flex-col items-center gap-4 px-4 py-8 lg:gap-12 lg:py-16">
+    <div className="container mx-8 flex flex-col items-center gap-4 px-4 pt-8 lg:gap-12 md:pt-16">
       <div className="flex flex-row items-end gap-1">
         <h1 className="text-5xl font-extrabold tracking-tight text-green750 sm:text-[5rem]">
           Freud
