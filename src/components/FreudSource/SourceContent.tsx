@@ -23,7 +23,7 @@ export const SourceContent = ({
   // location,
 }: Prop) => {
   return (
-    <div className="bg-250 m-3 rounded-lg p-2">
+    <div className="bg-250 m-3 rounded-lg p-2 w-[100%]">
       {content}
       {/* {filetype === "pdf" && (
         <ViewPDF category={category} filename={filename} location={location} />

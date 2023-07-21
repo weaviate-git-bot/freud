@@ -130,17 +130,6 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
 
 
 
-  const sourcemutation = api.source.ask.useMutation({
-    onError: (error) => {
-      console.error(error);
-    },
-    onSuccess: (response) => {
-      console.log(response)
-    }
-  });
-
-
-
   return (
     <>
       <div
@@ -153,7 +142,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
         )}
       </div>
 
-      <div className="align-center flex w-[100%] flex-col items-center">
+      <div className="align-center flex w-[100%] flex-col items-center mt-5">
         <QuickAsk
           suggestedQuestions={suggestedQuestions}
           onClick={handleQuickSubmit}

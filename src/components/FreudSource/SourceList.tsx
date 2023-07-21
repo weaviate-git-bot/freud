@@ -4,9 +4,13 @@ import SourceItem from "./SourceItem";
 
 type Prop = {
   sources: Source[];
+  activeSources: boolean[];
+  setActiveSources: React.Dispatch<React.SetStateAction<boolean[]>>
+  scrollToId: number,
+  setScrollToId: React.Dispatch<React.SetStateAction<number>>
 };
 
-const SourceList = ({ sources }: Prop) => {
+const SourceList = ({ sources, activeSources, setActiveSources, scrollToId, setScrollToId }: Prop) => {
   return (
     <div className="mb-3 mt-5 rounded-lg p-2">
       {sources == undefined || sources?.length == 0 ? (
@@ -16,11 +20,12 @@ const SourceList = ({ sources }: Prop) => {
       ) : (
         <div>
           <p className="ml-3 text-lg font-bold">Kilder</p>
-          <div className="w-fit">
-            {sources.map((source: Source, idx) => (
-              <SourceItem source={source} key={idx} />
-            ))}
-          </div>
+          {sources.map((source: Source, idx) => {
+            // console.log(activeSources[idx])
+            return <SourceItem source={source} key={idx} id={idx} active={activeSources[idx]!} setActiveSources={setActiveSources} scrollToId={scrollToId} setScrollToId={setScrollToId} />
+          }
+          )
+          }
         </div>
       )}
     </div>

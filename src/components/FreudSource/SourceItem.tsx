@@ -1,21 +1,39 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { type Source } from "~/interfaces/source";
 import { SourceContent } from "./SourceContent";
 
 type Prop = {
   source: Source;
+  active: boolean;
+  id: number;
+  setActiveSources: React.Dispatch<React.SetStateAction<boolean[]>>;
+  scrollToId: number;
+  setScrollToId: React.Dispatch<React.SetStateAction<number>>;
 };
 
-const SourceItem = ({ source }: Prop) => {
-  const [showContent, setShowContent] = useState(false);
+const SourceItem = ({ source, setActiveSources, active, id, scrollToId, setScrollToId }: Prop) => {
+
+  const sourceRef = useRef<null | HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollToId == id && sourceRef.current) {
+      sourceRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      setScrollToId(-1)
+    }
+  }, [scrollToId])
 
   return (
-    <div className="m-3 flex list-disc flex-col rounded-lg bg-gray50 pb-2 pl-5 pr-10 pt-2 text-base font-light">
+    <div className="m-3 list-disc rounded-lg bg-gray50 pb-2 pl-5 pr-10 pt-2 text-base font-light w-fit min-w-[60%]" ref={sourceRef}>
       <div
         className="cursor-pointer"
-        onClick={() => setShowContent(!showContent)}
+        onClick={() => setActiveSources(prevState => prevState.map((active, index) => index === id ? !active : active))}
       >
-        <span className="font-normal">{source.title}</span> av{" "}
+        <span>[{id + 1}] </span>
+        <span className="font-bold">{source.title}</span> av{" "}
         <span className="font-normal">{source.author}</span>
         {/* {source.filetype === "pdf" && (
           <span> (s. {source.location.pageNr})</span>
@@ -28,7 +46,7 @@ const SourceItem = ({ source }: Prop) => {
         )} */}
       </div>
       <div>
-        {showContent && (
+        {active && (
           <SourceContent
             // category={source.category}
             content={source.content}

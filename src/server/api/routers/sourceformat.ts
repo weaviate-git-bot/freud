@@ -7,6 +7,10 @@ import { embeddings } from "~/utils/weaviate/embeddings";
 import { Configuration, OpenAIApi } from "openai";
 import { Categories } from "~/pages";
 import { Source } from "~/interfaces/source";
+import { env } from "~/env.mjs";
+import { getRetrieverFromIndex } from "~/utils/weaviate/getRetriever";
+import { MergerRetriever } from "~/utils/weaviate/MergerRetriever";
+import { Content } from "@radix-ui/react-popover";
 
 const metadataKeys: string[] = [
     "author",
@@ -20,7 +24,7 @@ const metadataKeys: string[] = [
 
 
 const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey: env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
@@ -29,6 +33,9 @@ const weaviateStore = await WeaviateStore.fromExistingIndex(embeddings, {
     indexName: "ISTDP",
     metadataKeys,
 });
+
+const NUM_SOURCES = 5;
+const SIMILARITY_THRESHOLD = 0.3;
 
 
 export const sourceRouter = createTRPCRouter({
@@ -42,24 +49,45 @@ export const sourceRouter = createTRPCRouter({
                 throw new Error("Question is undefined")
             }
 
-            const documents = await weaviateStore.similaritySearchWithScore(question, 5)
 
-            documents.map((doc) => {
-                console.log(doc[0].metadata, doc[1])
-            })
+            // const arrayOfActiveCategories: string[] = [];
+            // for (const key in input.categories) {
+            //     if (input.categories[key]?.active) {
+            //         arrayOfActiveCategories.push(key);
+            //     }
+            // }
+            // const useAllCategories: boolean = arrayOfActiveCategories.length == 0;
+
+            // const arrayOfVectorStores: WeaviateStore[] = [];
+            // for (const key in input.categories) {
+            //     if (input.categories[key]?.active || useAllCategories) {
+            //         arrayOfVectorStores.push(await getRetrieverFromIndex(key));
+            //     }
+            // }
+
+            // const retriever = new MergerRetriever(
+            //     arrayOfVectorStores,
+            //     NUM_SOURCES,
+            //     SIMILARITY_THRESHOLD
+            // );
+
+            // const documents = await retriever.getRelevantDocuments(question)
+
+            const documents = await weaviateStore.similaritySearch(question, 5)
+
 
             let stuffString = "";
 
             documents.map(((doc, index) => {
-                stuffString += "---\nSource " + (index + 1) + ": \n" + doc[0].pageContent + "\n---\n\n"
+                stuffString += "---\nSource " + (index + 1) + ": \n" + doc.pageContent + "\n---\n\n"
             }))
 
             console.log(stuffString)
 
             const completion = await openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
-                messages: [{ "role": "system", "content": `You are a chatbot used by a professional psychiatrist. They have a work-related question. Only use the ${documents.length} sources below to answer the question, and if the question can't be answered based on the sources, say \"I don't know\". Show usage of each source with in-text citations. Do this by including square brackets with only the number of the source. \n\n${stuffString}` },
-                { role: "user", content: question }],
+                messages: [{ role: "system", content: `You are a chatbot used by a professional psychiatrist. They have a work-related question. Only use the ${documents.length} sources below to answer the question, and if the question can't be answered based on the sources, say \"I don't know\". Show usage of each source with in-text citations. Do this by including square brackets with only the number of the source. \n\n${stuffString}` },
+                ...input.messages],
                 temperature: 0,
                 // stream: true, For streaming: https://github.com/openai/openai-node/discussions/182
             });
@@ -74,18 +102,18 @@ export const sourceRouter = createTRPCRouter({
             const sources: Source[] = documents.map(
                 (source) => {
                     return {
-                        author: source[0].metadata.author,
-                        title: source[0].metadata.title,
+                        author: source.metadata.author,
+                        title: source.metadata.title,
                         location: {
-                            pageNr: source[0].metadata.pageNumber,
-                            lineFrom: source[0].metadata.loc_lines_from
-                                ? source[0].metadata.loc_lines_from
+                            pageNr: source.metadata.pageNumber,
+                            lineFrom: source.metadata.loc_lines_from
+                                ? source.metadata.loc_lines_from
                                 : 0,
-                            lineTo: source[0].metadata.loc_lines_to
-                                ? source[0].metadata.loc_lines_to
+                            lineTo: source.metadata.loc_lines_to
+                                ? source.metadata.loc_lines_to
                                 : 0,
                         },
-                        content: source[0].pageContent,
+                        content: source.pageContent,
                     };
                 }
             );

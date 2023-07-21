@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { type Message, Role } from "~/interfaces/message";
 import { colors } from "~/stitches/colors";
 import SourceList from "./FreudSource/SourceList";
+import { Button } from "./ui/button/Button";
 
 type Prop = {
   message: Message;
@@ -12,9 +13,10 @@ type Prop = {
 const AVATAR_IMAGE_SIZE = 50;
 
 const MessageComponent = ({ message, children }: Prop) => {
-  console.log(message.content)
 
-
+  //initializes with length of sources (if sources are available) or is empty array
+  const [activeSources, setActiveSources] = useState<boolean[]>(new Array(message.sources?.length ?? 0).fill(false));
+  const [scrollToId, setScrollToId] = useState<number>(-1);
 
   const formatLinks = (input: string): React.JSX.Element => {
     try {
@@ -28,14 +30,16 @@ const MessageComponent = ({ message, children }: Prop) => {
       let outputlist: any[] = []
 
       let mystring = "";
-      splittext.map((split) => {
+      splittext.map((split, idx) => {
         if (regex.test(split)) {
           outputlist.push(mystring)
           mystring = ""
           for (let i = 1; i <= message.sources!.length; i++) {
             if (parseInt(split.charAt(1)) == i) {
-
-              outputlist.push(<a href="#" onClick={() => { }}>[{i}].</a>)
+              outputlist.push(<button key={idx} className="text-blue600" onClick={() => {
+                setScrollToId(i - 1);
+                setActiveSources(prevState => prevState.map((active, index) => index === i - 1 ? true : active))
+              }}>[{i}].</button>)
             }
           }
         } else {
@@ -53,7 +57,7 @@ const MessageComponent = ({ message, children }: Prop) => {
     }
     catch {
       //Code above is bad. So if it breaks, sources wont be clickable.
-      console.log("")
+      console.log("Error in formatting sources")
       return <p>input</p>
     }
   }
@@ -87,7 +91,7 @@ const MessageComponent = ({ message, children }: Prop) => {
             {children}
             {formatLinks(message.content)}
           </div>
-          <SourceList sources={message.sources ?? []} />
+          <SourceList sources={message.sources ?? []} activeSources={activeSources} setActiveSources={setActiveSources} scrollToId={scrollToId} setScrollToId={setScrollToId} />
         </div>
       )}
     </div>
