@@ -28,11 +28,6 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-const weaviateStore = await WeaviateStore.fromExistingIndex(embeddings, {
-    client,
-    indexName: "ISTDP",
-    metadataKeys,
-});
 
 const NUM_SOURCES = 5;
 const SIMILARITY_THRESHOLD = 0.3;
@@ -107,9 +102,15 @@ export const sourceRouter = createTRPCRouter({
             const sources: Source[] = documents.map(
                 (source) => {
                     return {
+                        content: source.pageContent,
                         author: source.metadata.author,
+                        category: source.metadata.category,
+                        filename: source.metadata.filename,
+                        filetype: source.metadata.filetype,
                         title: source.metadata.title,
                         location: {
+                            chapter: source.metadata.chapter,
+                            href: source.metadata.href,
                             pageNr: source.metadata.pageNumber,
                             lineFrom: source.metadata.loc_lines_from
                                 ? source.metadata.loc_lines_from
@@ -118,7 +119,6 @@ export const sourceRouter = createTRPCRouter({
                                 ? source.metadata.loc_lines_to
                                 : 0,
                         },
-                        content: source.pageContent,
                     };
                 }
             );

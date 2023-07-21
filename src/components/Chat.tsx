@@ -75,7 +75,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
     },
   });
 
-  const mutation = api.langchain.conversation.useMutation({
+  const mutation = api.source.ask.useMutation({
     onError: (error) => {
       console.error(error);
       setIsLoadingReply(false);
