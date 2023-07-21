@@ -9,6 +9,9 @@ import { InputField } from './ui/inputField/InputField';
 import { Label } from './ui/label/Label';
 import { TextArea } from './ui/textArea/TextArea';
 
+import * as RadixTooltip from "@radix-ui/react-tooltip";
+import { Tooltip } from "./ui/tooltip/Tooltip";
+
 Modal.setAppElement('#__next');
 
 const customStyles = {
@@ -95,7 +98,11 @@ const FeedbackComponent = ({ chat }: Props) => {
 
     return (
         <div className='float-right ml-4'>
-            <Button onClick={openModal}><Icon name={'mail'}></Icon></Button>
+            <RadixTooltip.Provider delayDuration={0}>
+                <Tooltip content={"Feedback"}>
+                    <Button onClick={openModal}><Icon name={'mail'}></Icon></Button>
+                </Tooltip>
+            </RadixTooltip.Provider>
             <Modal
                 isOpen={modalIsOpen}
                 onAfterOpen={afterOpenModal}
