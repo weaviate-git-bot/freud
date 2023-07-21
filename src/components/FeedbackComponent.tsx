@@ -30,10 +30,19 @@ type Props = {
   chat: Message[];
 };
 
+enum ThumbSelection {
+  up = "up",
+  down = "down",
+  none = "none",
+}
+
 const FeedbackComponent = ({ chat }: Props) => {
   let thanku: HTMLParagraphElement;
   const [feedbackComment, setFeedbackComment] = useState<string>("");
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [thumbSelection, setThumbSelection] = useState<ThumbSelection>(
+    ThumbSelection.none
+  );
   const [name, setName] = useState<string>(localStorage.getItem("name") || "");
   const [email, setEmail] = useState<string>(
     localStorage.getItem("email") || ""
@@ -87,8 +96,29 @@ const FeedbackComponent = ({ chat }: Props) => {
     <div className="float-right ml-4">
       <RadixTooltip.Provider delayDuration={0}>
         <Tooltip content={"Feedback"}>
-          <Button onClick={() => setModalIsOpen(true)}>
-            <Icon name={"mail"}></Icon>
+          <Button
+            color={thumbSelection === ThumbSelection.up ? "green" : "gray"}
+            onClick={() => {
+              thumbSelection === ThumbSelection.up
+                ? setThumbSelection(ThumbSelection.none)
+                : setThumbSelection(ThumbSelection.up);
+              // setModalIsOpen(true);
+            }}
+          >
+            <Icon name={"handThumbsUp"} />
+          </Button>
+        </Tooltip>
+        <Tooltip content={"Feedback"}>
+          <Button
+            color={thumbSelection === ThumbSelection.down ? "red" : "gray"}
+            onClick={() => {
+              thumbSelection === ThumbSelection.down
+                ? setThumbSelection(ThumbSelection.none)
+                : setThumbSelection(ThumbSelection.down);
+              // setModalIsOpen(true);
+            }}
+          >
+            <Icon name={"handThumbsDown"} />
           </Button>
         </Tooltip>
       </RadixTooltip.Provider>
