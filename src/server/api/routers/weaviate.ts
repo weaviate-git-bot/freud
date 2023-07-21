@@ -1,7 +1,8 @@
 import { readdirSync } from "fs";
 import type { Document } from "langchain/dist/document";
 import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
-import { EPubLoader } from "langchain/document_loaders/fs/epub";
+// import { EPubLoader } from "langchain/document_loaders/fs/epub";
+import { EPubLoader } from "~/server/document_loaders/epub";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { type OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -227,6 +228,11 @@ async function createIndex(indexName: string) {
         description: "Chapter of text split (only Epub)",
       },
       {
+        name: "href",
+        dataType: ["string"],
+        description: "Hyperlink to the chapter a snippet is from (only Epub)",
+      },
+      {
         name: "loc_lines_from",
         dataType: ["int"],
         description: "Text split beginning",
@@ -336,6 +342,7 @@ async function loadDocuments(indexName: string) {
     "chapter",
     "filename",
     "filetype",
+    "href",
     "splitCount",
     "pageNumber",
     "title",
@@ -391,9 +398,12 @@ async function loadDocuments(indexName: string) {
       // Add metadata to document
       document.metadata.author = metadataDictionary[filename]!.author;
       document.metadata.category = indexName;
-      document.metadata.chapter = (document.metadata?.chapter as string) ?? "";
+      document.metadata.chapter =
+        (document.metadata?.chapter_title as string) ?? "";
       document.metadata.filename = file;
       document.metadata.filetype = filetype;
+      document.metadata.href =
+        (document.metadata?.chapter_href as string) ?? "";
       document.metadata.title = title;
       document.metadata.pageNumber =
         (document.metadata.loc as { pageNumber?: number })?.pageNumber ?? 0;
@@ -465,15 +475,6 @@ async function createVectorStoreFromDocuments(
   await WeaviateStore.fromDocuments(splits, embeddings, {
     client,
     indexName: indexName,
-    metadataKeys: [
-      "title",
-      "author",
-      "source",
-      "pageNumber",
-      "loc_lines_from",
-      "loc_lines_to",
-      "splitCount",
-    ],
   })
     .then(() => {
       console.debug(`- Vector store created (${indexName})`);

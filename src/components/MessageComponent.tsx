@@ -19,51 +19,47 @@ const MessageComponent = ({ message, children }: Prop) => {
   const [scrollToId, setScrollToId] = useState<number>(-1);
 
   const formatLinks = (input: string): React.JSX.Element => {
-    try {
+    // try {
 
-      var regex = /\[[0-9]+\]/g;
+    //   var regex = /\[[0-9]+\]/g;
 
-      const goodspaces = input.replaceAll("\n", " \n")
+    //   const goodspaces = input.replaceAll("\n", " \n")
 
-      const splittext = goodspaces.split(' ');
+    //   const splittext = goodspaces.split(' ');
 
-      if (splittext.length == 0) {
-        throw new Error("Ingen kilder har blitt brukt. Dette kan skyldes at gpt skriver [Source 1] istedet for [1]")
-      }
+    //   let outputlist: any[] = []
 
-      let outputlist: any[] = []
+    //   let mystring = "";
+    //   splittext.map((split, idx) => {
+    //     if (regex.test(split)) {
+    //       outputlist.push(mystring)
+    //       mystring = ""
+    //       for (let i = 1; i <= message.sources!.length; i++) {
+    //         if (parseInt(split.charAt(1)) == i) {
+    //           outputlist.push(<button key={idx} className="text-blue600" onClick={() => {
+    //             setScrollToId(i - 1);
+    //             setActiveSources(prevState => prevState.map((active, index) => index === i - 1 ? true : active))
+    //           }}>[{i}].</button>)
+    //         }
+    //       }
+    //     } else {
+    //       mystring += split + " ";
 
-      let mystring = "";
-      splittext.map((split, idx) => {
-        if (regex.test(split)) {
-          outputlist.push(mystring)
-          mystring = ""
-          for (let i = 1; i <= message.sources!.length; i++) {
-            if (parseInt(split.charAt(1)) == i) {
-              outputlist.push(<button key={idx} className="text-blue600" onClick={() => {
-                setScrollToId(i - 1);
-                setActiveSources(prevState => prevState.map((active, index) => index === i - 1 ? true : active))
-              }}>[{i}].</button>)
-            }
-          }
-        } else {
-          mystring += split + " ";
+    //     }
+    //   })
 
-        }
-      })
+    //   const output = <p className='whitespace-pre-wrap'>
+    //     {outputlist}
+    //   </p>
 
-      const output = <p className='whitespace-pre-wrap'>
-        {outputlist}
-      </p>
-
-      return output;
-    }
-    catch (error) {
-      //Code above is bad. So if it breaks, sources wont be clickable.
-      console.log("Error in formatting sources")
-      console.log(error)
-      return <p>{input}</p>
-    }
+    //   return output;
+    // }
+    // catch (error) {
+    //Code above is bad. So if it breaks, sources wont be clickable.
+    // console.log("Error in formatting sources")
+    // console.log(error)
+    return <p>{input}</p>
+    // }
   }
 
 

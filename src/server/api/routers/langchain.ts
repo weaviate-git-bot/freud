@@ -17,7 +17,8 @@ import { MergerRetriever } from "~/utils/weaviate/MergerRetriever";
 
 // Specify language model, embeddings and prompts
 const model = new OpenAI({
-  modelName: "gpt-3.5-turbo",
+  verbose: true,
+  cache: true,
 });
 
 const CONDENSE_PROMPT = `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
@@ -94,9 +95,10 @@ export const langchainRouter = createTRPCRouter({
             metadata: {
               author: string;
               category: string;
-              // chapter: string;
+              chapter: string;
               filename: string;
               filetype: string;
+              href: string;
               loc_lines_from: number;
               loc_lines_to: number;
               pageNumber: number;
@@ -111,7 +113,8 @@ export const langchainRouter = createTRPCRouter({
               filetype: source.metadata.filetype,
               title: source.metadata.title,
               location: {
-                // chapter: source.metadata.chapter,
+                chapter: source.metadata.chapter,
+                href: source.metadata.href,
                 pageNr: source.metadata.pageNumber,
                 lineFrom: source.metadata.loc_lines_from
                   ? source.metadata.loc_lines_from

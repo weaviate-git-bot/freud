@@ -35,7 +35,7 @@ const SourceItem = ({ source, setActiveSources, active, id, scrollToId, setScrol
         <span>[{id + 1}] </span>
         <span className="font-bold">{source.title}</span> av{" "}
         <span className="font-normal">{source.author}</span>
-        {/* {source.filetype === "pdf" && (
+        {source.filetype === "pdf" && (
           <span> (s. {source.location.pageNr})</span>
         )}
         {source.filetype === "epub" && (
@@ -43,16 +43,16 @@ const SourceItem = ({ source, setActiveSources, active, id, scrollToId, setScrol
             <br />
             <span>{source.location.chapter}</span>
           </>
-        )} */}
+        )}
       </div>
       <div>
         {active && (
           <SourceContent
-            // category={source.category}
+            category={source.category}
             content={source.content}
-          // filename={source.filename}
-          // filetype={source.filetype}
-          // location={source.location}
+            filename={source.filename}
+            filetype={source.filetype}
+            location={source.location}
           />
         )}
       </div>
