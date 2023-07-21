@@ -12,6 +12,8 @@ import { TextArea } from "./ui/textArea/TextArea";
 import * as RadixTooltip from "@radix-ui/react-tooltip";
 import { Tooltip } from "./ui/tooltip/Tooltip";
 
+import { ThumbState } from "@prisma/client";
+
 Modal.setAppElement("#__next");
 
 const customStyles = {
@@ -30,18 +32,12 @@ type Props = {
   chat: Message[];
 };
 
-enum ThumbSelection {
-  up = "up",
-  down = "down",
-  none = "none",
-}
-
 const FeedbackComponent = ({ chat }: Props) => {
   let thanku: HTMLParagraphElement;
   const [feedbackComment, setFeedbackComment] = useState<string>("");
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [thumbSelection, setThumbSelection] = useState<ThumbSelection>(
-    ThumbSelection.none
+  const [thumbSelection, setThumbSelection] = useState<ThumbState>(
+    ThumbState.none
   );
   const [name, setName] = useState<string>(localStorage.getItem("name") || "");
   const [email, setEmail] = useState<string>(
@@ -83,6 +79,7 @@ const FeedbackComponent = ({ chat }: Props) => {
       comment: feedbackComment,
       name: name,
       email: email,
+      thumb: thumbSelection,
       messages: chat,
     };
 
@@ -97,11 +94,11 @@ const FeedbackComponent = ({ chat }: Props) => {
       <RadixTooltip.Provider delayDuration={0}>
         <Tooltip content={"Feedback"}>
           <Button
-            color={thumbSelection === ThumbSelection.up ? "green" : "gray"}
+            color={thumbSelection === ThumbState.up ? "green" : "transparent"}
             onClick={() => {
-              thumbSelection === ThumbSelection.up
-                ? setThumbSelection(ThumbSelection.none)
-                : setThumbSelection(ThumbSelection.up);
+              thumbSelection === ThumbState.up
+                ? setThumbSelection(ThumbState.none)
+                : setThumbSelection(ThumbState.up);
               // setModalIsOpen(true);
             }}
           >
@@ -110,11 +107,11 @@ const FeedbackComponent = ({ chat }: Props) => {
         </Tooltip>
         <Tooltip content={"Feedback"}>
           <Button
-            color={thumbSelection === ThumbSelection.down ? "red" : "gray"}
+            color={thumbSelection === ThumbState.down ? "red" : "transparent"}
             onClick={() => {
-              thumbSelection === ThumbSelection.down
-                ? setThumbSelection(ThumbSelection.none)
-                : setThumbSelection(ThumbSelection.down);
+              thumbSelection === ThumbState.down
+                ? setThumbSelection(ThumbState.none)
+                : setThumbSelection(ThumbState.down);
               // setModalIsOpen(true);
             }}
           >
