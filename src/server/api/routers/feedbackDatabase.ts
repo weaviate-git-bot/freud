@@ -33,7 +33,6 @@ export const feedbackRouter = createTRPCRouter({
     addMessage: publicProcedure
         .input(z.object({ message: Message, feedbackId: z.number() }))
         .mutation(async ({ input }) => {
-            console.log(input.message.sources);
             try {
                 const messageID = await prisma.message.create({
                     data: {

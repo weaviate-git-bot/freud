@@ -1,23 +1,23 @@
 import React, {
-  type Dispatch,
-  type FormEvent,
-  type SetStateAction,
   createRef,
   useEffect,
   useRef,
   useState,
+  type Dispatch,
+  type FormEvent,
+  type SetStateAction,
 } from "react";
-import { type Message, Role } from "~/interfaces/message";
+import { Role, type Message } from "~/interfaces/message";
+import { type Categories } from "~/pages";
 import { colors } from "~/stitches/colors";
 import { api } from "~/utils/api";
-import useAutosizeTextArea from "./useAutosizeTextArea";
 import MessageList from "./MessageList";
+import QuickAsk from "./QuickAsk";
 import { Button } from "./ui/button/Button";
 import { Icon } from "./ui/icon/Icon";
 import { Spinner } from "./ui/icon/icons/Spinner";
 import { TextArea } from "./ui/textArea/TextArea";
-import QuickAsk from "./QuickAsk";
-import { type Categories } from "~/pages";
+import useAutosizeTextArea from "./useAutosizeTextArea";
 
 type Prop = {
   messages: Message[];
@@ -125,16 +125,14 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
     };
     setMessages([...messages, message]);
     mutation.mutate({ messages: [...messages, message], categories });
-
   }
-
-
 
   return (
     <>
       <div
-        className={`min-h-[1rem] w-full text-2xl transition-all duration-1000 ${messages.length > 0 ? "grow" : ""
-          } flex flex-col items-center`}
+        className={`min-h-[1rem] w-full text-2xl transition-all duration-1000 ${
+          messages.length > 0 ? "grow" : ""
+        } flex flex-col items-center`}
       >
         <MessageList messages={messages} />
         {isLoadingReply && (
@@ -142,7 +140,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
         )}
       </div>
 
-      <div className="align-center flex w-[100%] flex-col items-center mt-5">
+      <div className="align-center mt-5 flex w-[100%] flex-col items-center">
         <QuickAsk
           suggestedQuestions={suggestedQuestions}
           onClick={handleQuickSubmit}
@@ -151,7 +149,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
         />
         <form
           onSubmit={handleSubmit}
-          className="mb-0 mt-8 flex md:w-[50%] w-100% flex-row gap-3"
+          className="w-100% mb-0 mt-8 flex flex-row gap-3 md:w-[50%]"
           ref={myFormRef}
         >
           <TextArea
@@ -180,7 +178,6 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
           >
             <Icon name={"arrowNarrowRight"} color={colors.green600}></Icon>
           </Button>
-
         </form>
         <div ref={bottomRef} />
       </div>
