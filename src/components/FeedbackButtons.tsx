@@ -3,12 +3,10 @@ import * as RadixTooltip from "@radix-ui/react-tooltip";
 import React, { useEffect, useState } from "react";
 import { type Message } from "~/interfaces/message";
 import { api } from "~/utils/api";
+import { ButtonWithTooltip } from "./ButtonWithTooltip";
 import { FeedbackForm } from "./FeedbackForm";
-import { Button } from "./ui/button/Button";
-import { ButtonMinimal } from "./ui/buttonMinimal/ButtonMinimal";
 import { Icon } from "./ui/icon/Icon";
 import { Popover } from "./ui/popover/Popover";
-import { Tooltip } from "./ui/tooltip/Tooltip";
 
 type Props = {
   chat: Message[];
@@ -24,7 +22,10 @@ const FeedbackButtons = ({ chat }: Props) => {
   );
   const [thumb, setThumb] = useState<ThumbState>(ThumbState.none);
   const [comment, setComment] = useState<string>("");
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState({
+    up: false,
+    down: false,
+  });
   const [feedbackID, setFeedbackID] = useState<null | number>(null);
 
   useEffect(() => {
@@ -98,7 +99,7 @@ const FeedbackButtons = ({ chat }: Props) => {
     },
     onSuccess: () => {
       console.info("Comment submitted");
-      setShowForm(false);
+      setShowForm({ up: false, down: false });
     },
   });
 
@@ -107,7 +108,7 @@ const FeedbackButtons = ({ chat }: Props) => {
       console.error(error);
     },
     onSuccess: () => {
-      console.info("Thumb set to " + thumb);
+      console.debug("Thumbs " + thumb);
     },
   });
 
@@ -167,8 +168,15 @@ const FeedbackButtons = ({ chat }: Props) => {
   return (
     <div className="float-right ml-4">
       <RadixTooltip.Provider delayDuration={0}>
-        <Tooltip content={"Good answer"}>
-          <Button
+        <Popover
+          content={form}
+          side="bottom"
+          closeButton={true}
+          open={showForm.up && thumb !== ThumbState.none}
+          onOpenChange={() => setShowForm({ up: !showForm.up, down: false })}
+        >
+          <ButtonWithTooltip
+            tooltip={"Good answer"}
             color={thumb === ThumbState.up ? "green" : "transparent"}
             onClick={() => {
               thumb === ThumbState.up
@@ -177,10 +185,17 @@ const FeedbackButtons = ({ chat }: Props) => {
             }}
           >
             <Icon name={"handThumbsUp"} />
-          </Button>
-        </Tooltip>
-        <Tooltip content={"Unsatisfactory answer"}>
-          <Button
+          </ButtonWithTooltip>
+        </Popover>
+        <Popover
+          content={form}
+          side="bottom"
+          closeButton={true}
+          open={showForm.down && thumb !== ThumbState.none}
+          onOpenChange={() => setShowForm({ up: false, down: !showForm.down })}
+        >
+          <ButtonWithTooltip
+            tooltip={"Unsatisfactory answer"}
             color={thumb === ThumbState.down ? "red" : "transparent"}
             onClick={() => {
               thumb === ThumbState.down
@@ -189,18 +204,8 @@ const FeedbackButtons = ({ chat }: Props) => {
             }}
           >
             <Icon name={"handThumbsDown"} />
-          </Button>
-        </Tooltip>
-        {thumb !== ThumbState.none && (
-          <Popover content={form} side="bottom" open={showForm}>
-            <ButtonMinimal
-              className="block text-base font-semibold text-green600"
-              onClick={() => setShowForm(!showForm)}
-            >
-              Legg til kommentar
-            </ButtonMinimal>
-          </Popover>
-        )}
+          </ButtonWithTooltip>
+        </Popover>
       </RadixTooltip.Provider>
     </div>
   );
