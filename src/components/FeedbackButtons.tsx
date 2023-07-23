@@ -13,20 +13,18 @@ type Props = {
 };
 
 // Delay before a de-selected thumb actually deletes the entry in the database
-const THUMB_DELETE_DELAY = 2000; // 2 seconds
+const THUMB_DELETE_DELAY = 1000; // 2 seconds
 
 const FeedbackButtons = ({ chat }: Props) => {
-  const [name, setName] = useState<string>(localStorage.getItem("name") || "");
-  const [email, setEmail] = useState<string>(
-    localStorage.getItem("email") || ""
-  );
+  const [name, setName] = useState(localStorage.getItem("name") || "");
+  const [email, setEmail] = useState(localStorage.getItem("email") || "");
   const [thumb, setThumb] = useState<ThumbState>(ThumbState.none);
-  const [comment, setComment] = useState<string>("");
+  const [comment, setComment] = useState("");
   const [showForm, setShowForm] = useState({
     up: false,
     down: false,
   });
-  const [feedbackID, setFeedbackID] = useState<null | number>(null);
+  const [feedbackID, setFeedbackID] = useState<number | null>(null);
 
   useEffect(() => {
     let thumbChangedToNone = true;
@@ -78,7 +76,6 @@ const FeedbackButtons = ({ chat }: Props) => {
     },
     onSuccess: (data) => {
       console.info("Feedback sent!");
-      console.info(data);
       setFeedbackID(data.id);
     },
   });
@@ -148,7 +145,9 @@ const FeedbackButtons = ({ chat }: Props) => {
     setNewThumbFeedback.mutate(newThumb);
   }
 
-  function updateCommentFeedback() {
+  function updateCommentFeedback(e: Event) {
+    e.preventDefault();
+
     localStorage.setItem("email", email);
     localStorage.setItem("name", name);
 
@@ -207,6 +206,13 @@ const FeedbackButtons = ({ chat }: Props) => {
           </ButtonWithTooltip>
         </Popover>
       </RadixTooltip.Provider>
+      {showForm.up === false &&
+        showForm.down === false &&
+        feedbackID !== null && (
+          <span className="absolute ml-4 w-fit text-base text-green750">
+            Takk for tilbakemelding!
+          </span>
+        )}
     </div>
   );
 };
