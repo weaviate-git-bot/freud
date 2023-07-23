@@ -130,7 +130,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
   return (
     <>
       <div
-        className={`min-h-[1rem] w-full text-2xl transition-all duration-1000 ${
+        className={`min-h-[1rem] w-2/3 text-2xl transition-all duration-1000 ${
           messages.length > 0 ? "grow" : ""
         } flex flex-col items-center`}
       >
