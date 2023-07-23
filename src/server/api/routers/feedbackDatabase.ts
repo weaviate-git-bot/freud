@@ -49,6 +49,16 @@ export const feedbackRouter = createTRPCRouter({
       });
     }),
 
+  delete: publicProcedure
+    .input(z.object({ feedbackID: z.number() }))
+    .mutation(async ({ input }) => {
+      await prisma.feedback.delete({
+        where: {
+          id: input.feedbackID,
+        },
+      });
+    }),
+
   addMessage: publicProcedure
     .input(z.object({ message: Message, feedbackId: z.number() }))
     .mutation(async ({ input }) => {

@@ -19,7 +19,7 @@ model Message {
   content    String   @db.Text
   sources    Json     @default("[]")
   createdAt  DateTime @default(now())
-  feedback   Feedback @relation(fields: [feedbackId], references: [id])
+  feedback   Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
   feedbackId Int
 
   // https://www.prisma.io/docs/concepts/components/prisma-schema/relations/relation-mode#indexes

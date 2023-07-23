@@ -1,19 +1,21 @@
-import { ThumbState } from "@prisma/client";
+import { ThumbState, type Feedback } from "@prisma/client";
 import * as RadixTooltip from "@radix-ui/react-tooltip";
 import React, { useEffect, useState } from "react";
+import { type Message } from "~/interfaces/message";
 import { api } from "~/utils/api";
 import { FeedbackForm } from "./FeedbackForm";
 import { Button } from "./ui/button/Button";
+import { ButtonMinimal } from "./ui/buttonMinimal/ButtonMinimal";
 import { Icon } from "./ui/icon/Icon";
 import { Popover } from "./ui/popover/Popover";
 import { Tooltip } from "./ui/tooltip/Tooltip";
-import { ButtonMinimal } from "./ui/buttonMinimal/ButtonMinimal";
-import { type Feedback } from "@prisma/client";
-import type { Message } from "@prisma/client";
 
 type Props = {
   chat: Message[];
 };
+
+// Delay before a de-selected thumb actually deletes the entry in the database
+const THUMB_DELETE_DELAY = 2000; // 2 seconds
 
 const FeedbackButtons = ({ chat }: Props) => {
   const [name, setName] = useState<string>(localStorage.getItem("name") || "");
@@ -26,11 +28,19 @@ const FeedbackButtons = ({ chat }: Props) => {
   const [feedbackID, setFeedbackID] = useState<null | number>(null);
 
   useEffect(() => {
+    let thumbChangedToNone = true;
+
     // Thumb is de-selected
+    // Delete feedback after a delay, unless a new thumb is selected in the meantime
+    // Note: feedbackID is set to null in the onSuccess function
     if (thumb === ThumbState.none) {
-      // TODO: delete feedback
-      // -> consider adding a delay before deleting
-      return;
+      const deleteTimeout = setTimeout(() => {
+        if (thumbChangedToNone) {
+          deleteFeedback();
+        }
+      }, THUMB_DELETE_DELAY);
+
+      return () => clearTimeout(deleteTimeout);
     }
 
     // Create new feedback entry in database (thumbs only)
@@ -42,6 +52,11 @@ const FeedbackButtons = ({ chat }: Props) => {
     else {
       updateThumbFeedback();
     }
+
+    return () => {
+      // If thumb changes before the delay, cancel the delete signal
+      thumbChangedToNone = false;
+    };
   }, [thumb]);
 
   const form = (
@@ -64,6 +79,16 @@ const FeedbackButtons = ({ chat }: Props) => {
       console.info("Feedback sent!");
       console.info(data);
       setFeedbackID(data.id);
+    },
+  });
+
+  const deleteCreatedFeedback = api.feedback.delete.useMutation({
+    onError: (error) => {
+      console.error(error);
+    },
+    onSuccess: () => {
+      console.info("Feedback deleted");
+      setFeedbackID(null);
     },
   });
 
@@ -95,6 +120,17 @@ const FeedbackButtons = ({ chat }: Props) => {
     };
 
     createNewFeedback.mutate(feedback);
+  }
+
+  function deleteFeedback() {
+    if (!feedbackID) {
+      console.error("Cannot delete feedback since feedbackID isn't set");
+      return;
+    }
+
+    deleteCreatedFeedback.mutate({
+      feedbackID: feedbackID,
+    });
   }
 
   function updateThumbFeedback() {
