@@ -12,9 +12,9 @@ const MessageList = ({ messages }: Prop) => {
   return (
     <div>
       {messages.map((message, idx) => (
-        <MessageComponent message={message} key={idx}>
-          <FeedbackButtons chat={messages} />
-          <CopyButton message={message} />
+        <MessageComponent message={message} key={"message-" + idx.toString()}>
+          <FeedbackButtons chat={messages} key={"feedback-" + idx.toString()} />
+          <CopyButton message={message} key={"copy-button-" + idx.toString()} />
         </MessageComponent>
       ))}
     </div>
