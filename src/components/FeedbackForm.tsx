@@ -1,10 +1,8 @@
 import React from "react";
-import { Button } from "./ui/button/Button";
 import { InputField } from "./ui/inputField/InputField";
 import { Label } from "./ui/label/Label";
 import { TextArea } from "./ui/textArea/TextArea";
-
-const textSize = "text-sm";
+import { ButtonMinimal } from "./ui/buttonMinimal/ButtonMinimal";
 
 export const FeedbackForm = ({
   name,
@@ -15,43 +13,65 @@ export const FeedbackForm = ({
   setComment,
   handleSubmit,
 }) => {
+  const labelStyle = { fontSize: "var(--fontSizes-xxs)", fontWeight: "bold" };
+  const inputStyle = {
+    fontSize: "var(--fontSizes-xxs)",
+    marginBottom: "0.4rem",
+  };
+
   return (
     <div>
-      <h1 className="text-2xl font-bold">Tilbakemeldingskjema</h1>
-      <p>
-        Både tilbakemelding og samtalen du har hatt vil bli sendt inn til oss
-      </p>
-      <form>
-        <Label>Tilbakemelding</Label>
+      <form className="pb-10">
+        <Label htmlFor="feedback" style={labelStyle}>
+          Kommentar
+        </Label>
+        <p className="mb-1">Både din kommentar og samtale vil bli sendt.</p>
         <TextArea
-          id={"feedback"}
-          className="h-[6rem] w-[6rem]"
+          id="feedback"
+          // className="h-[6rem]"
+          style={inputStyle}
           onChange={(e) => setComment(e.target.value)}
           value={comment}
         />
+        <Label htmlFor="name" style={labelStyle}>
+          Navn (valgfritt)
+        </Label>
         <InputField
-          id=""
-          label="Navn (valgfritt)"
+          id="name"
+          label=""
+          style={inputStyle}
           onChange={(e) => setName(e.target.value)}
           value={name}
-        ></InputField>
+        />
+        <Label htmlFor="email" style={labelStyle}>
+          Epost (valgfritt)
+        </Label>
         <InputField
-          id=""
-          label="E-mail (valgfritt)"
+          id="email"
+          label=""
+          style={inputStyle}
           onChange={(e) => setEmail(e.target.value)}
           value={email}
-        ></InputField>
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSubmit(e);
+            }
+          }}
+        />
+        <ButtonMinimal
+          className="float-right"
+          color={"green"}
+          style={{
+            color: "white",
+            background: "var(--colors-green700)",
+            padding: "5px 12px",
+            borderRadius: "5px",
+          }}
+          onClick={handleSubmit}
+        >
+          Send
+        </ButtonMinimal>
       </form>
-      <Button className="float-right" color={"green"} onClick={handleSubmit}>
-        Send inn
-      </Button>
-      <Button
-        className="float-right"
-        color={"red"}
-        // onClick={() => setModalIsOpen(false)}
-      >
-        Cancel
-      </Button>
     </div>
   );
 };
