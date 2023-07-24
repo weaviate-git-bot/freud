@@ -23,7 +23,7 @@ const config = {
   experimental: {
     outputFileTracingRoot: __dirname,
     outputFileTracingExcludes: {
-      "*": ["node_modules/canvas/"],
+      "**/*": ["node_modules/canvas/"],
     },
   },
   /**
