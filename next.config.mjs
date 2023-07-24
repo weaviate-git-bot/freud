@@ -22,9 +22,7 @@ const config = {
   // https://stackoverflow.com/a/76208316
   experimental: {
     outputFileTracingRoot: __dirname,
-    outputFileTracingExcludes: {
-      "*": ["node_modules/canvas"],
-    },
+    outputFileTracingIgnores: ["node_modules/canvas/"],
   },
   /**
    * If you have `experimental: { appDir: true }` set, then you must comment the below `i18n` config
