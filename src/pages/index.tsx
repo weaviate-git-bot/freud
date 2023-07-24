@@ -77,7 +77,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("categories", JSON.stringify(categories));
+    setTimeout(() => {localStorage.setItem("categories", JSON.stringify(categories))}, 2000);
   }, [categories]);
 
   function tempHandleClick() {
