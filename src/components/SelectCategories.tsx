@@ -26,7 +26,7 @@ const SelectCategories = ({ categories, myfunc }: Props) => {
                     return (
                         <label htmlFor={category} className="flex flex-row gap-5 pb-2 justify-between" key={index}>
                             {category}
-                            <Checkbox name={category} id={category} onCheckedChange={(checked) => {
+                            <Checkbox checked={categories[category]?.active} name={category} id={category} onCheckedChange={(checked) => {
 
                                 if (checked != "indeterminate") {
                                     myfunc(prevState => ({

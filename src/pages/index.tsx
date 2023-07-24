@@ -10,8 +10,12 @@ import Chat from "~/components/Chat";
 import SelectCategories from "~/components/SelectCategories";
 import { api } from "~/utils/api";
 import { z } from "zod";
+import { Button } from "~/components/ui/button/Button";
 
-export const Categories = z.record(z.string(), z.object({ active: z.boolean() }));
+export const Categories = z.record(
+  z.string(),
+  z.object({ active: z.boolean() })
+);
 
 export type Categories = z.infer<typeof Categories>;
 
@@ -25,27 +29,64 @@ export default function Home() {
   const fetchedCategories = api.weaviate.listSchemas.useMutation({
     onSuccess: (data) => {
       if (!data) {
-        throw new Error("Data not defined in OnSuccess")
+        throw new Error("Data not defined in OnSuccess");
       }
-      data.classes?.map((item) => {
+
+      const fetched_keys: string[] = [];
+      data.classes?.forEach((item) => {
         let name: string;
         if (!item.class) {
           name = "Kategori uten navn";
         } else {
           name = item.class;
         }
+        fetched_keys.push(name);
+      });
 
+      fetched_keys.map((name) => {
         setCategories((prevState) => ({
           ...prevState,
           [name]: { active: false },
         }));
       });
+
     },
   });
 
   useEffect(() => {
     fetchedCategories.mutate();
+    let localstore_categories: { [name: string]: { active: boolean } } = {};
+    let localstore_keys: string[] = [];
+
+    if (localStorage.getItem("categories")) {
+      localstore_categories = JSON.parse(
+        localStorage.getItem("categories") as string
+      ) as { [name: string]: { active: boolean } };
+
+      localstore_keys = Object.keys(
+        localstore_categories
+      ).sort((a, b) => a.localeCompare(b));
+
+      localstore_keys.forEach((name) => {
+        setCategories((prevState) => ({
+          ...prevState,
+          [name]: { active: localstore_categories[name]?.active as boolean},
+        }));
+      })
+    }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("categories", JSON.stringify(categories));
+  }, [categories]);
+
+  function tempHandleClick() {
+    console.log("\nCategories from button:", categories);
+    console.log(
+      "Categories from localstore:",
+      localStorage.getItem("categories")
+    );
+  }
 
   return (
     <>
@@ -72,6 +113,7 @@ export default function Home() {
         <div />
         <div />
         <Header chatStarted={messages.length > 0} />
+        <Button onClick={tempHandleClick} />
         <Chat
           messages={messages}
           setMessages={setMessages}

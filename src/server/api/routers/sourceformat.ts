@@ -51,6 +51,9 @@ export const sourceRouter = createTRPCRouter({
                     arrayOfActiveCategories.push(key);
                 }
             }
+
+            console.log("Active categories: ", arrayOfActiveCategories);
+
             const useAllCategories: boolean = arrayOfActiveCategories.length == 0;
 
             const arrayOfVectorStores: WeaviateStore[] = [];
