@@ -1,7 +1,8 @@
-import { ThumbState, type Feedback } from "@prisma/client";
+import { ThumbState } from "@prisma/client";
 import * as RadixTooltip from "@radix-ui/react-tooltip";
 import React, { useEffect, useState } from "react";
 import { type Message } from "~/interfaces/message";
+import { type Feedback } from "~/interfaces/feedback";
 import { api } from "~/utils/api";
 import { ButtonWithTooltip } from "./ButtonWithTooltip";
 import { FeedbackForm } from "./FeedbackForm";
@@ -145,9 +146,7 @@ const FeedbackButtons = ({ chat }: Props) => {
     setNewThumbFeedback.mutate(newThumb);
   }
 
-  function updateCommentFeedback(e: Event) {
-    e.preventDefault();
-
+  function updateCommentFeedback() {
     localStorage.setItem("email", email);
     localStorage.setItem("name", name);
 
