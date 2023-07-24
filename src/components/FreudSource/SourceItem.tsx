@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { type Source } from "~/interfaces/source";
-import { SourceContent } from "./SourceContent";
+// import { SourceContent } from "./SourceContent";
 
 type Prop = {
   source: Source;
@@ -14,7 +14,7 @@ type Prop = {
 const SourceItem = ({
   source,
   setActiveSources,
-  active,
+  // active,
   id,
   scrollToId,
   setScrollToId,
@@ -25,7 +25,7 @@ const SourceItem = ({
     if (scrollToId == id && sourceRef.current) {
       sourceRef.current.scrollIntoView({
         behavior: "smooth",
-        block: "center",
+        block: "start",
       });
 
       setScrollToId(-1);
@@ -38,7 +38,7 @@ const SourceItem = ({
       ref={sourceRef}
     >
       <div
-        className="cursor-pointer"
+        // className="cursor-pointer"
         onClick={() =>
           setActiveSources((prevState) =>
             prevState.map((active, index) => (index === id ? !active : active))
@@ -58,17 +58,17 @@ const SourceItem = ({
           </>
         )}
       </div>
-      <div>
-        {active && (
-          <SourceContent
-            category={source.category}
-            content={source.content}
-            filename={source.filename}
-            filetype={source.filetype}
-            location={source.location}
-          />
-        )}
-      </div>
+      {/* <div> */}
+      {/*   {active && ( */}
+      {/*     <SourceContent */}
+      {/*       category={source.category} */}
+      {/*       content={source.content} */}
+      {/*       filename={source.filename} */}
+      {/*       filetype={source.filetype} */}
+      {/*       location={source.location} */}
+      {/*     /> */}
+      {/*   )} */}
+      {/* </div> */}
     </div>
   );
 };
