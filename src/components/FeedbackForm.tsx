@@ -4,6 +4,16 @@ import { Label } from "./ui/label/Label";
 import { TextArea } from "./ui/textArea/TextArea";
 import { ButtonMinimal } from "./ui/buttonMinimal/ButtonMinimal";
 
+type Props = {
+  name: string;
+  email: string;
+  comment: string;
+  setName: React.Dispatch<React.SetStateAction<string>>;
+  setEmail: React.Dispatch<React.SetStateAction<string>>;
+  setComment: React.Dispatch<React.SetStateAction<string>>;
+  handleSubmit: () => void;
+};
+
 export const FeedbackForm = ({
   name,
   email,
@@ -12,7 +22,7 @@ export const FeedbackForm = ({
   setEmail,
   setComment,
   handleSubmit,
-}) => {
+}: Props) => {
   const labelStyle = { fontSize: "var(--fontSizes-xxs)", fontWeight: "bold" };
   const inputStyle = {
     fontSize: "var(--fontSizes-xxs)",
@@ -54,7 +64,8 @@ export const FeedbackForm = ({
           value={email}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              handleSubmit(e);
+              e.preventDefault();
+              handleSubmit();
             }
           }}
         />
@@ -67,7 +78,10 @@ export const FeedbackForm = ({
             padding: "5px 12px",
             borderRadius: "5px",
           }}
-          onClick={handleSubmit}
+          onClick={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
         >
           Send
         </ButtonMinimal>
