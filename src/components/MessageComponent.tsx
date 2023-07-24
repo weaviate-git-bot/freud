@@ -21,7 +21,12 @@ const MessageComponent = ({ message, children }: Prop) => {
   const formatLinks = (input: string): React.JSX.Element => {
     try {
 
-      var regex = /\[[0-9]+\]/g;
+      var regex = /\[[Source 0-9]+\]/gi;
+
+      if (!regex.test(input)) {
+        // If it does not contain any source references
+        throw new Error("No sources found")
+      }
 
       const goodspaces = input.replaceAll("\n", " \n")
 
@@ -56,7 +61,6 @@ const MessageComponent = ({ message, children }: Prop) => {
     }
     catch (error) {
       // Code above is bad. So if it breaks, sources wont be clickable.
-      console.log("Error in formatting sources")
       console.log(error)
       return <p>{input}</p>
     }
