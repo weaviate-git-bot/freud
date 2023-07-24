@@ -5,16 +5,18 @@ type Prop = {
   category: string;
   filename: string;
   location: {
-    chapter: string;
-    href: string;
+    chapter?: string;
+    href?: string;
     lineFrom: number;
     lineTo: number;
   };
 };
 
 export const ViewEpub = ({ category, filename, location }: Prop) => {
-  const [currentLocation, setCurrentLocation] = React.useState(null);
-  const locationChanged = (epubcifi) => {
+  const [currentLocation, setCurrentLocation] = React.useState<
+    string | number | undefined
+  >(undefined);
+  const locationChanged = (epubcifi: string) => {
     // epubcifi is a internal string used by epubjs to point to a location in an epub.
     // It looks like this: epubcfi(/6/6[titlepage]!/4/2/12[pgepubid00003]/3:0)
     setCurrentLocation(epubcifi);
