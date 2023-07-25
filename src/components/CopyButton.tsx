@@ -64,7 +64,7 @@ const CopyButton = ({ message }: Prop) => {
     return (
       <RadixTooltip.Provider delayDuration={0}>
         <Tooltip content={"Copy"}>
-          <Button className="float-right ml-4" onClick={handleClick}>
+          <Button  color={"transparent"} className="float-right ml-4" onClick={handleClick}>
             <Icon name={buttonIcon as IconName}></Icon>
           </Button>
         </ Tooltip>

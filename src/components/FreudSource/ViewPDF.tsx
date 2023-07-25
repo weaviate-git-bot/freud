@@ -9,21 +9,21 @@ type Prop = {
   category: string;
   filename: string;
   location: {
-    pageNr: number;
+    pageNr?: number;
     lineFrom: number;
     lineTo: number;
   };
 };
 
 export const ViewPDF = ({ category, filename, location }: Prop) => {
-  const [numPages, setNumPages] = React.useState(null);
-  const [pageNumber, setPageNumber] = React.useState(location.pageNr);
+  const [numPages, setNumPages] = React.useState<number | null>(null);
+  const [pageNumber, setPageNumber] = React.useState(location.pageNr ?? 1);
 
   const file = `/documents/${category}/${filename}`;
 
-  function onDocumentLoadSuccess({ numPages }) {
+  function onDocumentLoadSuccess({ numPages}: {numPages: number}) {
     setNumPages(numPages);
-    setPageNumber(location.pageNr);
+    setPageNumber(location.pageNr ?? 1);
   }
 
   function changePage(offset: number) {
