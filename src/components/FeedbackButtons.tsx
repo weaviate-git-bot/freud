@@ -34,6 +34,10 @@ const FeedbackButtons = ({ chat }: Props) => {
     // Delete feedback after a delay, unless a new thumb is selected in the meantime
     // Note: feedbackID is set to null in the onSuccess function
     if (thumb === ThumbState.none) {
+      // Only proceed with deletion if feedback exists
+      if (feedbackID === null) {
+        return;
+      }
       const deleteTimeout = setTimeout(() => {
         if (thumbChangedToNone) {
           deleteFeedback();

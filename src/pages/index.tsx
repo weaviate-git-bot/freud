@@ -1,17 +1,15 @@
 import Head from "next/head";
 import React, { useEffect, useState } from "react";
-import { SidebarFreud } from "~/SidebarFreud";
-import { VectorStoreSettings } from "~/components/VectorStoreSettings";
-import { type Message } from "~/interfaces/message";
-
-import { env } from "~/env.mjs";
-import Header from "~/components/Header";
-import Chat from "~/components/Chat";
-import SelectCategories from "~/components/SelectCategories";
-import { api } from "~/utils/api";
 import { z } from "zod";
-import { Button } from "~/components/ui/button/Button";
-import { ConsoleCallbackHandler } from "langchain/dist/callbacks";
+import Chat from "~/components/Chat";
+import Header from "~/components/Header";
+import SelectCategories from "~/components/SelectCategories";
+import { SidebarFreud } from "~/components/SidebarFreud";
+import { VectorStoreSettings } from "~/components/VectorStoreSettings";
+import { env } from "~/env.mjs";
+import { type Message } from "~/interfaces/message";
+import { api } from "~/utils/api";
+
 
 export const Categories = z.record(
   z.string(),

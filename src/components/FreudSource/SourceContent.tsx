@@ -18,13 +18,13 @@ type Prop = {
 
 export const SourceContent = ({
   category,
-  content,
+  // content,
   filename,
   filetype,
   location,
 }: Prop) => {
   return (
-    <div className="bg-250 m-3 rounded-lg p-2 w-[100%]">
+    <div className="bg-250 m-3 w-[100%] rounded-lg p-2">
       {/* {content} */}
       {filetype === "pdf" && (
         <ViewPDF category={category} filename={filename} location={location} />
