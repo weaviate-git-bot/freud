@@ -21,7 +21,6 @@ const SourceList = ({ sources, activeSources, setActiveSources, scrollToId, setS
         <div>
           <p className="ml-3 text-lg font-bold">Kilder</p>
           {sources.map((source: Source, idx) => {
-            // console.log(activeSources[idx])
             return <SourceItem source={source} key={idx} id={idx} active={activeSources[idx]!} setActiveSources={setActiveSources} scrollToId={scrollToId} setScrollToId={setScrollToId} />
           }
           )

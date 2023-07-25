@@ -10,14 +10,13 @@ import { env } from "~/env.mjs";
 import { type Message } from "~/interfaces/message";
 import { api } from "~/utils/api";
 
+
 export const Categories = z.record(
   z.string(),
-  z.object({ active: z.boolean() })
+  z.boolean()
 );
 
 export type Categories = z.infer<typeof Categories>;
-
-// export type Categories = { [key: string]: { active: boolean } };
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -26,21 +25,48 @@ export default function Home() {
 
   const fetchedCategories = api.weaviate.listSchemas.useMutation({
     onSuccess: (data) => {
+      //Fetch categories from vector db. Set either false or value from localstore.
       if (!data) {
         throw new Error("Data not defined in OnSuccess");
       }
-      data.classes?.map((item) => {
+
+      const fetched_keys: string[] = [];
+
+      data.classes?.forEach((item) => {
         let name: string;
         if (!item.class) {
           name = "Kategori uten navn";
         } else {
           name = item.class;
         }
+        fetched_keys.push(name);
+      });
 
-        setCategories((prevState) => ({
-          ...prevState,
-          [name]: { active: false },
-        }));
+      let localstore_categories: { [name: string]: boolean } = {};
+      let localstore_keys: string[] = [];
+
+      localstore_categories = JSON.parse(
+        localStorage.getItem("categories") as string
+      ) as { [name: string]: boolean };
+
+      localstore_keys = Object.keys(
+        localstore_categories
+      );
+
+
+      fetched_keys.map((name) => {
+        if (localstore_keys.includes(name)) {
+          setCategories((prevState) => ({
+            ...prevState,
+            [name]: localstore_categories[name]!,
+          }));
+        } else {
+          setCategories((prevState) => ({
+            ...prevState,
+            [name]: false,
+          }));
+
+        }
       });
     },
   });
@@ -48,6 +74,7 @@ export default function Home() {
   useEffect(() => {
     fetchedCategories.mutate();
   }, []);
+
 
   return (
     <>
