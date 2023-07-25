@@ -26,13 +26,24 @@ const SelectCategories = ({ categories, myfunc }: Props) => {
                     return (
                         <label htmlFor={category} className="flex flex-row gap-5 pb-2 justify-between" key={index}>
                             {category}
-                            <Checkbox checked={categories[category]?.active} name={category} id={category} onCheckedChange={(checked) => {
+                            <Checkbox checked={categories[category]} name={category} id={category} onCheckedChange={(checked) => {
 
                                 if (checked != "indeterminate") {
-                                    myfunc(prevState => ({
-                                        ...prevState,
-                                        [category]: { active: checked }
-                                    }));
+                                    //Update state and localstore for checkmark
+
+                                    let newstate: Categories = {};
+
+                                    Object.keys(categories).map((cat) => {
+                                        if (cat === category) {
+                                            newstate[cat] = checked
+                                        } else {
+                                            newstate[cat] = categories[cat]!
+                                        }
+                                    })
+
+                                    myfunc(newstate);
+
+                                    localStorage.setItem("categories", JSON.stringify(newstate));
                                 }
 
                             }}></Checkbox>

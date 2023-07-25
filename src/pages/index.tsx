@@ -11,15 +11,14 @@ import SelectCategories from "~/components/SelectCategories";
 import { api } from "~/utils/api";
 import { z } from "zod";
 import { Button } from "~/components/ui/button/Button";
+import { ConsoleCallbackHandler } from "langchain/dist/callbacks";
 
 export const Categories = z.record(
   z.string(),
-  z.object({ active: z.boolean() })
+  z.boolean()
 );
 
 export type Categories = z.infer<typeof Categories>;
-
-// export type Categories = { [key: string]: { active: boolean } };
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -28,11 +27,13 @@ export default function Home() {
 
   const fetchedCategories = api.weaviate.listSchemas.useMutation({
     onSuccess: (data) => {
+      //Fetch categories from vector db. Set either false or value from localstore.
       if (!data) {
         throw new Error("Data not defined in OnSuccess");
       }
 
       const fetched_keys: string[] = [];
+
       data.classes?.forEach((item) => {
         let name: string;
         if (!item.class) {
@@ -43,53 +44,39 @@ export default function Home() {
         fetched_keys.push(name);
       });
 
-      fetched_keys.map((name) => {
-        setCategories((prevState) => ({
-          ...prevState,
-          [name]: { active: false },
-        }));
-      });
+      let localstore_categories: { [name: string]: boolean } = {};
+      let localstore_keys: string[] = [];
 
+      localstore_categories = JSON.parse(
+        localStorage.getItem("categories") as string
+      ) as { [name: string]: boolean };
+
+      localstore_keys = Object.keys(
+        localstore_categories
+      );
+
+
+      fetched_keys.map((name) => {
+        if (localstore_keys.includes(name)) {
+          setCategories((prevState) => ({
+            ...prevState,
+            [name]: localstore_categories[name]!,
+          }));
+        } else {
+          setCategories((prevState) => ({
+            ...prevState,
+            [name]: false,
+          }));
+
+        }
+      });
     },
   });
 
   useEffect(() => {
     fetchedCategories.mutate();
-    let localstore_categories: { [name: string]: { active: boolean } } = {};
-    let localstore_keys: string[] = [];
-
-    if (localStorage.getItem("categories")) {
-      localstore_categories = JSON.parse(
-        localStorage.getItem("categories") as string
-      ) as { [name: string]: { active: boolean } };
-
-      localstore_keys = Object.keys(
-        localstore_categories
-      ).sort((a, b) => a.localeCompare(b));
-    }
-
-    // const current_keys = Object.keys(categories);
-
-    setTimeout(()=> {
-      localstore_keys.forEach((name) => {
-      setCategories((prevState) => ({
-        ...prevState,
-        [name]: { active: localstore_categories[name]?.active ?? false},
-      }));
-    })}, 1000);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("categories", JSON.stringify(categories));
-  }, [categories]);
-
-  function tempHandleClick() {
-    console.log("\nCategories from button:", categories);
-    console.log(
-      "Categories from localstore:",
-      localStorage.getItem("categories")
-    );
-  }
 
   return (
     <>
@@ -116,7 +103,6 @@ export default function Home() {
         <div />
         <div />
         <Header chatStarted={messages.length > 0} />
-        <Button onClick={tempHandleClick} />
         <Chat
           messages={messages}
           setMessages={setMessages}
