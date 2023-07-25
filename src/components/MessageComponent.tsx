@@ -21,32 +21,41 @@ const MessageComponent = ({ message, children }: Prop) => {
   const formatLinks = (input: string): React.JSX.Element => {
     try {
 
-      var regex = /\[[0-9]+\]/g;
+      //Sometimes gpt wrongly outputs [Source 1] instead of [1], so we include it in regex.
+      var regex = /\[[Source 0-9]+\]/i;
+
+      if (!regex.test(input)) {
+        // If it does not contain any source references
+        throw new Error("No sources found")
+      }
 
       const goodspaces = input.replaceAll("\n", " \n")
+      const moregoodspaces = goodspaces.replaceAll("]", "] ")
 
-      const splittext = goodspaces.split(' ');
+      const splittext = moregoodspaces.split(' ');
+      console.log(splittext)
 
       let outputlist: any[] = []
 
       let mystring = "";
       splittext.map((split, idx) => {
-        if (regex.test(split)) {
+        if (regex.test(split.trim())) {
           outputlist.push(mystring)
           mystring = ""
-          for (let i = 1; i <= message.sources!.length; i++) {
-            if (parseInt(split.charAt(1)) == i) {
+          for (let i = 0; i < message.sources!.length; i++) {
+            if (parseInt(split.trim().charAt(1)) == i + 1) {
+              console.log(split,)
               outputlist.push(<button key={idx} className="text-blue600" onClick={() => {
-                setScrollToId(i - 1);
-                setActiveSources(prevState => prevState.map((active, index) => index === i - 1 ? true : active))
-              }}>[{i}].</button>)
+                setScrollToId(i);
+                setActiveSources(prevState => prevState.map((active, index) => index === i ? true : active))
+              }}>[{i + 1}]</button>)
             }
           }
         } else {
           mystring += split + " ";
-
         }
       })
+      outputlist.push(mystring);
 
       const output = <p className='whitespace-pre-wrap'>
         {outputlist}
@@ -56,7 +65,6 @@ const MessageComponent = ({ message, children }: Prop) => {
     }
     catch (error) {
       // Code above is bad. So if it breaks, sources wont be clickable.
-      console.log("Error in formatting sources")
       console.log(error)
       return <p>{input}</p>
     }
