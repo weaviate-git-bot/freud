@@ -1,17 +1,19 @@
 import Head from "next/head";
 import React, { useEffect, useState } from "react";
-import { SidebarFreud } from "~/SidebarFreud";
-import { VectorStoreSettings } from "~/components/VectorStoreSettings";
-import { type Message } from "~/interfaces/message";
-
-import { env } from "~/env.mjs";
-import Header from "~/components/Header";
-import Chat from "~/components/Chat";
-import SelectCategories from "~/components/SelectCategories";
-import { api } from "~/utils/api";
 import { z } from "zod";
+import Chat from "~/components/Chat";
+import Header from "~/components/Header";
+import SelectCategories from "~/components/SelectCategories";
+import { SidebarFreud } from "~/components/SidebarFreud";
+import { VectorStoreSettings } from "~/components/VectorStoreSettings";
+import { env } from "~/env.mjs";
+import { type Message } from "~/interfaces/message";
+import { api } from "~/utils/api";
 
-export const Categories = z.record(z.string(), z.object({ active: z.boolean() }));
+export const Categories = z.record(
+  z.string(),
+  z.object({ active: z.boolean() })
+);
 
 export type Categories = z.infer<typeof Categories>;
 
@@ -25,7 +27,7 @@ export default function Home() {
   const fetchedCategories = api.weaviate.listSchemas.useMutation({
     onSuccess: (data) => {
       if (!data) {
-        throw new Error("Data not defined in OnSuccess")
+        throw new Error("Data not defined in OnSuccess");
       }
       data.classes?.map((item) => {
         let name: string;
@@ -55,7 +57,7 @@ export default function Home() {
         <link rel="icon" href="/sigmund_freud_avatar.png" />
       </Head>
       <main
-        className={`flex min-h-screen flex-col items-center justify-between bg-beige100 px-8 pb-8`}
+        className={`flex min-h-screen flex-col items-center justify-between bg-beige100 pb-8`}
       >
         <SidebarFreud
           showSettings={showSettings}

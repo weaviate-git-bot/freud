@@ -1,17 +1,17 @@
 version: "3.7"
 
 services:
-  # mysql:
-  #   image: mysql:8.0
-  #   command: --default-authentication-plugin=caching_sha2_password
-  #   restart: always
-  #   environment:
-  #     - MYSQL_DATABASE=freuddb
-  #     - MYSQL_USER=freud
-  #     - MYSQL_PASSWORD=testpswd
-  #     - MYSQL_ROOT_PASSWORD=root
-  #   ports:
-  #     - "3316:3306" #change the first port number if you already have MySQL running locally
+  mysql:
+    image: mysql:8.0
+    command: --default-authentication-plugin=caching_sha2_password
+    restart: always
+    environment:
+      - MYSQL_DATABASE=freuddb
+      - MYSQL_USER=freud
+      - MYSQL_PASSWORD=testpswd
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - "3316:3306" #change the first port number if you already have MySQL running locally
 
   weaviate:
     command:
@@ -57,17 +57,3 @@ services:
 
   text-spellcheck:
     image: semitechnologies/text-spellcheck-model:pyspellchecker-en
-
-#   postgres-db:
-#   image: postgres
-#     restart: always
-#     ports:
-#       - 5432:5432
-#     environment:
-#       POSTGRES_USER: joddern
-#       POSTGRES_PASSWORD: prisma
-#       POSTGRES_DB: freud
-#     volumes:
-#       - postgres:/var/lib/postgresql/data
-# volumes:
-#   postgres: ~

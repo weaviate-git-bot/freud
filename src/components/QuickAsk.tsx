@@ -12,7 +12,7 @@ type Props = {
 
 const QuickAsk = ({ suggestedQuestions, onClick, isLoadingReply, isLoadingFollowUps }: Props) => {
     return (
-        <div className='w-[50%]'>
+        <div className='md:w-[50%] w-[90%]'>
             {suggestedQuestions.map((question: string, index: number) => (
                 <div key={index}>
                     <Button

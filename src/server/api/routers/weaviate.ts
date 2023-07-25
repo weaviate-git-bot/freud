@@ -1,7 +1,8 @@
 import { readdirSync } from "fs";
 import type { Document } from "langchain/dist/document";
 import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
-import { EPubLoader } from "langchain/document_loaders/fs/epub";
+// import { EPubLoader } from "langchain/document_loaders/fs/epub";
+import { EPubLoader } from "~/server/document_loaders/epub";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { type OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -31,7 +32,6 @@ const indexDescriptions: { [key: string]: string } = {
 
 // Root directory containing source documents
 const rootDirectoryPath = path.join(process.cwd(), "documents");
-
 
 /* tRPC router
 - createSchema
@@ -198,19 +198,39 @@ async function createIndex(indexName: string) {
         description: "Author of book",
       },
       {
-        name: "source",
+        name: "filename",
         dataType: ["string"],
-        description: "Filename of source data",
+        description: "Name of source document",
+      },
+      {
+        name: "filetype",
+        dataType: ["string"],
+        description: "Type of source document",
+      },
+      {
+        name: "category",
+        dataType: ["string"],
+        description: "Psychotherapy framework",
       },
       {
         name: "text",
         dataType: ["text"],
-        description: "Text split",
+        description: "Text content",
       },
       {
         name: "pageNumber",
         dataType: ["int"],
-        description: "Page number of text split",
+        description: "Page number of text split (only PDF)",
+      },
+      {
+        name: "chapter",
+        dataType: ["string"],
+        description: "Chapter of text split (only Epub)",
+      },
+      {
+        name: "href",
+        dataType: ["string"],
+        description: "Hyperlink to the chapter a snippet is from (only Epub)",
       },
       {
         name: "loc_lines_from",
@@ -304,11 +324,11 @@ async function loadDocuments(indexName: string) {
   const loader = new DirectoryLoader(path.join(sourceDirectoryPath), {
     ".pdf": (sourceDirectoryPath) =>
       new PDFLoader(sourceDirectoryPath, {
-        splitPages: false,
+        splitPages: true,
       }),
     ".epub": (sourceDirectoryPath) =>
       new EPubLoader(sourceDirectoryPath, {
-        splitChapters: false,
+        splitChapters: true,
       }),
   });
   const allDocs = await loader.load();
@@ -316,7 +336,17 @@ async function loadDocuments(indexName: string) {
   // Add custom metadata
   console.debug(`- Clean document list and add metadata (${indexName})`);
 
-  const validKeys = ["author", "title", "source", "pageNumber", "splitCount"];
+  const validKeys = [
+    "author",
+    "category",
+    "chapter",
+    "filename",
+    "filetype",
+    "href",
+    "splitCount",
+    "pageNumber",
+    "title",
+  ];
   let splits: Array<Document<Record<string, any>>> = [];
 
   // Define splitter
@@ -341,8 +371,11 @@ async function loadDocuments(indexName: string) {
         throw new Error("Missing or corrupted source metadata");
       }
 
-      const filename: string =
-        document.metadata?.source?.split(pathSeparator).pop()?.split(".")[0] ?? "";
+      const file: string =
+        document.metadata?.source?.split(pathSeparator).pop() ?? "";
+
+      const filename = file.split(".")[0] ?? "";
+      const filetype = file.split(".")[1] ?? "";
 
       if (metadataDictionary[filename] === undefined) {
         throw new Error(
@@ -364,6 +397,13 @@ async function loadDocuments(indexName: string) {
 
       // Add metadata to document
       document.metadata.author = metadataDictionary[filename]!.author;
+      document.metadata.category = indexName;
+      document.metadata.chapter =
+        (document.metadata?.chapter_title as string) ?? "";
+      document.metadata.filename = file;
+      document.metadata.filetype = filetype;
+      document.metadata.href =
+        (document.metadata?.chapter_href as string) ?? "";
       document.metadata.title = title;
       document.metadata.pageNumber =
         (document.metadata.loc as { pageNumber?: number })?.pageNumber ?? 0;
@@ -435,15 +475,6 @@ async function createVectorStoreFromDocuments(
   await WeaviateStore.fromDocuments(splits, embeddings, {
     client,
     indexName: indexName,
-    metadataKeys: [
-      "title",
-      "author",
-      "source",
-      "pageNumber",
-      "loc_lines_from",
-      "loc_lines_to",
-      "splitCount",
-    ],
   })
     .then(() => {
       console.debug(`- Vector store created (${indexName})`);
