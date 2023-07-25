@@ -47,15 +47,16 @@ export const sourceRouter = createTRPCRouter({
 
             const arrayOfActiveCategories: string[] = [];
             for (const key in input.categories) {
-                if (input.categories[key]?.active) {
+                if (input.categories[key]) {
                     arrayOfActiveCategories.push(key);
                 }
             }
+
             const useAllCategories: boolean = arrayOfActiveCategories.length == 0;
 
             const arrayOfVectorStores: WeaviateStore[] = [];
             for (const key in input.categories) {
-                if (input.categories[key]?.active || useAllCategories) {
+                if (input.categories[key] || useAllCategories) {
                     arrayOfVectorStores.push(await getRetrieverFromIndex(key));
                 }
             }

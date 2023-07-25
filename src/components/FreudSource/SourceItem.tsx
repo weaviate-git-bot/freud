@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { type Source } from "~/interfaces/source";
 import { SourceContent } from "./SourceContent";
 
@@ -11,8 +11,14 @@ type Prop = {
   setScrollToId: React.Dispatch<React.SetStateAction<number>>;
 };
 
-const SourceItem = ({ source, setActiveSources, active, id, scrollToId, setScrollToId }: Prop) => {
-
+const SourceItem = ({
+  source,
+  setActiveSources,
+  active,
+  id,
+  scrollToId,
+  setScrollToId,
+}: Prop) => {
   const sourceRef = useRef<null | HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,15 +28,22 @@ const SourceItem = ({ source, setActiveSources, active, id, scrollToId, setScrol
         block: "center",
       });
 
-      setScrollToId(-1)
+      setScrollToId(-1);
     }
-  }, [scrollToId])
+  }, [scrollToId]);
 
   return (
-    <div className="m-3 list-disc rounded-lg bg-gray50 pb-2 pl-5 pr-10 pt-2 text-base font-light w-fit min-w-[60%]" ref={sourceRef}>
+    <div
+      className="m-3 w-fit min-w-[60%] list-disc rounded-lg bg-gray50 pb-2 pl-5 pr-10 pt-2 text-base font-light"
+      ref={sourceRef}
+    >
       <div
         className="cursor-pointer"
-        onClick={() => setActiveSources(prevState => prevState.map((active, index) => index === id ? !active : active))}
+        onClick={() =>
+          setActiveSources((prevState) =>
+            prevState.map((active, index) => (index === id ? !active : active))
+          )
+        }
       >
         <span>[{id + 1}] </span>
         <span className="font-bold">{source.title}</span> av{" "}

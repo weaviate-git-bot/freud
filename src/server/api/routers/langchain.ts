@@ -53,7 +53,7 @@ export const langchainRouter = createTRPCRouter({
 
       const arrayOfActiveCategories: string[] = [];
       for (const key in input.categories) {
-        if (input.categories[key]?.active) {
+        if (input.categories[key]) {
           arrayOfActiveCategories.push(key);
         }
       }
@@ -61,7 +61,7 @@ export const langchainRouter = createTRPCRouter({
 
       const arrayOfVectorStores: WeaviateStore[] = [];
       for (const key in input.categories) {
-        if (input.categories[key]?.active || useAllCategories) {
+        if (input.categories[key] || useAllCategories) {
           arrayOfVectorStores.push(await getRetrieverFromIndex(key));
         }
       }
