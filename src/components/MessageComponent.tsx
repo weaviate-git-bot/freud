@@ -33,7 +33,6 @@ const MessageComponent = ({ message, children }: Prop) => {
       const moregoodspaces = goodspaces.replaceAll("]", "] ")
 
       const splittext = moregoodspaces.split(' ');
-      console.log(splittext)
 
       let outputlist: any[] = []
 
@@ -44,7 +43,6 @@ const MessageComponent = ({ message, children }: Prop) => {
           mystring = ""
           for (let i = 0; i < message.sources!.length; i++) {
             if (parseInt(split.trim().charAt(1)) == i + 1) {
-              console.log(split,)
               outputlist.push(<button key={idx} className="text-blue600" onClick={() => {
                 setScrollToId(i);
                 setActiveSources(prevState => prevState.map((active, index) => index === i ? true : active))
