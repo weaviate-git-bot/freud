@@ -66,18 +66,21 @@ export default function Home() {
       localstore_keys = Object.keys(
         localstore_categories
       ).sort((a, b) => a.localeCompare(b));
-
-      localstore_keys.forEach((name) => {
-        setCategories((prevState) => ({
-          ...prevState,
-          [name]: { active: localstore_categories[name]?.active as boolean},
-        }));
-      })
     }
+
+    // const current_keys = Object.keys(categories);
+
+    setTimeout(()=> {
+      localstore_keys.forEach((name) => {
+      setCategories((prevState) => ({
+        ...prevState,
+        [name]: { active: localstore_categories[name]?.active ?? false},
+      }));
+    })}, 1000);
   }, []);
 
   useEffect(() => {
-    setTimeout(() => {localStorage.setItem("categories", JSON.stringify(categories))}, 2000);
+    localStorage.setItem("categories", JSON.stringify(categories));
   }, [categories]);
 
   function tempHandleClick() {
