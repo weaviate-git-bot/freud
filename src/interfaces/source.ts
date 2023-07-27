@@ -14,6 +14,7 @@ export const Source = z.object({
   filename: z.string(),
   filetype: z.string(),
   category: z.string(),
+  score: z.number(),
 });
 
 export type Source = z.infer<typeof Source>;
