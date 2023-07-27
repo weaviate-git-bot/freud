@@ -37,7 +37,6 @@ const SourceList = ({ sources, scrollToId, setScrollToId }: Prop) => {
         </p>
       ) : (
         <div>
-
           <p className="ml-3 text-lg font-bold">Kilder</p>
           {sourceItems.map((sources: Source[], index) => {
             from = to
