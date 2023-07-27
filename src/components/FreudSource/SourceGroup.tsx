@@ -20,7 +20,7 @@ const SourceGroup = ({
   const source = sources[0]!;
   const to = from + sources.length;
 
-  const [lastSelected, setLastSelected] = useState<number>(0);
+  const [lastSelected, setLastSelected] = useState<number>(from);
   const [open, setOpen] = useState<boolean>();
 
   useEffect(() => {
@@ -41,8 +41,11 @@ const SourceGroup = ({
       ref={sourceRef}
     >
       <p className="cursor-pointer" onClick={(e) => setOpen(!open)}>
-
-        <span>[{from + 1} - {to}] </span>
+        {sources.length == 1 ?
+          <span>[{from + 1}] </span>
+          :
+          <span>[{from + 1} - {to}] </span>
+        }
         <span className="font-bold">{source.title}</span> av{" "}
         <span className="font-normal">{source.author}</span>
         {/* {source.filetype === "pdf" && (
