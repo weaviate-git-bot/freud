@@ -1,5 +1,5 @@
 import React from "react";
-import { type Categories } from "~/pages";
+import { type Categories } from "~/types/categories";
 import { Checkbox } from "./ui/checkbox/Checkbox";
 
 type Props = {

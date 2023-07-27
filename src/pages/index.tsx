@@ -1,6 +1,5 @@
 import Head from "next/head";
 import React, { useEffect, useState } from "react";
-import { z } from "zod";
 import Chat from "~/components/Chat";
 import Header from "~/components/Header";
 import SelectCategories from "~/components/SelectCategories";
@@ -8,15 +7,8 @@ import { SidebarFreud } from "~/components/SidebarFreud";
 import { VectorStoreSettings } from "~/components/VectorStoreSettings";
 import { env } from "~/env.mjs";
 import { type Message } from "~/interfaces/message";
+import type { Categories } from "~/types/categories";
 import { api } from "~/utils/api";
-
-
-export const Categories = z.record(
-  z.string(),
-  z.boolean()
-);
-
-export type Categories = z.infer<typeof Categories>;
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
