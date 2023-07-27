@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { type Message, Role } from "~/interfaces/message";
-import { colors } from "~/stitches/colors";
 import SourceList from "./FreudSource/SourceList";
-import { Button } from "./ui/button/Button";
 
 type Prop = {
   message: Message;
@@ -15,7 +13,6 @@ const AVATAR_IMAGE_SIZE = 50;
 const MessageComponent = ({ message, children }: Prop) => {
 
   //initializes with length of sources (if sources are available) or is empty array
-  const [activeSources, setActiveSources] = useState<boolean[]>(new Array(message.sources?.length ?? 0).fill(false));
   const [scrollToId, setScrollToId] = useState<number>(-1);
 
   const formatLinks = (input: string): React.JSX.Element => {
@@ -45,7 +42,6 @@ const MessageComponent = ({ message, children }: Prop) => {
             if (parseInt(split.trim().charAt(1)) == i + 1) {
               outputlist.push(<button key={idx} className="text-blue600" onClick={() => {
                 setScrollToId(i);
-                setActiveSources(prevState => prevState.map((active, index) => index === i ? true : active))
               }}>[{i + 1}]</button>)
             }
           }
@@ -97,7 +93,10 @@ const MessageComponent = ({ message, children }: Prop) => {
             {children}
             {formatLinks(message.content)}
           </div>
-          <SourceList sources={message.sources ?? []} activeSources={activeSources} setActiveSources={setActiveSources} scrollToId={scrollToId} setScrollToId={setScrollToId} />
+          {message.sources ?
+            <SourceList sources={message.sources} scrollToId={scrollToId} setScrollToId={setScrollToId} />
+            : null
+          }
         </div>
       )}
     </div>

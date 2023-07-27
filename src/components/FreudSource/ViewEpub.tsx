@@ -24,7 +24,6 @@ export const ViewEpub = ({ category, filename, location }: Prop) => {
 
   const file = `/documents/${category}/${filename}`;
 
-  console.log(location);
 
   return (
     <div className="h-screen">
