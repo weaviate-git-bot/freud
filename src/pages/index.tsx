@@ -17,47 +17,33 @@ export default function Home() {
 
   const fetchedCategories = api.weaviate.listSchemas.useMutation({
     onSuccess: (data) => {
-      //Fetch categories from vector db. Set either false or value from localstore.
       if (!data) {
         throw new Error("Data not defined in OnSuccess");
       }
 
-      const fetched_keys: string[] = [];
+      // If category selections exists in localStorage, update checked value accordingly
+      const localCategorySelections: Categories = JSON.parse(
+        localStorage.getItem("categories") ?? ""
+      ) as Categories;
 
-      data.classes?.forEach((item) => {
-        let name: string;
-        if (!item.class) {
-          name = "Kategori uten navn";
-        } else {
-          name = item.class;
+      // Iterate through classes fetched via API
+      data.classes?.map((item) => {
+        if (item.class === undefined) {
+          return;
         }
-        fetched_keys.push(name);
-      });
 
-      let localstore_categories: { [name: string]: boolean } = {};
-      let localstore_keys: string[] = [];
+        const className = item.class;
+        const localStorageSelectionExists = Object.keys(
+          localCategorySelections
+        ).includes(className);
 
-      localstore_categories = JSON.parse(
-        localStorage.getItem("categories") as string
-      ) as { [name: string]: boolean };
-
-      localstore_keys = Object.keys(
-        localstore_categories
-      );
-
-
-      fetched_keys.map((name) => {
-        if (localstore_keys.includes(name)) {
-          setCategories((prevState) => ({
-            ...prevState,
-            [name]: localstore_categories[name]!,
-          }));
-        } else {
-          setCategories((prevState) => ({
-            ...prevState,
-            [name]: false,
-          }));
-        }
+        // Set to value in localStorage, alternatively default to false (not checked)
+        setCategories((categories) => ({
+          ...categories,
+          [className]: localStorageSelectionExists
+            ? localCategorySelections[className] ?? false
+            : false,
+        }));
       });
     },
   });

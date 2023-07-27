@@ -30,15 +30,19 @@ const SelectCategories = ({ categories, setCategories }: Props) => {
                 id={category}
                 onCheckedChange={(checked) => {
                   if (checked != "indeterminate") {
-                    //Update state and localstore for checkmark
-                    setCategories((categories) => ({
+                    // Define new state
+                    const newState = {
                       ...categories,
                       [category]: checked,
-                    }));
+                    };
 
+                    // Update state
+                    setCategories(newState);
+
+                    // Store state in localStorage
                     localStorage.setItem(
                       "categories",
-                      JSON.stringify(categories)
+                      JSON.stringify(newState)
                     );
                   }
                 }}
