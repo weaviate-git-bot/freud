@@ -5,15 +5,14 @@
 import { ConversationalRetrievalQAChain } from "langchain/chains";
 import { OpenAI } from "langchain/llms/openai";
 import { BufferMemory } from "langchain/memory";
+import { type WeaviateStore } from "langchain/vectorstores/weaviate";
 import { z } from "zod";
 import { Message, Role } from "~/interfaces/message";
 import type { Source } from "~/interfaces/source";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { getRetrieverFromIndex } from "~/utils/weaviate/getRetriever";
-
-import { Categories } from "~/pages";
-import { type WeaviateStore } from "langchain/vectorstores/weaviate";
+import { Categories } from "~/types/categories";
 import { MergerRetriever } from "~/utils/weaviate/MergerRetriever";
+import { getRetrieverFromIndex } from "~/utils/weaviate/getRetriever";
 
 // Specify language model, embeddings and prompts
 const model = new OpenAI({

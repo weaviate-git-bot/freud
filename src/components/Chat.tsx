@@ -8,8 +8,8 @@ import React, {
   type SetStateAction,
 } from "react";
 import { Role, type Message } from "~/interfaces/message";
-import { type Categories } from "~/pages";
 import { colors } from "~/stitches/colors";
+import { type Categories } from "~/types/categories";
 import { api } from "~/utils/api";
 import MessageList from "./MessageList";
 import QuickAsk from "./QuickAsk";
