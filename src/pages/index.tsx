@@ -23,7 +23,7 @@ export default function Home() {
 
       // If category selections exists in localStorage, update checked value accordingly
       const localCategorySelections: Categories = JSON.parse(
-        localStorage.getItem("categories") ?? ""
+        localStorage.getItem("categories") ?? "{}"
       ) as Categories;
 
       // Iterate through classes fetched via API
