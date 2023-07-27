@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { env } from "~/env.mjs";
 import { type Source } from "~/interfaces/source";
 import { SourceContent } from "./SourceContent";
 
@@ -37,17 +38,27 @@ const SourceGroup = ({
 
   return (
     <div
-      className="m-3 w-fit min-w-[60%] list-disc rounded-lg bg-gray50 pb-2 pl-5 pr-10 pt-2 text-base font-light "
+      className={`m-3  w-fit min-w-[60%] list-disc rounded-lg bg-gray50 pb-2 pl-5 pr-10 pt-2 text-base font-light min-h-fit `}
       ref={sourceRef}
     >
-      <p className="cursor-pointer" onClick={(e) => setOpen(!open)}>
-        {sources.length == 1 ?
-          <span>[{from + 1}] </span>
-          :
-          <span>[{from + 1} - {to}] </span>
-        }
-        <span className="font-bold">{source.title}</span> av{" "}
-        <span className="font-normal">{source.author}</span>
+      <div className="cursor-pointer flex flex-row justify-between gap-3" onClick={(e) => setOpen(!open)}>
+
+        <div>
+
+          {sources.length == 1 ?
+            <span>[{from + 1}] </span>
+            :
+            <span>[{from + 1} - {to}] </span>
+          }
+          <span className="font-bold">{source.title}</span> av{" "}
+          <span className="font-normal">{source.author}</span>
+        </div>
+        <div className="flex flex-col">
+
+          {env.NEXT_PUBLIC_NODE_ENV == "development" && sources.map((source) => {
+            return <span>{source.score.toPrecision(3)}</span>
+          })}
+        </div>
         {/* {source.filetype === "pdf" && (
         <span> (s. {source.location.pageNr})</span>
       )}
@@ -57,7 +68,7 @@ const SourceGroup = ({
           <span>{source.location.chapter}</span>
         </>
       )} */}
-      </p>
+      </div>
       {open &&
         <div className="flex flex-row gap-2">
           {sources.map((_, index) => {

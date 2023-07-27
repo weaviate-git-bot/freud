@@ -67,10 +67,13 @@ export const sourceRouter = createTRPCRouter({
                 SIMILARITY_THRESHOLD
             );
 
-            const documents = await retriever.getRelevantDocuments(question)
+            const docuementswithscores = await retriever.getRelevantDocumentsWithScore(question)
+
+            docuementswithscores.sort((a, b) => { return a[0].metadata.title.localeCompare(b[0].metadata.title) })
+
+            const documents = docuementswithscores.map(([doc, _]) => doc);
 
             // Sort documents for later grouping
-            documents.sort((a, b) => { return a.metadata.title.localeCompare(b.metadata.title) })
 
 
             let stuffString = "";
@@ -88,7 +91,7 @@ export const sourceRouter = createTRPCRouter({
 
             const completion = await openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
-                messages: [{ role: "system", content: `You are a chatbot used by a professional psychiatrist. They have a work-related question. Only use the ${documents.length} sources below to answer the question, and if the question can't be answered based on the sources, say \"I don't know\". Show usage of each source with in-text citations. Do this with square brackets with ONLY the number of the source. \n\n${stuffString}` },
+                messages: [{ role: "system", content: `You are a chatbot used by a professional psychiatrist. They have a work-related question. Only use the ${documents.length} sources below to answer the question. If the question can't be answered based on the sources, just say \"I don't know\". Show usage of each source with in-text citations. Do this with square brackets with ONLY the number of the source. \n\n${stuffString}` },
                 ...formatedmessages],
                 temperature: 0,
                 // stream: true, For streaming: https://github.com/openai/openai-node/discussions/182
@@ -101,26 +104,27 @@ export const sourceRouter = createTRPCRouter({
                 throw new Error("Reply is not defined")
             }
 
-            const sources: Source[] = documents.map(
-                (source) => {
+            const sources: Source[] = docuementswithscores.map(
+                ([doc, score]) => {
                     return {
-                        content: source.pageContent,
-                        author: source.metadata.author,
-                        category: source.metadata.category,
-                        filename: source.metadata.filename,
-                        filetype: source.metadata.filetype,
-                        title: source.metadata.title,
+                        content: doc.pageContent,
+                        author: doc.metadata.author,
+                        category: doc.metadata.category,
+                        filename: doc.metadata.filename,
+                        filetype: doc.metadata.filetype,
+                        title: doc.metadata.title,
                         location: {
-                            chapter: source.metadata.chapter,
-                            href: source.metadata.href,
-                            pageNr: source.metadata.pageNumber,
-                            lineFrom: source.metadata.loc_lines_from
-                                ? source.metadata.loc_lines_from
+                            chapter: doc.metadata.chapter,
+                            href: doc.metadata.href,
+                            pageNr: doc.metadata.pageNumber,
+                            lineFrom: doc.metadata.loc_lines_from
+                                ? doc.metadata.loc_lines_from
                                 : 0,
-                            lineTo: source.metadata.loc_lines_to
-                                ? source.metadata.loc_lines_to
+                            lineTo: doc.metadata.loc_lines_to
+                                ? doc.metadata.loc_lines_to
                                 : 0,
                         },
+                        score: score,
                     };
                 }
             );
