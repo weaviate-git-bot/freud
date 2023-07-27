@@ -67,11 +67,14 @@ const SourceGroup = ({
         </div>}
       {open && (
         <SourceContent
-          // category={source.category}
+          category={sources[lastSelected - from]?.category ?? "Klarte ikke å hente"}
           content={sources[lastSelected - from]?.content ?? "Klarte ikke å hente"}
-        // filename={source.filename}
-        // filetype={source.filetype}
-        // location={source.location}
+          filename={sources[lastSelected - from]?.filename ?? "Klarte ikke å hente"}
+          filetype={sources[lastSelected - from]?.filetype ?? "Klarte ikke å hente"}
+          location={sources[lastSelected - from]?.location ?? {
+            lineFrom: 0,
+            lineTo: 0
+          }}
         />
       )}
     </div>

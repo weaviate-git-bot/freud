@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { pdfjs, Document, Page } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
@@ -21,9 +21,8 @@ export const ViewPDF = ({ category, filename, location }: Prop) => {
 
   const file = `/documents/${category}/${filename}`;
 
-  function onDocumentLoadSuccess({ numPages}: {numPages: number}) {
+  function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
-    setPageNumber(location.pageNr ?? 1);
   }
 
   function changePage(offset: number) {
@@ -37,6 +36,11 @@ export const ViewPDF = ({ category, filename, location }: Prop) => {
   function nextPage() {
     changePage(1);
   }
+
+  useEffect(() => {
+    setPageNumber(location.pageNr!)
+    console.log("kjører useeffect")
+  }, [location])
 
   return (
     <>
