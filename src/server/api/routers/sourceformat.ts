@@ -69,7 +69,8 @@ export const sourceRouter = createTRPCRouter({
 
             const documents = await retriever.getRelevantDocuments(question)
 
-            // const documents = await weaviateStore.similaritySearch(question, 5)
+            // Sort documents for later grouping
+            documents.sort((a, b) => { return a.metadata.title.localeCompare(b.metadata.title) })
 
 
             let stuffString = "";
