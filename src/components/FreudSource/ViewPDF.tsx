@@ -39,7 +39,6 @@ export const ViewPDF = ({ category, filename, location }: Prop) => {
 
   useEffect(() => {
     setPageNumber(location.pageNr!)
-    console.log("kjører useeffect")
   }, [location])
 
   return (
