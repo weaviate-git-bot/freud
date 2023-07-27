@@ -57,7 +57,6 @@ export default function Home() {
             ...prevState,
             [name]: false,
           }));
-
         }
       });
     },
@@ -66,7 +65,6 @@ export default function Home() {
   useEffect(() => {
     fetchedCategories.mutate();
   }, []);
-
 
   return (
     <>
@@ -83,7 +81,10 @@ export default function Home() {
           setShowSettings={setShowSettings}
         >
           <>
-            <SelectCategories categories={categories} myfunc={setCategories} />
+            <SelectCategories
+              categories={categories}
+              setCategories={setCategories}
+            />
             {env.NEXT_PUBLIC_NODE_ENV == "development" && (
               <VectorStoreSettings vectorStoreSchemas={fetchedCategories} />
             )}

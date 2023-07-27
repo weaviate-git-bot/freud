@@ -4,10 +4,10 @@ import { Checkbox } from "./ui/checkbox/Checkbox";
 
 type Props = {
   categories: Categories;
-  myfunc: React.Dispatch<React.SetStateAction<Categories>>;
+  setCategories: React.Dispatch<React.SetStateAction<Categories>>;
 };
 
-const SelectCategories = ({ categories, myfunc }: Props) => {
+const SelectCategories = ({ categories, setCategories }: Props) => {
   return (
     <div className="p-10">
       <h5>
@@ -31,22 +31,14 @@ const SelectCategories = ({ categories, myfunc }: Props) => {
                 onCheckedChange={(checked) => {
                   if (checked != "indeterminate") {
                     //Update state and localstore for checkmark
-
-                    const newstate: Categories = {};
-
-                    Object.keys(categories).map((cat) => {
-                      if (cat === category) {
-                        newstate[cat] = checked;
-                      } else {
-                        newstate[cat] = categories[cat]!;
-                      }
-                    });
-
-                    myfunc(newstate);
+                    setCategories((categories) => ({
+                      ...categories,
+                      [category]: checked,
+                    }));
 
                     localStorage.setItem(
                       "categories",
-                      JSON.stringify(newstate)
+                      JSON.stringify(categories)
                     );
                   }
                 }}
