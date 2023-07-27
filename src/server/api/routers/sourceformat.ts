@@ -10,7 +10,7 @@ import { Source } from "~/interfaces/source";
 import { env } from "~/env.mjs";
 import { getRetrieverFromIndex } from "~/utils/weaviate/getRetriever";
 import { MergerRetriever } from "~/utils/weaviate/MergerRetriever";
-import { Content } from "@radix-ui/react-popover";
+import { calcPrice } from "~/utils/usagecalc";
 
 const metadataKeys: string[] = [
     "author",
@@ -99,6 +99,7 @@ export const sourceRouter = createTRPCRouter({
 
             const response = completion.data.choices[0]?.message?.content
 
+            console.log("QA: " + calcPrice(completion.data.usage!).toPrecision(3) + "$")
 
             if (!response) {
                 throw new Error("Reply is not defined")
