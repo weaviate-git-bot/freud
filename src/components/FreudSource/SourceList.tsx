@@ -5,9 +5,10 @@ import SourceGroup from "./SourceGroup";
 type Prop = {
   sources: Source[];
   scrollToId: number,
+  setScrollToId: React.Dispatch<React.SetStateAction<number>>
 };
 
-const SourceList = ({ sources, scrollToId }: Prop) => {
+const SourceList = ({ sources, scrollToId, setScrollToId }: Prop) => {
 
 
   let sourceItemsIndex = 0
@@ -41,7 +42,7 @@ const SourceList = ({ sources, scrollToId }: Prop) => {
           {sourceItems.map((sources: Source[], index) => {
             from = to
             to = from + sources.length
-            return <SourceGroup from={from} sources={sources} scrollToId={scrollToId} />
+            return <SourceGroup from={from} sources={sources} scrollToId={scrollToId} setScrollToId={setScrollToId} key={index} />
           })}
         </div>
       )

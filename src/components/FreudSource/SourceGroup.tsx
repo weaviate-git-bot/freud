@@ -6,12 +6,14 @@ type Prop = {
   sources: Source[];
   from: number;
   scrollToId: number;
+  setScrollToId: React.Dispatch<React.SetStateAction<number>>
 };
 
-const SourceItem = ({
+const SourceGroup = ({
   sources,
   from,
   scrollToId,
+  setScrollToId
 }: Prop) => {
 
   const sourceRef = useRef<null | HTMLDivElement>(null);
@@ -29,6 +31,7 @@ const SourceItem = ({
         behavior: "smooth",
         block: "center",
       });
+      setScrollToId(-1) //Necessary for triggering useEffect.
     }
   }, [scrollToId]);
 
@@ -55,7 +58,7 @@ const SourceItem = ({
       {open &&
         <div className="flex flex-row gap-2">
           {sources.map((_, index) => {
-            return <button className={`${from + index == lastSelected ? "font-bold" : "font-normal"}`} onClick={(e) => {
+            return <button key={index} className={`${from + index == lastSelected ? "font-bold" : "font-normal"}`} onClick={(e) => {
 
               setLastSelected(from + index);
 
@@ -75,4 +78,4 @@ const SourceItem = ({
   );
 };
 
-export default SourceItem;
+export default SourceGroup;

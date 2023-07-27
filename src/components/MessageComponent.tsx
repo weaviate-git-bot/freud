@@ -94,7 +94,7 @@ const MessageComponent = ({ message, children }: Prop) => {
             {formatLinks(message.content)}
           </div>
           {message.sources ?
-            <SourceList sources={message.sources} scrollToId={scrollToId} />
+            <SourceList sources={message.sources} scrollToId={scrollToId} setScrollToId={setScrollToId} />
             : null
           }
         </div>
