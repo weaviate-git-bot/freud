@@ -7,6 +7,7 @@ import { type Source } from "~/interfaces/source";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { Categories } from "~/types/categories";
 import { MergerRetriever } from "~/utils/weaviate/MergerRetriever";
+import { calcPrice } from "~/utils/usagecalc";
 import { getRetrieverFromIndex } from "~/utils/weaviate/getRetriever";
 
 const configuration = new Configuration({
@@ -92,6 +93,8 @@ export const sourceRouter = createTRPCRouter({
       });
 
 
+      let startQA = performance.now();
+
       // Can either use chat (...formatedmessages) or standalone question in completion below. Chat is more robust, costs more, and reaches input-limit quicker.
       // Standalone is not as robust, but can save money and hinder reaching input-limit.
       const completion = await openai.createChatCompletion({
@@ -107,32 +110,44 @@ export const sourceRouter = createTRPCRouter({
         // stream: true, For streaming: https://github.com/openai/openai-node/discussions/182
       });
 
+
       const response = completion.data.choices[0]?.message?.content;
+      let timeTakenQA = performance.now() - startQA;
 
       if (!response) {
         throw new Error("Reply is not defined");
       }
 
-      const sources: Source[] = documentswithscores.map(([doc, score]) => {
-        return {
-          content: doc.pageContent,
-          author: doc.metadata.author,
-          category: doc.metadata.category,
-          filename: doc.metadata.filename,
-          filetype: doc.metadata.filetype,
-          title: doc.metadata.title,
-          location: {
-            chapter: doc.metadata.chapter,
-            href: doc.metadata.href,
-            pageNr: doc.metadata.pageNumber,
-            lineFrom: doc.metadata.loc_lines_from
-              ? doc.metadata.loc_lines_from
-              : 0,
-            lineTo: doc.metadata.loc_lines_to ? doc.metadata.loc_lines_to : 0,
-          },
-          score: score,
-        };
-      });
+      console.log("QA: " + calcPrice(completion.data.usage!).toPrecision(3) + "$")
+
+      if (!response) {
+        throw new Error("Reply is not defined")
+      }
+
+      const sources: Source[] = documentswithscores.map(
+        ([doc, score]) => {
+          return {
+            content: doc.pageContent,
+            author: doc.metadata.author,
+            category: doc.metadata.category,
+            filename: doc.metadata.filename,
+            filetype: doc.metadata.filetype,
+            title: doc.metadata.title,
+            location: {
+              chapter: doc.metadata.chapter,
+              href: doc.metadata.href,
+              pageNr: doc.metadata.pageNumber,
+              lineFrom: doc.metadata.loc_lines_from
+                ? doc.metadata.loc_lines_from
+                : 0,
+              lineTo: doc.metadata.loc_lines_to
+                ? doc.metadata.loc_lines_to
+                : 0,
+            },
+            score: score,
+          };
+        }
+      );
 
       const reply: Message = {
         role: Role.Assistant,
@@ -140,6 +155,8 @@ export const sourceRouter = createTRPCRouter({
         sources: sources,
       };
 
+
+
       return reply;
     }),
-});
+})
