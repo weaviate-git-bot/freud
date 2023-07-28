@@ -89,6 +89,8 @@ export const sourceRouter = createTRPCRouter({
                 }
             })
 
+            let startQA = performance.now();
+
             const completion = await openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
                 messages: [{ role: "system", content: `You are a chatbot used by a professional psychiatrist. They have a work-related question. Only use the ${documents.length} sources below to answer the question. If the question can't be answered based on the sources, just say \"I don't know\". Show usage of each source with in-text citations. Do this with square brackets with ONLY the number of the source. \n\n${stuffString}` },
@@ -98,6 +100,8 @@ export const sourceRouter = createTRPCRouter({
             });
 
             const response = completion.data.choices[0]?.message?.content
+
+            let timeTakenQA = performance.now() - startQA;
 
             console.log("QA: " + calcPrice(completion.data.usage!).toPrecision(3) + "$")
 
