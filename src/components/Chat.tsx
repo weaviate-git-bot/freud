@@ -113,19 +113,31 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    //Quickfix for empty query
-    if (query.length == 0) {
-      return;
-    }
+    // //Quickfix for empty query
+    // if (query.length == 0) {
+    //   return;
+    // }
 
-    setIsLoadingReply(true);
-    const message = {
-      role: Role.User,
-      content: query,
-    };
-    setMessages([...messages, message]);
-    mutation.mutate({ messages: [...messages, message], categories });
+    // setIsLoadingReply(true);
+    // const message = {
+    //   role: Role.User,
+    //   content: query,
+    // };
+    // setMessages([...messages, message]);
+    // mutation.mutate({ messages: [...messages, message], categories });
+
+    // Testing diagnosis query 
+    console.log("\nQuerying!");
+    queryDSM.mutate(query);
   }
+
+  const queryDSM = api.diagnosis.queryTheDatabase.useMutation({
+    onSuccess: (data) => {
+      if (!data) {
+        throw new Error("Data not defined in OnSuccess")
+      }
+    }
+  })
 
   return (
     <>
