@@ -1,37 +1,22 @@
-import { WeaviateStore } from "langchain/vectorstores/weaviate";
-import { z } from "zod";
-import { Message, Role } from "~/interfaces/message";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { client } from "~/utils/weaviate/client";
-import { embeddings } from "~/utils/weaviate/embeddings";
+import { type WeaviateStore } from "langchain/vectorstores/weaviate";
 import { Configuration, OpenAIApi } from "openai";
-import { Categories } from "~/pages";
-import { Source } from "~/interfaces/source";
+import { z } from "zod";
 import { env } from "~/env.mjs";
-import { getRetrieverFromIndex } from "~/utils/weaviate/getRetriever";
+import { Message, Role } from "~/interfaces/message";
+import { type Source } from "~/interfaces/source";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { Categories } from "~/types/categories";
 import { MergerRetriever } from "~/utils/weaviate/MergerRetriever";
 import { calcPrice } from "~/utils/usagecalc";
-
-const metadataKeys: string[] = [
-    "author",
-    "title",
-    "pageNumber",
-    "loc_lines_from",
-    "loc_lines_to",
-];
-
-
-
+import { getRetrieverFromIndex } from "~/utils/weaviate/getRetriever";
 
 const configuration = new Configuration({
     apiKey: env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
-
 const NUM_SOURCES = 5;
 const SIMILARITY_THRESHOLD = 0.3;
-
 
 export const sourceRouter = createTRPCRouter({
     ask: publicProcedure
@@ -39,11 +24,9 @@ export const sourceRouter = createTRPCRouter({
         .mutation(async ({ input }) => {
             const question = input.messages[input.messages.length - 1]?.content;
 
-
             if (!question) {
-                throw new Error("Question is undefined")
+                throw new Error("Question is undefined");
             }
-
 
             const arrayOfActiveCategories: string[] = [];
             for (const key in input.categories) {
@@ -67,27 +50,33 @@ export const sourceRouter = createTRPCRouter({
                 SIMILARITY_THRESHOLD
             );
 
-            const docuementswithscores = await retriever.getRelevantDocumentsWithScore(question)
+            const documentswithscores = await retriever.getRelevantDocumentsWithScore(
+                question
+            );
 
-            docuementswithscores.sort((a, b) => { return a[0].metadata.title.localeCompare(b[0].metadata.title) })
+            documentswithscores.sort((a, b) => {
+                return a[0].metadata.title.localeCompare(b[0].metadata.title);
+            });
 
-            const documents = docuementswithscores.map(([doc, _]) => doc);
+            const documents = documentswithscores.map(([doc, _]) => doc);
 
             // Sort documents for later grouping
 
-
             let stuffString = "";
 
-            documents.map(((doc, index) => {
-                stuffString += "Source " + (index + 1) + ":\n---\n" + doc.pageContent + "\n---\n\n"
-            }))
+            documents.map((doc, index) => {
+                stuffString +=
+                    "Source " + (index + 1) + ":\n---\n" + doc.pageContent + "\n---\n\n";
+            });
 
             const formatedmessages = input.messages.map((message) => {
                 return {
                     role: message.role,
-                    content: message.content
-                }
-            })
+                    content: message.content,
+                };
+            });
+
+
 
             let startQA = performance.now();
 
@@ -99,9 +88,12 @@ export const sourceRouter = createTRPCRouter({
                 // stream: true, For streaming: https://github.com/openai/openai-node/discussions/182
             });
 
-            const response = completion.data.choices[0]?.message?.content
-
+            const response = completion.data.choices[0]?.message?.content;
             let timeTakenQA = performance.now() - startQA;
+
+            if (!response) {
+                throw new Error("Reply is not defined");
+            }
 
             console.log("QA: " + calcPrice(completion.data.usage!).toPrecision(3) + "$")
 
@@ -109,7 +101,7 @@ export const sourceRouter = createTRPCRouter({
                 throw new Error("Reply is not defined")
             }
 
-            const sources: Source[] = docuementswithscores.map(
+            const sources: Source[] = documentswithscores.map(
                 ([doc, score]) => {
                     return {
                         content: doc.pageContent,

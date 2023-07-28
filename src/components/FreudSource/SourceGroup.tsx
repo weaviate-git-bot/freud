@@ -55,8 +55,8 @@ const SourceGroup = ({
         </div>
         <div className="flex flex-col">
 
-          {env.NEXT_PUBLIC_NODE_ENV == "development" && sources.map((source) => {
-            return <span>{source.score.toPrecision(3)}</span>
+          {env.NEXT_PUBLIC_NODE_ENV == "development" && sources.map((source, idx) => {
+            return <span key={idx}>{source.score.toPrecision(3)}</span>
           })}
         </div>
         {/* {source.filetype === "pdf" && (
