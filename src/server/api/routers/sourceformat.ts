@@ -49,8 +49,31 @@ export const sourceRouter = createTRPCRouter({
         SIMILARITY_THRESHOLD
       );
 
+      const formatedmessages = input.messages.map((message) => {
+        return {
+          role: message.role,
+          content: message.content,
+        };
+      });
+
+      // make standalone question to get better sources
+      const standalone = await openai.createChatCompletion({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, if the follow up question is already a standalone question, just return the follow up question.`,
+          },
+          ...formatedmessages,
+        ],
+        temperature: 0,
+      });
+
+      console.log(standalone.data.choices[0]?.message?.content)
+
+
       const documentswithscores = await retriever.getRelevantDocumentsWithScore(
-        question
+        standalone.data.choices[0]?.message?.content!
       );
 
       documentswithscores.sort((a, b) => {
@@ -68,13 +91,9 @@ export const sourceRouter = createTRPCRouter({
           "Source " + (index + 1) + ":\n---\n" + doc.pageContent + "\n---\n\n";
       });
 
-      const formatedmessages = input.messages.map((message) => {
-        return {
-          role: message.role,
-          content: message.content,
-        };
-      });
 
+      // Can either use chat (...formatedmessages) or standalone question in completion below. Chat is more robust, costs more, and reaches input-limit quicker.
+      // Standalone is not as robust, but can save money and hinder reaching input-limit.
       const completion = await openai.createChatCompletion({
         model: "gpt-3.5-turbo",
         messages: [
