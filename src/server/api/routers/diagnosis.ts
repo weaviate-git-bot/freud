@@ -81,8 +81,8 @@ export const diagnosisRouter = createTRPCRouter({
         }
       );
 
-      const NUM_SOURCES = 5;
-      const SIMILARITY_THRESHOLD = 0.3;
+      const NUM_SOURCES = 8;
+      const SIMILARITY_THRESHOLD = 0.27;
 
       const retriever = new MergerRetriever(
         [arrayOfVectorStores],
@@ -121,11 +121,21 @@ export const diagnosisRouter = createTRPCRouter({
 
       // Sort by score
       combinedData.sort((a, b) => b.score - a.score);
-
-      console.debug("\n QUERY RESULTS: ");
       console.debug(combinedData);
 
-      return "dummy";
+      // Format the data for output (like a message in chat)
+      let formattedOutput = "Diagnoses and percentage match with the input symptoms:\n";
+      combinedData.forEach( (elem) => {
+        if (elem.score >= 40){
+          formattedOutput += "\n\nDiagnosis code and name:\n" + elem.diagnosis + "\n\nMatch evaluation:\n" + elem.evaluation + "\n";
+        }
+        
+      })
+      console.debug(formattedOutput);
+      // console.debug("\n QUERY RESULTS: ");
+      // console.debug(combinedData);
+
+      return formattedOutput;
     }),
 });
 
