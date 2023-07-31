@@ -21,6 +21,8 @@ const MessageComponent = ({ message, children }: Prop) => {
 
       if (!regex.test(input)) {
         // If it does not contain any source references
+        return <p className="whitespace-pre-wrap">{input}</p>;
+
         throw new Error("No sources found");
       }
 

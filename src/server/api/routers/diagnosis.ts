@@ -21,10 +21,22 @@ const dirPath = path.join(process.cwd(), "public", "documents", "DSM");
 const dsmWebPagePath = path.join(process.cwd(), "public");
 
 type DiagnosisAndEval = {
-  diagnosis: string, 
-  evaluation: string,
-  score: number,
-}
+  diagnosis: string;
+  evaluation: string;
+  score: number;
+  similarityScore: number,
+};
+
+// Query database variables:
+const metadataKeys: string[] = ["diagnosisName", "categoryName"];
+
+const indexName = "DSM";
+
+const arrayOfVectorStores = await WeaviateStore.fromExistingIndex(embeddings, {
+  client: client_diagnosis,
+  indexName,
+  metadataKeys,
+});
 
 export const diagnosisRouter = createTRPCRouter({
   createFileAndEmbedd: publicProcedure.mutation(async () => {
@@ -49,39 +61,11 @@ export const diagnosisRouter = createTRPCRouter({
 
   queryTheDatabase: publicProcedure
 
-    .input(z.string())
+    .input(z.array(z.string()))
 
     .mutation(async ({ input }) => {
-      const query_description = input;
 
-      const symptoms = await openai.createChatCompletion({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: `Extract a list of symptoms from this description of a psychosomatic or psychological disease: ${query_description}.`,
-          },
-        ],
-        temperature: 1,
-      });
-
-      const symptoms_response = symptoms.data.choices[0]?.message?.content;
-      console.debug("symptoms_response:\n", symptoms_response);
-
-      const metadataKeys: string[] = ["diagnosisName", "categoryName"];
-
-      const indexName = "DSM";
-
-      const arrayOfVectorStores = await WeaviateStore.fromExistingIndex(
-        embeddings,
-        {
-          client: client_diagnosis,
-          indexName,
-          metadataKeys,
-        }
-      );
-
-      const NUM_SOURCES = 8;
+      const NUM_SOURCES = 5;
       const SIMILARITY_THRESHOLD = 0.27;
 
       const retriever = new MergerRetriever(
@@ -89,18 +73,62 @@ export const diagnosisRouter = createTRPCRouter({
         NUM_SOURCES,
         SIMILARITY_THRESHOLD
       );
+      
+      console.debug("input length: ", input.length);
+      let searchString = input[0] as string;
+      for (let i = 2 ; i < input.length ; i += 2) {
+        // For each followUp and user-answer create a search string to append 
+        const searchAdd = await openai.createChatCompletion({
+          model: "gpt-4",
+          messages: [{ role: "system", content: `For the following question and the returned answer create a short statement sentence that summarizes the information given from the answer in regards to the question asked.
+\nQuestion: ${input[i - 1] as string}
+Answer: ${input[i] as string}
+Summarizing sentence:` }],
+          temperature: 0,
+        });
+        console.debug("searchAdd number", i); 
+        console.debug(searchAdd.data.choices[0]?.message?.content as string);
+        searchString += searchAdd.data.choices[0]?.message?.content as string;
+      }
 
-      const documents = await retriever.getRelevantDocuments(query_description);
+      let endTheSearch = false;
 
-      // Making chatGPT evaluate the correlation between the symptoms and the
+      console.debug("searchString: ", searchString);
+
+      if (input.length >= 7) {
+        endTheSearch = true;
+      }
+      console.debug("BEFORE");
+      const resultingDiagnoses = await retriever.getRelevantDocumentsWithScore(searchString);
+      console.debug("AFTER");
+
+      if (resultingDiagnoses[0] != undefined && resultingDiagnoses[0][1] < 0.16){
+        endTheSearch = true;
+      }
+
+      if (!endTheSearch) {
+        // Making chatGPT produce a differencial-diagnosis question based on the sources
+        const diffDiagnosisQueryText = createDifferentiatingQuestion(resultingDiagnoses);
+        const diffCompletion = await openai.createChatCompletion({
+        model: "gpt-4",
+        messages: [{ role: "system", content: diffDiagnosisQueryText }],
+        temperature: 0,
+        });
+        const diffFollowUp = diffCompletion.data.choices[0]?.message?.content as string;
+
+        return {messageOutput: diffFollowUp, clearQueryMessages: endTheSearch};
+      }
+    
+      // Making chatGPT evaluate the correlation between the symptoms and the diagnosis
+      const topThreeDiagnoses = resultingDiagnoses.slice(0, 4);
       const listOfEvaluations = await Promise.all(
-        documents.map(async (elem) => {
+        topThreeDiagnoses.map(async (elem) => {
           const completion = await openai.createChatCompletion({
             model: "gpt-4",
             messages: [
               {
                 role: "system",
-                content: `Give an evaluation of how much the given input description matches the diagnosis description. Finally in your response, give a match score on the format: (#/100), where "#" is a score of how much the descriptions match out of a hundred\n\n. Input description: ${query_description}. \n\n Diagnosis: ${elem.pageContent}. \n\n Evaluation with score at the end: `,
+                content: `Give an evaluation of how much the given input description matches the diagnosis description. Finally in your response, give a match score on the format: (#/100), where "#" is a score of how much the descriptions match out of a hundred\n\n. Input description: ${searchString}. \n\n Diagnosis: ${elem[0].pageContent}. \n\n Evaluation with score at the end: `,
               },
             ],
             temperature: 1,
@@ -112,32 +140,43 @@ export const diagnosisRouter = createTRPCRouter({
 
       const combinedData: DiagnosisAndEval[] = [];
 
-      for (let i = 0 ; i < NUM_SOURCES ; i++ ) {
+      for (let i = 0 ; i < 3 ; i++ ) {
         // Find score of eval
         const scoreIndex = findScoreIndex(listOfEvaluations[i] as string);
         const score = parseInt(listOfEvaluations[i]?.substring(scoreIndex, scoreIndex + 2) as string);
-        combinedData.push({diagnosis: documents[i]?.metadata.diagnosisName as string, evaluation: listOfEvaluations[i] as string, score: score });
+        combinedData.push({diagnosis: topThreeDiagnoses[i][0]?.metadata.diagnosisName as string, evaluation: listOfEvaluations[i] as string, score: score, similarityScore: topThreeDiagnoses[i][1]});
       }
 
       // Sort by score
       combinedData.sort((a, b) => b.score - a.score);
-      console.debug(combinedData);
+      // console.debug(combinedData);
 
       // Format the data for output (like a message in chat)
       let formattedOutput = "Diagnoses and percentage match with the input symptoms:\n";
       combinedData.forEach( (elem) => {
-        if (elem.score >= 40){
-          formattedOutput += "\n\nDiagnosis code and name:\n" + elem.diagnosis + "\n\nMatch evaluation:\n" + elem.evaluation + "\n";
-        }
-        
+        formattedOutput += "\n\nDiagnosis code and name:\n" + elem.diagnosis + "\n\nMatch evaluation:\n" + elem.evaluation + "\n";
       })
-      console.debug(formattedOutput);
-      // console.debug("\n QUERY RESULTS: ");
-      // console.debug(combinedData);
+      // console.debug(formattedOutput);
+      console.debug("\n QUERY RESULTS: ");
+      console.debug(combinedData);
 
-      return formattedOutput;
+      return {messageOutput: formattedOutput, clearQueryMessages: endTheSearch};
     }),
 });
+
+function createDifferentiatingQuestion(docs: [Document<Record<string, any>>, number][]): string {
+  let diffDiagnosisQueryText = `Based on the following list of diagnoses, provide a single yes/no follow-up question that attempts to differentiate between the diagnoses. Provide only the one question and nothing more.
+\nList of diagnoses:\n`;
+  let counter = 1;
+  docs.forEach((doc) => {
+    diffDiagnosisQueryText +=
+      `\nDiagnosis ${counter}:\n` + doc[0].pageContent + "\n";
+    counter++;
+  });
+
+  diffDiagnosisQueryText += `\n\nDifferentiating question: `;
+  return diffDiagnosisQueryText;
+}
 
 function findScoreIndex(input: string): number {
   const regex = /\d{2}\/100/;
