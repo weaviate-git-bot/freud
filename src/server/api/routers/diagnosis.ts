@@ -80,10 +80,10 @@ export const diagnosisRouter = createTRPCRouter({
         // For each followUp and user-answer create a search string to append 
         const searchAdd = await openai.createChatCompletion({
           model: "gpt-4",
-          messages: [{ role: "system", content: `For the following question and the returned answer create a short statement sentence that summarizes the information given from the answer in regards to the question asked.
-\nQuestion: ${input[i - 1] as string}
-Answer: ${input[i] as string}
-Summarizing sentence:` }],
+          messages: [{ role: "system", content: `For det følgende spørsmålet og det gitte svaret lag en kort setning som oppsummerer informasjonen som gis fra svaret i henhold til spørsmålet som er stilt.
+\nSpørsmål: ${input[i - 1] as string}
+Svar: ${input[i] as string}
+Oppsummerende setning:` }],
           temperature: 0,
         });
         console.debug("searchAdd number", i); 
@@ -134,7 +134,7 @@ Summarizing sentence:` }],
             messages: [
               {
                 role: "system",
-                content: `Give an evaluation of how much the given input description matches the diagnosis description. Finally in your response, give a match score on the format: (#/100), where "#" is a score of how much the descriptions match out of a hundred\n\n. Input description: ${searchString}. \n\n Diagnosis: ${elem[0].pageContent}. \n\n Evaluation with score at the end: `,
+                content: `Gi en evaluering på hvor mye den gitte input beskrivelsen stemmer overens med diagnose-beskrivelsen. Til slutt i svaret ditt, gi en matching-score på formatet: (#/100), hvor "#" er en score på hvor mye beskrivelsene stemmer overens ut av hundre.\n\nInput beskrivelse: ${searchString}.\n\nDiagnose: ${elem[0].pageContent}. \n\nEvaluering med score på slutten: `,
               },
             ],
             temperature: 1,
@@ -163,9 +163,9 @@ Summarizing sentence:` }],
       // console.debug(combinedData);
 
       // Format the data for output (like a message in chat)
-      let formattedOutput = "Diagnoses and percentage match with the input symptoms:\n";
+      let formattedOutput = "Diagnoser og prosent-matching med gitte input symptomer:\n";
       combinedData.forEach( (elem) => {
-        formattedOutput += "\n\nDiagnosis code and name:\n" + elem.diagnosis + "\n\nMatch evaluation:\n" + elem.evaluation + "\n";
+        formattedOutput += "\n\nDiagnose-kode og navn:\n" + elem.diagnosis + "\n\nMatching evaluering:\n" + elem.evaluation + "\n";
       })
       // console.debug(formattedOutput);
       console.debug("\n QUERY RESULTS: ");
@@ -176,16 +176,16 @@ Summarizing sentence:` }],
 });
 
 function createDifferentiatingQuestion(docs: [Document<Record<string, any>>, number][]): string {
-  let diffDiagnosisQueryText = `Based on the following list of diagnoses, provide a single yes/no follow-up question that attempts to differentiate between the diagnoses. Provide only the one question and nothing more.
-\nList of diagnoses:\n`;
+  let diffDiagnosisQueryText = `Basert på the følgende listen med diagnoser, gi ett enkelt ja/nei oppfølgingsspørsmål som forsøker å differensiere mellom diagnosene. Gi kun spørsmålet og ikke noe mer.
+\nListe med diagnoser:\n`;
   let counter = 1;
   docs.forEach((doc) => {
     diffDiagnosisQueryText +=
-      `\nDiagnosis ${counter}:\n` + doc[0].pageContent + "\n";
+      `\nDiagnose ${counter}:\n` + doc[0].pageContent + "\n";
     counter++;
   });
 
-  diffDiagnosisQueryText += `\n\nDifferentiating question: `;
+  diffDiagnosisQueryText += `\n\nDifferensierende spørsmål: `;
   return diffDiagnosisQueryText;
 }
 
