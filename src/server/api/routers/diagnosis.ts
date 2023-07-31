@@ -120,9 +120,10 @@ Summarizing sentence:` }],
       }
     
       // Making chatGPT evaluate the correlation between the symptoms and the diagnosis
-      const topThreeDiagnoses = resultingDiagnoses.slice(0, 4);
+      const numberOfTopDiagnoses = 3;
+      const topDiagnoses = resultingDiagnoses.slice(0, numberOfTopDiagnoses);
       const listOfEvaluations = await Promise.all(
-        topThreeDiagnoses.map(async (elem) => {
+        topDiagnoses.map(async (elem) => {
           const completion = await openai.createChatCompletion({
             model: "gpt-4",
             messages: [
@@ -140,11 +141,11 @@ Summarizing sentence:` }],
 
       const combinedData: DiagnosisAndEval[] = [];
 
-      for (let i = 0 ; i < 3 ; i++ ) {
+      for (let i = 0 ; i < numberOfTopDiagnoses ; i++ ) {
         // Find score of eval
         const scoreIndex = findScoreIndex(listOfEvaluations[i] as string);
         const score = parseInt(listOfEvaluations[i]?.substring(scoreIndex, scoreIndex + 2) as string);
-        combinedData.push({diagnosis: topThreeDiagnoses[i][0]?.metadata.diagnosisName as string, evaluation: listOfEvaluations[i] as string, score: score, similarityScore: topThreeDiagnoses[i][1]});
+        combinedData.push({diagnosis: topDiagnoses[i][0]?.metadata.diagnosisName as string, evaluation: listOfEvaluations[i] as string, score: score, similarityScore: topDiagnoses[i][1]});
       }
 
       // Sort by score
