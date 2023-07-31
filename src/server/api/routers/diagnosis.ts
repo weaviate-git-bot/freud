@@ -149,11 +149,9 @@ Summarizing sentence:` }],
       for (let i = 0 ; i < numberOfTopDiagnoses ; i++ ) {
         // Find score of eval
         const scoreIndex = findScoreIndex(listOfEvaluations[i] as string);
-        let score = "";
-        if (listOfEvaluations[i]?.substring(scoreIndex, scoreIndex + 1) as string == "0") {
-          score = "0";
-        } else {
-          const score = parseInt(listOfEvaluations[i]?.substring(scoreIndex, scoreIndex + 2) as string);
+        let score = 0;
+        if (listOfEvaluations[i]?.substring(scoreIndex, scoreIndex + 1) as string != "0") {
+          score = parseInt(listOfEvaluations[i]?.substring(scoreIndex, scoreIndex + 2) as string);
         }
         combinedData.push({diagnosis: topDiagnoses[i][0]?.metadata.diagnosisName as string, evaluation: listOfEvaluations[i] as string, score: score, similarityScore: topDiagnoses[i][1]});
       }
