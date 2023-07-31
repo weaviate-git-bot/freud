@@ -150,8 +150,10 @@ Summarizing sentence:` }],
         // Find score of eval
         const scoreIndex = findScoreIndex(listOfEvaluations[i] as string);
         let score = 0;
-        if (listOfEvaluations[i]?.substring(scoreIndex, scoreIndex + 1) as string != "0") {
+        if (listOfEvaluations[i][scoreIndex + 1] as string != "/") {
           score = parseInt(listOfEvaluations[i]?.substring(scoreIndex, scoreIndex + 2) as string);
+        } else {
+          score = parseInt(listOfEvaluations[i]?.substring(scoreIndex, scoreIndex + 1) as string);
         }
         combinedData.push({diagnosis: topDiagnoses[i][0]?.metadata.diagnosisName as string, evaluation: listOfEvaluations[i] as string, score: score, similarityScore: topDiagnoses[i][1]});
       }
