@@ -176,7 +176,7 @@ Oppsummerende setning:` }],
 });
 
 function createDifferentiatingQuestion(docs: [Document<Record<string, any>>, number][]): string {
-  let diffDiagnosisQueryText = `Basert på the følgende listen med diagnoser, gi ett enkelt ja/nei oppfølgingsspørsmål som forsøker å differensiere mellom diagnosene. Gi kun spørsmålet og ikke noe mer.
+  let diffDiagnosisQueryText = `Basert på the følgende liste med diagnoser, gi ett enkelt ja/nei oppfølgingsspørsmål totalt som skal forsøke å differensiere mellom diagnosene. Gi kun ett spørsmål og ikke noe mer.
 \nListe med diagnoser:\n`;
   let counter = 1;
   docs.forEach((doc) => {
@@ -185,12 +185,12 @@ function createDifferentiatingQuestion(docs: [Document<Record<string, any>>, num
     counter++;
   });
 
-  diffDiagnosisQueryText += `\n\nDifferensierende spørsmål: `;
+  diffDiagnosisQueryText += `\n\nEtt differensierende spørsmål: `;
   return diffDiagnosisQueryText;
 }
 
 function findScoreIndex(input: string): number {
-  const regex = /\d{2}\/100/;
+  const regex = /\d{1,2}\/100/;
   const matchIndex = input.search(regex);
   return matchIndex;
 }
