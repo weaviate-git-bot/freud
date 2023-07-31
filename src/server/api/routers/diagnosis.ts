@@ -75,7 +75,7 @@ export const diagnosisRouter = createTRPCRouter({
       );
       
       console.debug("input length: ", input.length);
-      let searchString = input[0] as string;
+      let searchString = input[0] as string + ".";
       for (let i = 2 ; i < input.length ; i += 2) {
         // For each followUp and user-answer create a search string to append 
         const searchAdd = await openai.createChatCompletion({
@@ -88,6 +88,7 @@ Summarizing sentence:` }],
         });
         console.debug("searchAdd number", i); 
         console.debug(searchAdd.data.choices[0]?.message?.content as string);
+        searchString += " ";
         searchString += searchAdd.data.choices[0]?.message?.content as string;
       }
 
@@ -95,14 +96,18 @@ Summarizing sentence:` }],
 
       console.debug("searchString: ", searchString);
 
-      if (input.length >= 7) {
+      const maxQuestions = 4;
+
+      if (input.length >= maxQuestions + 1) {
         endTheSearch = true;
       }
       console.debug("BEFORE");
       const resultingDiagnoses = await retriever.getRelevantDocumentsWithScore(searchString);
       console.debug("AFTER");
 
-      if (resultingDiagnoses[0] != undefined && resultingDiagnoses[0][1] < 0.16){
+      const similarityScoreTreshold = 0.12;
+
+      if (resultingDiagnoses[0] != undefined && resultingDiagnoses[0][1] < similarityScoreTreshold){
         endTheSearch = true;
       }
 
@@ -144,7 +149,12 @@ Summarizing sentence:` }],
       for (let i = 0 ; i < numberOfTopDiagnoses ; i++ ) {
         // Find score of eval
         const scoreIndex = findScoreIndex(listOfEvaluations[i] as string);
-        const score = parseInt(listOfEvaluations[i]?.substring(scoreIndex, scoreIndex + 2) as string);
+        let score = "";
+        if (listOfEvaluations[i]?.substring(scoreIndex, scoreIndex + 1) as string == "0") {
+          score = "0";
+        } else {
+          const score = parseInt(listOfEvaluations[i]?.substring(scoreIndex, scoreIndex + 2) as string);
+        }
         combinedData.push({diagnosis: topDiagnoses[i][0]?.metadata.diagnosisName as string, evaluation: listOfEvaluations[i] as string, score: score, similarityScore: topDiagnoses[i][1]});
       }
 

@@ -134,7 +134,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
       // Also set the queryMessages
       setQueryMessages([...queryMessages, query]);
       console.log("\nQuerying!");
-      console.log("from chat, queryMessages:", queryMessages);
+      console.log("from chat, queryMessages:", [...queryMessages, query]);
       queryDSM.mutate([...queryMessages, query]);
     }
   }
