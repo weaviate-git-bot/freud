@@ -24,7 +24,7 @@ type DiagnosisAndEval = {
   diagnosis: string;
   evaluation: string;
   score: number;
-  similarityScore: number,
+  similarityScore: number;
 };
 
 // Query database variables:
@@ -61,10 +61,10 @@ export const diagnosisRouter = createTRPCRouter({
 
   queryTheDatabase: publicProcedure
 
-    .input(z.array(z.string()))
+    .input(z.object({ qa: z.array(z.string()), symptoms: z.array(z.string()) }))
 
     .mutation(async ({ input }) => {
-
+      console.debug("\nQUERYING!");
       const NUM_SOURCES = 5;
       const SIMILARITY_THRESHOLD = 0.27;
 
@@ -73,60 +73,100 @@ export const diagnosisRouter = createTRPCRouter({
         NUM_SOURCES,
         SIMILARITY_THRESHOLD
       );
+
+      // Even though copies of the input arrays are made, no changes are made to these copies
+      const qaCopied = input.qa.slice();
+      const symptomsCopied = input.symptoms.slice();
       
-      console.debug("input length: ", input.length);
-      let searchString = input[0] as string + ".";
-      for (let i = 2 ; i < input.length ; i += 2) {
-        // For each followUp and user-answer create a search string to append 
-        const searchAdd = await openai.createChatCompletion({
+      // The new symptom is just the first user input if this is initial call of this API endpoint
+      let newSymptom: string = qaCopied[0] as string;
+
+      // If this is not initial call of this API endpoint, create symptom from user answering the symptom questioning
+      if (qaCopied.length > 1) {
+        const followUpSymptomGPTCompletion = await openai.createChatCompletion({
           model: "gpt-4",
-          messages: [{ role: "system", content: `For det følgende spørsmålet og det gitte svaret lag en kort setning som oppsummerer informasjonen som gis fra svaret i henhold til spørsmålet som er stilt.
-\nSpørsmål: ${input[i - 1] as string}
-Svar: ${input[i] as string}
-Oppsummerende setning:` }],
+          messages: [
+            {
+              role: "system",
+              content: `For det følgende spørsmålet og det gitte svaret lag en kort setning som oppsummerer informasjonen som gis fra svaret i henhold til spørsmålet som er stilt. Men hvis svaret er kun et kort nei, eller lignende, returner ingenting.\n\nSpørsmål: ${
+                qaCopied[qaCopied.length - 2] as string
+              }\nSvar: ${
+                qaCopied[qaCopied.length - 1] as string
+              }\nOppsummerende setning:`,
+            },
+          ],
           temperature: 0,
         });
-        console.debug("searchAdd number", i); 
-        console.debug(searchAdd.data.choices[0]?.message?.content as string);
-        searchString += " ";
-        searchString += searchAdd.data.choices[0]?.message?.content as string;
+
+        const followUpSymptomToAdd = followUpSymptomGPTCompletion.data
+          .choices[0]?.message?.content as string;
+
+        // Add the resulting symptom if GPT returned anything.
+        // Length > emptyMargin, because GPT may return some spacings instead of absolutely no characters
+        const emptyMargin = 3;
+
+        if (followUpSymptomToAdd.length > emptyMargin) {
+          newSymptom = followUpSymptomToAdd;
+        } else {
+          newSymptom = "";
+        }
+        console.debug("\nnewSymptom: ", newSymptom);
       }
 
-      let endTheSearch = false;
+      const totalSearchString = symptomsCopied.reduce((text, symptom, i) => {
+        if (i === 0) {
+          return symptom + ".";
+        }
+        return text + " " + symptom;
+      }, "") + " " + newSymptom;
 
-      console.debug("searchString: ", searchString);
+      console.debug("\ntotalSearchString: ", totalSearchString)
 
-      const maxQuestions = 4;
+      const diagnosesSearchResult =
+        await retriever.getRelevantDocumentsWithScore(totalSearchString);
 
-      if (input.length >= maxQuestions + 1) {
-        endTheSearch = true;
+      let giveDiagnosesAndEndSearch = false;
+
+      const maxSymptomsFollowUpQuestions = 4;
+      if (qaCopied.length >= maxSymptomsFollowUpQuestions * 2 + 1) {
+        giveDiagnosesAndEndSearch = true;
       }
-      console.debug("BEFORE");
-      const resultingDiagnoses = await retriever.getRelevantDocumentsWithScore(searchString);
-      console.debug("AFTER");
 
-      const similarityScoreTreshold = 0.12;
-
-      if (resultingDiagnoses[0] != undefined && resultingDiagnoses[0][1] < similarityScoreTreshold){
-        endTheSearch = true;
+      // Check if top search result has a good enough "cosine similarity" score
+      const satisfyingSimilarityLimit = 0.12;
+      if (
+        diagnosesSearchResult[0] !== undefined &&
+        diagnosesSearchResult[0][1] < satisfyingSimilarityLimit
+      ) {
+        giveDiagnosesAndEndSearch = true;
       }
 
-      if (!endTheSearch) {
-        // Making chatGPT produce a differencial-diagnosis question based on the sources
-        const diffDiagnosisQueryText = createDifferentiatingQuestion(resultingDiagnoses);
+      if (!giveDiagnosesAndEndSearch) {
+        // Make chatGPT produce a differencial-diagnosis question based on the different diagnoses from the search result
+        const diffDiagnosisQueryText = createDifferentiatingQuestion(
+          diagnosesSearchResult,
+          qaCopied
+        );
+
         const diffCompletion = await openai.createChatCompletion({
-        model: "gpt-4",
-        messages: [{ role: "system", content: diffDiagnosisQueryText }],
-        temperature: 0,
+          model: "gpt-4",
+          messages: [{ role: "system", content: diffDiagnosisQueryText }],
+          temperature: 0,
         });
-        const diffFollowUp = diffCompletion.data.choices[0]?.message?.content as string;
 
-        return {messageOutput: diffFollowUp, clearQueryMessages: endTheSearch};
+        const diffFollowUp = diffCompletion.data.choices[0]?.message
+          ?.content as string;
+
+        return {
+          response: diffFollowUp.replace(/^["']|["']$/g, ''),
+          newSymptom: newSymptom,
+          finishSuggestion: giveDiagnosesAndEndSearch,
+        };
       }
-    
-      // Making chatGPT evaluate the correlation between the symptoms and the diagnosis
+
+      // Give diagnoses and end search: make chatGPT evaluate the correlation between the symptoms and the diagnosis
       const numberOfTopDiagnoses = 3;
-      const topDiagnoses = resultingDiagnoses.slice(0, numberOfTopDiagnoses);
+      const topDiagnoses = diagnosesSearchResult.slice(0, numberOfTopDiagnoses);
       const listOfEvaluations = await Promise.all(
         topDiagnoses.map(async (elem) => {
           const completion = await openai.createChatCompletion({
@@ -134,7 +174,7 @@ Oppsummerende setning:` }],
             messages: [
               {
                 role: "system",
-                content: `Gi en evaluering på hvor mye den gitte input beskrivelsen stemmer overens med diagnose-beskrivelsen. Til slutt i svaret ditt, gi en matching-score på formatet: (#/100), hvor "#" er en score på hvor mye beskrivelsene stemmer overens ut av hundre.\n\nInput beskrivelse: ${searchString}.\n\nDiagnose: ${elem[0].pageContent}. \n\nEvaluering med score på slutten: `,
+                content: `Gi en evaluering på hvor mye den gitte input beskrivelsen stemmer overens med diagnose-beskrivelsen. Til slutt i svaret ditt, gi en matching-score på formatet: (#/100), hvor "#" er en score på hvor mye beskrivelsene stemmer overens ut av hundre.\n\nInput beskrivelse: ${totalSearchString}.\n\nDiagnose: ${elem[0].pageContent}. \n\nEvaluering med score på slutten: `,
               },
             ],
             temperature: 1,
@@ -144,55 +184,75 @@ Oppsummerende setning:` }],
         })
       );
 
-      const combinedData: DiagnosisAndEval[] = [];
-
-      for (let i = 0 ; i < numberOfTopDiagnoses ; i++ ) {
-        // Find score of eval
-        const scoreIndex = findScoreIndex(listOfEvaluations[i] as string);
-        let score = 0;
-        if (listOfEvaluations[i][scoreIndex + 1] as string != "/") {
-          score = parseInt(listOfEvaluations[i]?.substring(scoreIndex, scoreIndex + 2) as string);
-        } else {
-          score = parseInt(listOfEvaluations[i]?.substring(scoreIndex, scoreIndex + 1) as string);
+      const combinedData: DiagnosisAndEval[] = listOfEvaluations.map((elem, i) => {
+        return {
+          diagnosis: topDiagnoses[i][0]?.metadata.diagnosisName as string,
+          evaluation: elem,
+          score: findScore(elem),
+          similarityScore: topDiagnoses[i][1],
         }
-        combinedData.push({diagnosis: topDiagnoses[i][0]?.metadata.diagnosisName as string, evaluation: listOfEvaluations[i] as string, score: score, similarityScore: topDiagnoses[i][1]});
-      }
+      }).sort((a, b) => b.score - a.score);
 
-      // Sort by score
-      combinedData.sort((a, b) => b.score - a.score);
-      // console.debug(combinedData);
+      let formattedOutput =
+        "Diagnoser og prosent-matching med gitte input symptomer:\n";
+      combinedData.forEach((elem, i) => {
+        formattedOutput +=
+          "\n" + (i + 1).toString() + ". Diagnose-kode og navn:\n" +
+          elem.diagnosis +
+          "\n\nMatching evaluering:\n" +
+          elem.evaluation +
+          "\n\n";
+      });
 
-      // Format the data for output (like a message in chat)
-      let formattedOutput = "Diagnoser og prosent-matching med gitte input symptomer:\n";
-      combinedData.forEach( (elem) => {
-        formattedOutput += "\n\nDiagnose-kode og navn:\n" + elem.diagnosis + "\n\nMatching evaluering:\n" + elem.evaluation + "\n";
-      })
-      // console.debug(formattedOutput);
-      console.debug("\n QUERY RESULTS: ");
-      console.debug(combinedData);
-
-      return {messageOutput: formattedOutput, clearQueryMessages: endTheSearch};
+      return {
+        response: formattedOutput,
+        newSymptom: newSymptom,
+        finishSuggestion: giveDiagnosesAndEndSearch,
+      };
     }),
 });
 
-function createDifferentiatingQuestion(docs: [Document<Record<string, any>>, number][]): string {
-  let diffDiagnosisQueryText = `Basert på the følgende liste med diagnoser, gi ett enkelt ja/nei oppfølgingsspørsmål totalt som skal forsøke å differensiere mellom diagnosene. Gi kun ett spørsmål og ikke noe mer.
-\nListe med diagnoser:\n`;
-  let counter = 1;
-  docs.forEach((doc) => {
+function createDifferentiatingQuestion(
+  docs: [Document<Record<string, any>>, number][],
+  earlierQA: string[]
+): string {
+  let diffDiagnosisQueryText = `Basert på følgende liste med diagnoser, gi totalt ett enkelt ja/nei oppfølgingsspørsmål som skal forsøke å differensiere mellom diagnosene. Gi kun ett spørsmål og ikke noe mer. Ikke rett spørsmålet mot en "du", still heller spørsmålet om en pasient. For eksempel: "Opplever pasienten 'eksempel-symptom'?".\n\nListe med diagnoser:\n`;
+  docs.forEach((doc, counter) => {
     diffDiagnosisQueryText +=
-      `\nDiagnose ${counter}:\n` + doc[0].pageContent + "\n";
-    counter++;
+      `\nDiagnose ${counter + 1}:\n` + doc[0].pageContent + "\n";
   });
 
-  diffDiagnosisQueryText += `\n\nEtt differensierende spørsmål: `;
+  // If there has been asked questions from before, they should not be asked again.
+  // ealierQA array contains both questions and answers.
+  const earlierQuestionsExist = earlierQA.length > 1;
+  if (earlierQuestionsExist) {
+    diffDiagnosisQueryText += `\nIkke still et spørsmål som ligner på de følgende, da de allerede har vært stilt:\n`;
+    earlierQA.forEach((qOrA, i) => {
+      // Every other element is a question
+      if (i % 2 !== 0) {
+        diffDiagnosisQueryText += Math.floor(i / 2).toString() + qOrA + "\n";
+      }
+    });
+  }
+
+  diffDiagnosisQueryText += `\n\nEtt differensierende spørsmål`;
+  if (earlierQuestionsExist) {
+    diffDiagnosisQueryText += ` som spør om noe helt annet en de tidligere stilte spørsmålene: `;
+  } else {
+    diffDiagnosisQueryText += `: `;
+  }
+  console.debug("\ndiffDiagnosisQueryText: ", diffDiagnosisQueryText);
   return diffDiagnosisQueryText;
 }
 
-function findScoreIndex(input: string): number {
-  const regex = /\d{1,2}\/100/;
-  const matchIndex = input.search(regex);
-  return matchIndex;
+function findScore(input: string): number {
+  const regex = /(\d{1,2})\/100/;
+  const match = input.match(regex);
+  if (match) {
+    return parseInt(match[1] as string);
+  } else {
+    return NaN;
+  }
 }
 
 // All code below is for creating the embeddings in a weaviate DB, and making the Documents (aka splits) from the html document in a specific manner

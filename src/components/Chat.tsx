@@ -37,6 +37,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
 
   const [diagnosisMode, setDiagnosisMode] = useState(false);
   const [queryMessages, setQueryMessages] = useState<string[]>([]);
+  const [symptoms, setSymptoms] = useState<string[]>([]);
 
   // Autosize textarea (grow height with input)
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -131,11 +132,9 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
       mutation.mutate({ messages: [...messages, message], categories });
     }
     else {
-      // Also set the queryMessages
+      console.log("QUERYING!");
       setQueryMessages([...queryMessages, query]);
-      console.log("\nQuerying!");
-      console.log("from chat, queryMessages:", [...queryMessages, query]);
-      queryDSM.mutate([...queryMessages, query]);
+      queryDSM.mutate({qa: [...queryMessages, query], symptoms: symptoms});
     }
   }
 
@@ -152,15 +151,17 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
       setIsLoadingReply(false);
       const messageFromData: Message = {
         role: Role.Assistant,
-        content: data.messageOutput, // Then I might have to change here too :)
+        content: data.response,
       }
       setMessages([...messages, messageFromData]);
 
-      // Also set queryMessages
-      if (data.clearQueryMessages) {
+      // Also set diagnosis relevant useStates
+      if (data.finishSuggestion) {
         setQueryMessages([]);
+        setSymptoms([]);
       } else {
-        setQueryMessages([...queryMessages, data.messageOutput]); // TODO: Might have to change data here! Maybe I want a boolean return value as well!
+        setQueryMessages([...queryMessages, data.response]); 
+        setSymptoms([...symptoms, data.newSymptom]);
       }
     }
   })
