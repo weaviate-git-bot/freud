@@ -88,11 +88,11 @@ export const diagnosisRouter = createTRPCRouter({
           messages: [
             {
               role: "system",
-              content: `For det følgende spørsmålet og det gitte svaret lag en kort setning som oppsummerer informasjonen som gis fra svaret i henhold til spørsmålet som er stilt. Men hvis svaret er kun et kort nei, eller lignende, returner ingenting.\n\nSpørsmål: ${
+              content: `For det følgende spørsmålet og det gitte svaret lag en kort setning som oppsummerer informasjonen som gis fra svaret i henhold til spørsmålet som er stilt. Men hvis svaret er kun et kort "nei", "vet ikke", eller lignende, returner ingenting.\n\nSpørsmål: ${
                 qaCopied[qaCopied.length - 2] as string
               }\nSvar: ${
                 qaCopied[qaCopied.length - 1] as string
-              }\nOppsummerende setning:`,
+              }\nOppsummerende setning (med mindre svaret var "nei", "vet ikke" eller lignende):`,
             },
           ],
           temperature: 0,
@@ -186,10 +186,10 @@ export const diagnosisRouter = createTRPCRouter({
 
       const combinedData: DiagnosisAndEval[] = listOfEvaluations.map((elem, i) => {
         return {
-          diagnosis: topDiagnoses[i][0]?.metadata.diagnosisName as string,
+          diagnosis: (topDiagnoses[i]?.at(0) as Document<Record<string, any>>).metadata.diagnosisName as string,
           evaluation: elem,
           score: findScore(elem),
-          similarityScore: topDiagnoses[i][1],
+          similarityScore: topDiagnoses[i]?.at(1) as number,
         }
       }).sort((a, b) => b.score - a.score);
 
