@@ -185,12 +185,14 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
       </div>
 
       <div className="align-center mt-5 flex w-[100%] flex-col items-center">
-        <QuickAsk
-          suggestedQuestions={suggestedQuestions}
-          onClick={handleQuickSubmit}
-          isLoadingReply={isLoadingReply}
-          isLoadingFollowUps={isLoadingFollowUps}
-        />
+        {!diagnosisMode && 
+          <QuickAsk
+            suggestedQuestions={suggestedQuestions}
+            onClick={handleQuickSubmit}
+            isLoadingReply={isLoadingReply}
+            isLoadingFollowUps={isLoadingFollowUps}
+            />
+        }
         <form
           onSubmit={handleSubmit}
           className="w-100% mb-0 mt-8 flex flex-row gap-3 md:w-[50%]"

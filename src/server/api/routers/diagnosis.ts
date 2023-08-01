@@ -230,7 +230,7 @@ function createDifferentiatingQuestion(
     earlierQA.forEach((qOrA, i) => {
       // Every other element is a question
       if (i % 2 !== 0) {
-        diffDiagnosisQueryText += Math.floor(i / 2).toString() + qOrA + "\n";
+        diffDiagnosisQueryText += (Math.floor(i / 2) + 1).toString() + ". " + qOrA + "\n";
       }
     });
   }
