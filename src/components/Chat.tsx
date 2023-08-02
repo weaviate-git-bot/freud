@@ -18,6 +18,7 @@ import { Icon } from "./ui/icon/Icon";
 import { Spinner } from "./ui/icon/icons/Spinner";
 import { TextArea } from "./ui/textArea/TextArea";
 import useAutosizeTextArea from "./useAutosizeTextArea";
+import { env } from "~/env.mjs";
 
 type Prop = {
   messages: Message[];
@@ -35,6 +36,7 @@ const Chat = ({ messages, setMessages, categories, diagnosisMode }: Prop) => {
   ]);
   const [isLoadingFollowUps, setIsLoadingFollowUps] = useState(false);
   const [query, setQuery] = useState("");
+  const [chatId, setChatId] = useState<string | null>(null);
 
   const [queryMessages, setQueryMessages] = useState<string[]>([]);
   const [symptoms, setSymptoms] = useState<string[]>([]);
@@ -88,12 +90,29 @@ const Chat = ({ messages, setMessages, categories, diagnosisMode }: Prop) => {
       if (!message) {
         return;
       }
-      setMessages([...messages, message]);
+      const newMessageList = [...messages, message];
+      setMessages(newMessageList);
       setQuery("");
       setIsLoadingReply(false);
 
       // Call followUp api
       makeFollowUps.mutate(message.content);
+
+      // Archive/update chatlog (for production deployment only)
+      if (env.NODE_ENV === "production") {
+        logchat.mutate({ chatId: chatId, messages: newMessageList });
+      }
+    },
+  });
+
+  const logchat = api.prisma.logChat.useMutation({
+    onError: (error) => {
+      console.error(error);
+    },
+    onSuccess: (data) => {
+      if (data && !chatId) {
+        setChatId(data.id);
+      }
     },
   });
 
@@ -172,7 +191,7 @@ const Chat = ({ messages, setMessages, categories, diagnosisMode }: Prop) => {
           messages.length > 0 ? "grow" : ""
         } flex flex-col items-center`}
       >
-        <MessageList messages={messages} />
+        <MessageList messages={messages} chatId={chatId} />
         {isLoadingReply && (
           <Spinner className={"p-10"} size="7em" color="green" />
         )}
