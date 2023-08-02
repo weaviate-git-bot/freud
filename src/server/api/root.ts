@@ -6,6 +6,7 @@ import { weaviateRouter } from "./routers/weaviate";
 import { sourceRouter } from "./routers/sourceformat";
 import { followUpRouter } from "./routers/followup";
 import { prismaRouter } from "./routers/prisma";
+import { diagnosisRouter } from "./routers/diagnosis";
 
 /**
  * This is the primary router for your server.
@@ -20,6 +21,7 @@ export const appRouter = createTRPCRouter({
   source: sourceRouter,
   followup: followUpRouter,
   prisma: prismaRouter,
+  diagnosis: diagnosisRouter,
 });
 
 // export type definition of API
