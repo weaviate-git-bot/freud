@@ -29,32 +29,34 @@ const FeedbackButtons = ({ chatId, messageId }: Props) => {
   const [feedbackIsSubmitted, setFeedbackIsSubmitted] = useState(false);
 
   useEffect(() => {
-    // We do not want to open form when deselecting a thumb-button
-    if (thumb === ThumbState.none) {
-      closeForms()
-    }
     // Assume we should delete feedback if thumb set to ThumbState.none (i.e. unselected)
     let deleteSignal = true;
 
-    // Thumb is de-selected
-    if (thumb === ThumbState.none && feedbackIsSubmitted) {
-      // Delete feedback after a delay
-      const deleteTimeout = setTimeout(() => {
-        // ... unless the delete signal is cancelled by a new thumb selection
-        if (deleteSignal) {
-          deleteFeedback();
-        }
-      }, THUMB_DELETE_DELAY);
+    if (thumb === ThumbState.none) {
+      // We do not want to open form when deselecting a thumb-button
+      closeForms();
 
-      return () => clearTimeout(deleteTimeout);
+      // Delete feedback after a delay (if it exists)
+      if (feedbackIsSubmitted) {
+        const deleteTimeout = setTimeout(() => {
+          // ... unless the delete signal is cancelled by a new thumb selection
+          if (deleteSignal) {
+            deleteFeedback();
+          }
+        }, THUMB_DELETE_DELAY);
+
+        return () => clearTimeout(deleteTimeout);
+      }
+
+      // Thumb is set to up or down
+    } else {
+      submitFeedback();
+
+      return () => {
+        // Cancel the delete signal
+        deleteSignal = false;
+      };
     }
-
-    submitFeedback();
-
-    return () => {
-      // If another thumb is selected, cancel the delete signal
-      deleteSignal = false;
-    };
   }, [thumb])
 
   const closeForms = () => {
@@ -101,26 +103,25 @@ const FeedbackButtons = ({ chatId, messageId }: Props) => {
 
     if (env.NEXT_PUBLIC_NODE_ENV === "development") return //We do not want to send data if we are in development
 
-    if (thumb !== ThumbState.none) {
 
-      if (!chatId) {
-        throw new Error("Cannot submit feedback because chatId is not set");
-      }
-
-      submitFeedbackMutation.mutate({
-        chatId,
-        messageId,
-        thumb,
-        name,
-        email,
-        comment,
-      });
-
+    if (!chatId) {
+      throw new Error("Cannot submit feedback because chatId is not set");
     }
+
+    submitFeedbackMutation.mutate({
+      chatId,
+      messageId,
+      thumb,
+      name,
+      email,
+      comment,
+    });
+
   }
 
   function deleteFeedback() {
     setFeedbackIsSubmitted(false);
+
     if (chatId) {
       deleteFeedbackMutation.mutate({
         chatId,
@@ -138,8 +139,6 @@ const FeedbackButtons = ({ chatId, messageId }: Props) => {
           closeButton={true}
           open={showForm.up}
           onOpenChange={() => {
-            console.log(showForm)
-            console.log("anotherthumb:", thumb)
             setShowForm({ up: !showForm.up, down: false })
           }}
         >
