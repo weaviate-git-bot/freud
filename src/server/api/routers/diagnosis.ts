@@ -17,6 +17,9 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
+const NUM_SOURCES = 5;
+const SIMILARITY_THRESHOLD = 0.27;
+
 const dirPath = path.join(process.cwd(), "public", "documents", "DSM");
 const dsmWebPagePath = path.join(process.cwd(), "public");
 
@@ -64,9 +67,6 @@ export const diagnosisRouter = createTRPCRouter({
     .input(z.object({ qa: z.array(z.string()), symptoms: z.array(z.string()) }))
 
     .mutation(async ({ input }) => {
-      console.debug("\nQUERYING!");
-      const NUM_SOURCES = 5;
-      const SIMILARITY_THRESHOLD = 0.27;
 
       const retriever = new MergerRetriever(
         [arrayOfVectorStores],
@@ -110,7 +110,6 @@ export const diagnosisRouter = createTRPCRouter({
         } else {
           newSymptom = "";
         }
-        console.debug("\nnewSymptom: ", newSymptom);
       }
 
       const totalSearchString = symptomsCopied.reduce((text, symptom, i) => {
@@ -119,8 +118,6 @@ export const diagnosisRouter = createTRPCRouter({
         }
         return text + " " + symptom;
       }, "") + " " + newSymptom;
-
-      console.debug("\ntotalSearchString: ", totalSearchString)
 
       const diagnosesSearchResult =
         await retriever.getRelevantDocumentsWithScore(totalSearchString);
@@ -241,7 +238,6 @@ function createDifferentiatingQuestion(
   } else {
     diffDiagnosisQueryText += `: `;
   }
-  console.debug("\ndiffDiagnosisQueryText: ", diffDiagnosisQueryText);
   return diffDiagnosisQueryText;
 }
 

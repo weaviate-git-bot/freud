@@ -132,7 +132,6 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
       mutation.mutate({ messages: [...messages, message], categories });
     }
     else {
-      console.log("QUERYING!");
       setQueryMessages([...queryMessages, query]);
       queryDSM.mutate({qa: [...queryMessages, query], symptoms: symptoms});
     }
