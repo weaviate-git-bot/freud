@@ -23,9 +23,10 @@ type Prop = {
   messages: Message[];
   setMessages: Dispatch<SetStateAction<Message[]>>;
   categories: Categories;
+  diagnosisMode: boolean,
 };
 
-const Chat = ({ messages, setMessages, categories }: Prop) => {
+const Chat = ({ messages, setMessages, categories, diagnosisMode }: Prop) => {
   const [isLoadingReply, setIsLoadingReply] = useState(false);
   const [suggestedQuestions, setSuggestedQuestions] = React.useState<string[]>([
     "How can I help my patient with anxiety?",
@@ -34,6 +35,9 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
   ]);
   const [isLoadingFollowUps, setIsLoadingFollowUps] = useState(false);
   const [query, setQuery] = useState("");
+
+  const [queryMessages, setQueryMessages] = useState<string[]>([]);
+  const [symptoms, setSymptoms] = useState<string[]>([]);
 
   // Autosize textarea (grow height with input)
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -124,8 +128,42 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
       content: query,
     };
     setMessages([...messages, message]);
-    mutation.mutate({ messages: [...messages, message], categories });
+    if (!diagnosisMode) {
+      mutation.mutate({ messages: [...messages, message], categories });
+    }
+    else {
+      setQueryMessages([...queryMessages, query]);
+      queryDSM.mutate({qa: [...queryMessages, query], symptoms: symptoms});
+    }
   }
+
+  const queryDSM = api.diagnosis.queryTheDatabase.useMutation({
+    onError: (error) => {
+      console.error(error);
+      setIsLoadingReply(false);
+    },
+    onSuccess: (data) => {
+      if (!data) {
+        throw new Error("Data not defined in OnSuccess")
+      }
+      setQuery("");
+      setIsLoadingReply(false);
+      const messageFromData: Message = {
+        role: Role.Assistant,
+        content: data.response,
+      }
+      setMessages([...messages, messageFromData]);
+
+      // Also set diagnosis relevant useStates
+      if (data.finishSuggestion) {
+        setQueryMessages([]);
+        setSymptoms([]);
+      } else {
+        setQueryMessages([...queryMessages, data.response]); 
+        setSymptoms([...symptoms, data.newSymptom]);
+      }
+    }
+  })
 
   return (
     <>
@@ -141,12 +179,14 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
       </div>
 
       <div className="align-center mt-5 flex w-[100%] flex-col items-center">
-        <QuickAsk
-          suggestedQuestions={suggestedQuestions}
-          onClick={handleQuickSubmit}
-          isLoadingReply={isLoadingReply}
-          isLoadingFollowUps={isLoadingFollowUps}
-        />
+        {!diagnosisMode && 
+          <QuickAsk
+            suggestedQuestions={suggestedQuestions}
+            onClick={handleQuickSubmit}
+            isLoadingReply={isLoadingReply}
+            isLoadingFollowUps={isLoadingFollowUps}
+            />
+        }
         <form
           onSubmit={handleSubmit}
           className="w-100% mb-0 mt-8 flex flex-row gap-3 md:w-[50%]"
@@ -166,7 +206,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
               transition: "border-color 150ms ease",
               padding: "1rem",
             }}
-            placeholder="What is your question for Freud?"
+            placeholder= {diagnosisMode ? "Skriv inn pasientens symptomer..." : "What is your question for Freud?"}
             id={"submitquestion"}
           />
           <Button
