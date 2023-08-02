@@ -27,8 +27,6 @@ const defaultQAPrompt = "You are a chatbot used by a professional psychiatrist. 
 
 const getStandAlone = async (messages: { role: Role, content: string }[], prompt: string) => {
 
-
-
   // make standalone question to get better sources
   const standaloneCompletion = await openai.createChatCompletion({
     model: "gpt-3.5-turbo",
@@ -125,128 +123,12 @@ const getResponse = async (documents: Document[], messages: { role: Role, conten
 
 export const sourceRouter = createTRPCRouter({
 
-  getStandAlone: publicProcedure.input(z.array(Message)).mutation(async ({ input }) => {
-
-    const formatedmessages = input.map((message) => {
-      return {
-        role: message.role,
-        content: message.content,
-      };
-    });
-
-    // make standalone question to get better sources
-    const standaloneCompletion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, if the follow up question is already a standalone question, just return the follow up question.`,
-        },
-        ...formatedmessages,
-      ],
-      temperature: 0,
-    });
-
-    return standaloneCompletion
-
-  }),
-
-
-
-  getSources: publicProcedure.input(z.object({
-    standalone: z.string(),
-    categories: Categories
-
-  })
-
-  ).mutation(
-    async ({ input }) => {
-
-      const arrayOfActiveCategories: string[] = [];
-      for (const key in input.categories) {
-        if (input.categories[key]) {
-          arrayOfActiveCategories.push(key);
-        }
-      }
-
-      const useAllCategories: boolean = arrayOfActiveCategories.length == 0;
-
-      const arrayOfVectorStores: WeaviateStore[] = [];
-      for (const key in input.categories) {
-        if (input.categories[key] || useAllCategories) {
-          arrayOfVectorStores.push(await getRetrieverFromIndex(key));
-        }
-      }
-
-      const retriever = new MergerRetriever(
-        arrayOfVectorStores,
-        NUM_SOURCES,
-        SIMILARITY_THRESHOLD
-      );
-
-      const documentswithscores = await retriever.getRelevantDocumentsWithScore(
-        input.standalone
-      );
-
-      // Sort documents for later grouping in SourceGroup
-      documentswithscores.sort((a, b) => {
-        return a[0].metadata.title.localeCompare(b[0].metadata.title);
-      });
-
-      const documents = documentswithscores.map(([doc, _]) => doc);
-
-      return documents;
-
-    }
-  ),
-
-
-  getAnswer: publicProcedure.input(z.object({ chat: z.array(Message), documents: z.array(z.object({ pageContent: z.string(), metadata: z.object({}) })) })).mutation(async ({ input }) => {
-
-    let stuffString = "";
-
-    input.documents.map((doc, index) => {
-      stuffString +=
-        "Source " + (index + 1) + ":\n---\n" + doc.pageContent + "\n---\n\n";
-    });
-
-    const qaprompt = `You are a chatbot used by a professional psychiatrist. They have a work-related question. Only use the ${input.documents.length} sources below to answer the question. If the question can't be answered based on the sources, just say \"I don't know\". Show usage of each source with in-text citations. Do this with square brackets with ONLY the number of the source. \n\n${stuffString}`
-
-    const formatedmessages = input.chat.map((message) => {
-      return {
-        role: message.role,
-        content: message.content,
-      };
-    });
-
-    // Can either use chat (...formatedmessages) or standalone question in completion below. Chat is more robust, costs more, and reaches input-limit quicker.
-    // Standalone is not as robust, but can save money and hinder reaching input-limit.
-    const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: qaprompt,
-        },
-        ...formatedmessages,
-      ],
-      temperature: 0,
-      // stream: true, For streaming: https://github.com/openai/openai-node/discussions/182
-    });
-
-    const response = completion.data.choices[0]?.message?.content;
-
-    return response;
-
-  }),
-
   ask: publicProcedure
     //TODO Maybe move prompts and so on to an options object.
-    .input(z.object({ messages: z.array(Message), categories: Categories, standalonePrompt: z.string().optional(), qaPrompt: z.string().optional() }))
+    .input(z.object({ messages: z.array(Message), categories: Categories, saveTo: z.string().optional().describe("Name of file to save output to e.g 'mytestrun'"), standalonePrompt: z.string().optional(), qaPrompt: z.string().optional() }))
     .mutation(async ({ input }) => {
       const question = input.messages[input.messages.length - 1]?.content;
 
-      console.log("mutation")
       if (!question) {
         throw new Error("Question is undefined");
       }
@@ -260,14 +142,13 @@ export const sourceRouter = createTRPCRouter({
       });
 
       const startStandAlone = performance.now()
-      const standaloneCompletion = await getStandAlone(formatedmessages, input.standalonePrompt ?? defaultStandAlonePrompt)
+      const standalonePrompt: string = input.standalonePrompt ?? defaultStandAlonePrompt
+      const standaloneCompletion = await getStandAlone(formatedmessages, standalonePrompt)
       const standalone = standaloneCompletion.data.choices[0]?.message?.content;
       if (!standalone) {
         throw new Error("Standalone is not defined");
       }
       const timeTakenStandAlone = performance.now() - startStandAlone;
-
-      console.log(standalone)
 
       const documentswithscores = await getDocuments(standalone, input.categories)
 
@@ -292,7 +173,6 @@ export const sourceRouter = createTRPCRouter({
         throw new Error("Response is not defined");
       }
 
-      console.log("QA: " + calcPrice(completion.data.usage!).toPrecision(3) + "$")
 
       const sources: Source[] = documentswithscores.map(
         ([doc, score]) => {
@@ -307,12 +187,8 @@ export const sourceRouter = createTRPCRouter({
               chapter: doc.metadata.chapter,
               href: doc.metadata.href,
               pageNr: doc.metadata.pageNumber,
-              lineFrom: doc.metadata.loc_lines_from
-                ? doc.metadata.loc_lines_from
-                : 0,
-              lineTo: doc.metadata.loc_lines_to
-                ? doc.metadata.loc_lines_to
-                : 0,
+              lineFrom: doc.metadata.loc_lines_from ?? 0,
+              lineTo: doc.metadata.loc_lines_to ?? 0,
             },
             score: score,
           };
@@ -326,19 +202,33 @@ export const sourceRouter = createTRPCRouter({
       };
 
 
-      // if (true) {
-      //   const dataFilePath = path.join(process.cwd(), "src/server/api/json/testData.json");
+      const standalonePrice = calcPrice(standaloneCompletion.data.usage!).toPrecision(3) + "$"
+      const qaPrice = calcPrice(completion.data.usage!).toPrecision(3) + "$"
 
-      //   const jsonData = await fsPromises.readFile(dataFilePath, "utf8");
-      //   const objectData = JSON.parse(jsonData);
+      if (input.saveTo) {
+        const dataFilePath = path.join(process.cwd(), `src/server/api/json/${input.saveTo}.json`);
 
-      //   const toSave = { question: input.messages[input.messages.length - 1], reply: { role: reply.role, content: reply.content }, qaPrompt, standalone, timeTakenQA, timeTakenStandAlone, usage: { qa: completion.data.usage, standalone: standaloneCompletion.data.usage } };
 
-      //   objectData.push(toSave)
+        let objectData: object[];
+        try {
+          const jsonData = await fsPromises.readFile(dataFilePath, "utf8");
+          objectData = JSON.parse(jsonData);
+        }
+        catch {
+          objectData = []
+        }
 
-      //   await fsPromises.writeFile(dataFilePath, (JSON.stringify(objectData)));
-      // }
+        const toSave = { question, response, qaPrompt, standalonePrompt, standaloneAnswer: standalone, timeTakenQA, timeTakenStandAlone, usage: { qa: { ...completion.data.usage, qaPrice }, standalone: { ...standaloneCompletion.data.usage, standalonePrice } } };
 
+        objectData.push(toSave)
+
+        await fsPromises.writeFile(dataFilePath, (JSON.stringify(objectData)));
+      }
+
+      const data = {
+
+
+      }
 
 
       return reply;
