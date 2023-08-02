@@ -172,7 +172,8 @@ const Chat = ({ messages, setMessages, categories, diagnosisMode }: Prop) => {
         role: Role.Assistant,
         content: data.response,
       };
-      setMessages([...messages, messageFromData]);
+      const newMessageList = [...messages, messageFromData];
+      setMessages(newMessageList);
 
       // Also set diagnosis relevant useStates
       if (data.finishSuggestion) {
@@ -181,6 +182,9 @@ const Chat = ({ messages, setMessages, categories, diagnosisMode }: Prop) => {
       } else {
         setQueryMessages([...queryMessages, data.response]);
         setSymptoms([...symptoms, data.newSymptom]);
+      }
+      if (env.NEXT_PUBLIC_NODE_ENV === "production") {
+        logchat.mutate({ chatId: chatId, messages: newMessageList });
       }
     },
   });
