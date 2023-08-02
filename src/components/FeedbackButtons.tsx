@@ -1,13 +1,13 @@
 import { ThumbState } from "@prisma/client";
 import * as RadixTooltip from "@radix-ui/react-tooltip";
 import React, { useEffect, useState } from "react";
-import { type Message } from "~/interfaces/message";
-import { type Feedback } from "~/interfaces/feedback";
 import { api } from "~/utils/api";
 import { ButtonWithTooltip } from "./ButtonWithTooltip";
 import { FeedbackForm } from "./FeedbackForm";
 import { Icon } from "./ui/icon/Icon";
 import { Popover } from "./ui/popover/Popover";
+import { env } from "~/env.mjs";
+
 
 type Props = {
   chatId: string | null;
@@ -29,6 +29,10 @@ const FeedbackButtons = ({ chatId, messageId }: Props) => {
   const [feedbackIsSubmitted, setFeedbackIsSubmitted] = useState(false);
 
   useEffect(() => {
+    // We do not want to open form when deselecting a thumb-button
+    if (thumb === ThumbState.none) {
+      closeForms()
+    }
     // Assume we should delete feedback if thumb set to ThumbState.none (i.e. unselected)
     let deleteSignal = true;
 
@@ -51,7 +55,11 @@ const FeedbackButtons = ({ chatId, messageId }: Props) => {
       // If another thumb is selected, cancel the delete signal
       deleteSignal = false;
     };
-  }, [thumb]);
+  }, [thumb])
+
+  const closeForms = () => {
+    setShowForm({ up: false, down: false })
+  }
 
   const form = (
     <FeedbackForm
@@ -62,6 +70,7 @@ const FeedbackButtons = ({ chatId, messageId }: Props) => {
       setEmail={setEmail}
       setComment={setComment}
       handleSubmit={submitFeedback}
+      closeForms={closeForms}
     />
   );
 
@@ -84,9 +93,15 @@ const FeedbackButtons = ({ chatId, messageId }: Props) => {
   });
 
   function submitFeedback() {
+
+
+    setFeedbackIsSubmitted(true);
+    localStorage.setItem("email", email);
+    localStorage.setItem("name", name);
+
+    if (env.NEXT_PUBLIC_NODE_ENV === "development") return //We do not want to send data if we are in development
+
     if (thumb !== ThumbState.none) {
-      localStorage.setItem("email", email);
-      localStorage.setItem("name", name);
 
       if (!chatId) {
         throw new Error("Cannot submit feedback because chatId is not set");
@@ -101,13 +116,12 @@ const FeedbackButtons = ({ chatId, messageId }: Props) => {
         comment,
       });
 
-      setFeedbackIsSubmitted(true);
     }
   }
 
   function deleteFeedback() {
+    setFeedbackIsSubmitted(false);
     if (chatId) {
-      setFeedbackIsSubmitted(false);
       deleteFeedbackMutation.mutate({
         chatId,
         messageId,
@@ -122,8 +136,12 @@ const FeedbackButtons = ({ chatId, messageId }: Props) => {
           content={form}
           side="bottom"
           closeButton={true}
-          open={showForm.up && thumb !== ThumbState.none}
-          onOpenChange={() => setShowForm({ up: !showForm.up, down: false })}
+          open={showForm.up}
+          onOpenChange={() => {
+            console.log(showForm)
+            console.log("anotherthumb:", thumb)
+            setShowForm({ up: !showForm.up, down: false })
+          }}
         >
           <ButtonWithTooltip
             tooltip={"Good answer"}
