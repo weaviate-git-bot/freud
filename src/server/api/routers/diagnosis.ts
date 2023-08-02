@@ -20,6 +20,11 @@ const openai = new OpenAIApi(configuration);
 const NUM_SOURCES = 5;
 const SIMILARITY_THRESHOLD = 0.27;
 
+const maxSymptomsFollowUpQuestions = 4;
+const satisfyingSimilarityLimit = 0.12;
+
+const numberOfDiagnosisToDisplay = 3;
+
 const dirPath = path.join(process.cwd(), "public", "documents", "DSM");
 const dsmWebPagePath = path.join(process.cwd(), "public");
 
@@ -124,13 +129,11 @@ export const diagnosisRouter = createTRPCRouter({
 
       let giveDiagnosesAndEndSearch = false;
 
-      const maxSymptomsFollowUpQuestions = 4;
       if (qaCopied.length >= maxSymptomsFollowUpQuestions * 2 + 1) {
         giveDiagnosesAndEndSearch = true;
       }
 
       // Check if top search result has a good enough "cosine similarity" score
-      const satisfyingSimilarityLimit = 0.12;
       if (
         diagnosesSearchResult[0] !== undefined &&
         diagnosesSearchResult[0][1] < satisfyingSimilarityLimit
@@ -162,8 +165,7 @@ export const diagnosisRouter = createTRPCRouter({
       }
 
       // Give diagnoses and end search: make chatGPT evaluate the correlation between the symptoms and the diagnosis
-      const numberOfTopDiagnoses = 3;
-      const topDiagnoses = diagnosesSearchResult.slice(0, numberOfTopDiagnoses);
+      const topDiagnoses = diagnosesSearchResult.slice(0, numberOfDiagnosisToDisplay);
       const listOfEvaluations = await Promise.all(
         topDiagnoses.map(async (elem) => {
           const completion = await openai.createChatCompletion({
