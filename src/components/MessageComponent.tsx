@@ -95,13 +95,13 @@ const MessageComponent = ({ message, children }: Prop) => {
             {children}
             {formatLinks(message.content)}
           </div>
-          {message.sources ? (
+          {message.sources && (
             <SourceList
               sources={message.sources}
               scrollToId={scrollToId}
               setScrollToId={setScrollToId}
             />
-          ) : null}
+          )}
         </div>
       )}
     </div>
