@@ -225,11 +225,6 @@ export const sourceRouter = createTRPCRouter({
         await fsPromises.writeFile(dataFilePath, (JSON.stringify(objectData)));
       }
 
-      const data = {
-
-
-      }
-
 
       return reply;
     }),
