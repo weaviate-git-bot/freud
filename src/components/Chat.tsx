@@ -24,7 +24,7 @@ type Prop = {
   messages: Message[];
   setMessages: Dispatch<SetStateAction<Message[]>>;
   categories: Categories;
-  diagnosisMode: boolean,
+  diagnosisMode: boolean;
 };
 
 const Chat = ({ messages, setMessages, categories, diagnosisMode }: Prop) => {
@@ -99,7 +99,7 @@ const Chat = ({ messages, setMessages, categories, diagnosisMode }: Prop) => {
       makeFollowUps.mutate(message.content);
 
       // Archive/update chatlog (for production deployment only)
-      if (env.NODE_ENV === "production") {
+      if (env.NEXT_PUBLIC_NODE_ENV === "production") {
         logchat.mutate({ chatId: chatId, messages: newMessageList });
       }
     },
@@ -149,10 +149,9 @@ const Chat = ({ messages, setMessages, categories, diagnosisMode }: Prop) => {
     setMessages([...messages, message]);
     if (!diagnosisMode) {
       mutation.mutate({ messages: [...messages, message], categories });
-    }
-    else {
+    } else {
       setQueryMessages([...queryMessages, query]);
-      queryDSM.mutate({qa: [...queryMessages, query], symptoms: symptoms});
+      queryDSM.mutate({ qa: [...queryMessages, query], symptoms: symptoms });
     }
   }
 
@@ -163,14 +162,14 @@ const Chat = ({ messages, setMessages, categories, diagnosisMode }: Prop) => {
     },
     onSuccess: (data) => {
       if (!data) {
-        throw new Error("Data not defined in OnSuccess")
+        throw new Error("Data not defined in OnSuccess");
       }
       setQuery("");
       setIsLoadingReply(false);
       const messageFromData: Message = {
         role: Role.Assistant,
         content: data.response,
-      }
+      };
       setMessages([...messages, messageFromData]);
 
       // Also set diagnosis relevant useStates
@@ -178,11 +177,11 @@ const Chat = ({ messages, setMessages, categories, diagnosisMode }: Prop) => {
         setQueryMessages([]);
         setSymptoms([]);
       } else {
-        setQueryMessages([...queryMessages, data.response]); 
+        setQueryMessages([...queryMessages, data.response]);
         setSymptoms([...symptoms, data.newSymptom]);
       }
-    }
-  })
+    },
+  });
 
   return (
     <>
@@ -198,14 +197,14 @@ const Chat = ({ messages, setMessages, categories, diagnosisMode }: Prop) => {
       </div>
 
       <div className="align-center mt-5 flex w-[100%] flex-col items-center">
-        {!diagnosisMode && 
+        {!diagnosisMode && (
           <QuickAsk
             suggestedQuestions={suggestedQuestions}
             onClick={handleQuickSubmit}
             isLoadingReply={isLoadingReply}
             isLoadingFollowUps={isLoadingFollowUps}
-            />
-        }
+          />
+        )}
         <form
           onSubmit={handleSubmit}
           className="w-100% mb-0 mt-8 flex flex-row gap-3 md:w-[50%]"
@@ -225,7 +224,11 @@ const Chat = ({ messages, setMessages, categories, diagnosisMode }: Prop) => {
               transition: "border-color 150ms ease",
               padding: "1rem",
             }}
-            placeholder= {diagnosisMode ? "Skriv inn pasientens symptomer..." : "What is your question for Freud?"}
+            placeholder={
+              diagnosisMode
+                ? "Skriv inn pasientens symptomer..."
+                : "What is your question for Freud?"
+            }
             id={"submitquestion"}
           />
           <Button
