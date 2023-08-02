@@ -26,6 +26,12 @@ export const prismaRouter = createTRPCRouter({
       }
     }),
 
+  /* Submit feedback
+   * - Feedback will be created or updated, depending on whether feedback exist for a given message
+   * - (One message cannot have multiple Feedbacks)
+   * - This is handled via Prisma's upsert function
+   *   https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#upsert
+   * */
   submitFeedback: publicProcedure
     .input(
       z.object({
@@ -52,6 +58,9 @@ export const prismaRouter = createTRPCRouter({
       });
     }),
 
+  /* Delete feedback
+   * - Returns an error if Feedback doesn't exist
+   * */
   deleteFeedback: publicProcedure
     .input(
       z.object({
@@ -124,7 +133,7 @@ async function updateChatLog(chatId: string, messages: Message[]) {
           role,
           content,
           sources: {
-            create: [], // We use an empty array to prevent direct creation of sources during message upsert
+            create: [], // Use an empty array to prevent direct creation of sources during message upsert
           },
         },
         include: {
@@ -132,7 +141,7 @@ async function updateChatLog(chatId: string, messages: Message[]) {
         },
       });
 
-      // Now, handle the sources separately using nested upserts
+      // Handle the sources separately using nested upserts
       if (Array.isArray(sources)) {
         let sourceId = 0;
         for (const source of sources) {
@@ -170,167 +179,3 @@ async function updateChatLog(chatId: string, messages: Message[]) {
     console.error(error);
   }
 }
-
-// async function updateChat(chatId: string, messages) {
-//   console.debug("update chatid: " + chatId);
-//
-//   try {
-//     let messageId = 0;
-//     for (const message of messages) {
-//       const { role, content, sources } = message;
-//       await prisma.message.upsert({
-//         where: {
-//           chatId_id: {
-//             chatId,
-//             id: messageId,
-//           },
-//         },
-//         update: {},
-//         create: {
-//           id: messageId, // Use the unique field as the id
-//           chat: {
-//             connect: {
-//               id: chatId,
-//             },
-//           },
-//           role,
-//           content,
-//           sources: {
-//             // Use nested upsert to upsert the sources for the message
-//             upsert:
-//               sources?.map((source, sid) => ({
-//                 where: {
-//                   chatId_messageId_id: {
-//                     chatId,
-//                     messageId,
-//                     id: sid,
-//                   },
-//                 },
-//                 update: {},
-//                 create: {
-//                   id: sid,
-//                   message: {
-//                     connect: {
-//                       chatId_id: {
-//                         chatId,
-//                         id: messageId,
-//                       },
-//                     },
-//                   },
-//                   author: source.author,
-//                   content: source.content,
-//                   title: source.title,
-//                 },
-//               })) ?? [],
-//           },
-//         },
-//         include: {
-//           sources: true,
-//         },
-//       });
-//     }
-//
-//     messageId++;
-//   } catch (error) {
-//     console.error(error);
-//   }
-// }
-
-// async function updateChat(chatId: string, messages: Message[]) {
-//   console.debug("update chatid: " + chatId);
-//
-//   try {
-//     let id = 0;
-//
-//     for (const message of messages) {
-//       const { role, content, sources } = message;
-//       await prisma.message.upsert({
-//         where: {
-//           chatId_id: {
-//             chatId,
-//             id,
-//           },
-//         },
-//         update: {},
-//         create: {
-//           id,
-//           chat: {
-//             connect: {
-//               id: chatId,
-//             },
-//           },
-//           role,
-//           content,
-//           sources: {
-//             create:
-//               sources?.map((source) => ({
-//                 ...source,
-//                 chatId,
-//                 messageId: id,
-//               })) ?? [],
-//           },
-//         },
-//         include: {
-//           sources: true,
-//         },
-//       });
-//     }
-//
-//     id++;
-//   } catch (error) {
-//     console.error(error);
-//   }
-//
-//   // const payload = messages.map((message, i) => {
-//   //   const sources =
-//   //     message?.sources?.map((source, j) => {
-//   //       return {
-//   //         chatId: chatId,
-//   //         messageId: i,
-//   //         id: j,
-//   //         author: source?.author,
-//   //         content: source.content,
-//   //         title: source?.title,
-//   //       };
-//   //     }) ?? [];
-//   //
-//   //   return {
-//   //     chatId: chatId,
-//   //     id: i,
-//   //     role: message.role,
-//   //     content: message.content,
-//   //     sources: {
-//   //       upsert: {
-//   //         create: sources.map((s) => s),
-//   //         update: sources.map((s) => s),
-//   //       },
-//   //     },
-//   //   };
-//   // });
-//   //
-//   // return await prisma.chat.update({
-//   //   where: {
-//   //     id: chatId,
-//   //   },
-//   //   data: {
-//   //     messages: {
-//   //       upsert: {
-//   //         create: payload.map((p) => p),
-//   //         update: payload.map((p) => p),
-//   //         where: {
-//   //           chatId_id: {
-//   //             chatId: chatId,
-//   //           },
-//   //         },
-//   //       },
-//   //     },
-//   //   },
-//   //   include: {
-//   //     messages: {
-//   //       include: {
-//   //         sources: true,
-//   //       },
-//   //     },
-//   //   },
-//   // });
-// }
