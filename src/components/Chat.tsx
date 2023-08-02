@@ -23,9 +23,10 @@ type Prop = {
   messages: Message[];
   setMessages: Dispatch<SetStateAction<Message[]>>;
   categories: Categories;
+  diagnosisMode: boolean,
 };
 
-const Chat = ({ messages, setMessages, categories }: Prop) => {
+const Chat = ({ messages, setMessages, categories, diagnosisMode }: Prop) => {
   const [isLoadingReply, setIsLoadingReply] = useState(false);
   const [suggestedQuestions, setSuggestedQuestions] = React.useState<string[]>([
     "How can I help my patient with anxiety?",
@@ -35,7 +36,6 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
   const [isLoadingFollowUps, setIsLoadingFollowUps] = useState(false);
   const [query, setQuery] = useState("");
 
-  const [diagnosisMode, setDiagnosisMode] = useState(false);
   const [queryMessages, setQueryMessages] = useState<string[]>([]);
   const [symptoms, setSymptoms] = useState<string[]>([]);
 
@@ -165,13 +165,8 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
     }
   })
 
-  function toggleSymptomsMode() {
-    setDiagnosisMode(!diagnosisMode);
-  }
-
   return (
     <>
-      <Button onClick={toggleSymptomsMode}> Toggle symptoms-mode </Button>
       <div
         className={`min-h-[1rem] w-2/3 text-2xl transition-all duration-1000 ${
           messages.length > 0 ? "grow" : ""
