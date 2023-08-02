@@ -29,14 +29,15 @@ const FeedbackButtons = ({ chatId, messageId }: Props) => {
   const [feedbackIsSubmitted, setFeedbackIsSubmitted] = useState(false);
 
   useEffect(() => {
-    let thumbChangedToNone = true;
+    // Assume we should delete feedback if thumb set to ThumbState.none (i.e. unselected)
+    let deleteSignal = true;
 
     // Thumb is de-selected
-    // Delete feedback after a delay, unless a new thumb is selected in the meantime
-    // Note: feedbackID is set to null in the onSuccess function
     if (thumb === ThumbState.none && feedbackIsSubmitted) {
+      // Delete feedback after a delay
       const deleteTimeout = setTimeout(() => {
-        if (thumbChangedToNone) {
+        // ... unless the delete signal is cancelled by a new thumb selection
+        if (deleteSignal) {
           deleteFeedback();
         }
       }, THUMB_DELETE_DELAY);
@@ -47,8 +48,8 @@ const FeedbackButtons = ({ chatId, messageId }: Props) => {
     submitFeedback();
 
     return () => {
-      // If thumb changes before the delay, cancel the delete signal
-      thumbChangedToNone = false;
+      // If another thumb is selected, cancel the delete signal
+      deleteSignal = false;
     };
   }, [thumb]);
 
