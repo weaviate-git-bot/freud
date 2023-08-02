@@ -5,6 +5,7 @@ import Header from "~/components/Header";
 import SelectCategories from "~/components/SelectCategories";
 import { SidebarFreud } from "~/components/SidebarFreud";
 import { VectorStoreSettings } from "~/components/VectorStoreSettings";
+import { Button } from "~/components/ui/button/Button";
 import { env } from "~/env.mjs";
 import { type Message } from "~/interfaces/message";
 import type { Categories } from "~/types/categories";
@@ -72,8 +73,15 @@ export default function Home() {
               categories={categories}
               setCategories={setCategories}
             />
+            <Button
+              color={diagnosisMode ? "green" : "white"}
+              onClick={() => setDiagnosisMode(!diagnosisMode)}
+              className="ml-4"
+            >
+              Diagnosis mode
+            </Button>
             {env.NEXT_PUBLIC_NODE_ENV == "development" && (
-              <VectorStoreSettings vectorStoreSchemas={fetchedCategories} setDiagnosisMode={setDiagnosisMode} diagnosisMode={diagnosisMode}/>
+              <VectorStoreSettings vectorStoreSchemas={fetchedCategories} />
             )}
           </>
         </SidebarFreud>
