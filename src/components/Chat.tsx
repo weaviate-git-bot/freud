@@ -34,6 +34,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
   ]);
   const [isLoadingFollowUps, setIsLoadingFollowUps] = useState(false);
   const [query, setQuery] = useState("");
+  const [chatId, setChatId] = useState<string | null>(null);
 
   // Autosize textarea (grow height with input)
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -84,12 +85,27 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
       if (!message) {
         return;
       }
-      setMessages([...messages, message]);
+      const newMessageList = [...messages, message];
+      setMessages(newMessageList);
       setQuery("");
       setIsLoadingReply(false);
 
       // Call followUp api
       makeFollowUps.mutate(message.content);
+
+      // Archive/update chatlog
+      logchat.mutate({ chatId: chatId, messages: newMessageList });
+    },
+  });
+
+  const logchat = api.prisma.logChat.useMutation({
+    onError: (error) => {
+      console.error(error);
+    },
+    onSuccess: (data) => {
+      if (data && !chatId) {
+        setChatId(data.id);
+      }
     },
   });
 
@@ -134,7 +150,7 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
           messages.length > 0 ? "grow" : ""
         } flex flex-col items-center`}
       >
-        <MessageList messages={messages} />
+        <MessageList messages={messages} chatId={chatId} />
         {isLoadingReply && (
           <Spinner className={"p-10"} size="7em" color="green" />
         )}

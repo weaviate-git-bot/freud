@@ -3,9 +3,9 @@ import { createTRPCRouter } from "~/server/api/trpc";
 import { openAIRouter } from "~/server/api/routers/openai";
 import { langchainRouter } from "./routers/langchain";
 import { weaviateRouter } from "./routers/weaviate";
-import { feedbackRouter } from "./routers/feedbackDatabase";
 import { sourceRouter } from "./routers/sourceformat";
 import { followUpRouter } from "./routers/followup";
+import { prismaRouter } from "./routers/prisma";
 
 /**
  * This is the primary router for your server.
@@ -17,9 +17,9 @@ export const appRouter = createTRPCRouter({
   openai: openAIRouter,
   langchain: langchainRouter,
   weaviate: weaviateRouter,
-  feedback: feedbackRouter,
   source: sourceRouter,
   followup: followUpRouter,
+  prisma: prismaRouter,
 });
 
 // export type definition of API
