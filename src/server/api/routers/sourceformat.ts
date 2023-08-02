@@ -78,9 +78,9 @@ const getDocuments = async (standalone: string, categories: Categories) => {
   return documentsWithScores;
 }
 
-const formatPrompt = (text: string, ...usedvariables: any) => {
-  Object.keys(usedvariables).forEach((idx) => {
-    text = text.replace(`\$\{${idx}\}`, usedvariables[idx])
+const formatPrompt = (text: string, ...usedvariables: string[]) => {
+  Object.keys(usedvariables).forEach((_, idx) => {
+    text = text.replace(`\$\{${idx}\}`, usedvariables[idx]!)
   }
   )
   return text
@@ -96,17 +96,15 @@ const getResponse = async (documents: Document[], messages: { role: Role, conten
       "Source " + (index + 1) + ":\n---\n" + doc.pageContent + "\n---\n\n";
   });
 
-  const formattedPrompt = formatPrompt(prompt, documents.length, stuffString)
 
-
-  // Can either use chat (...formatedmessages) or standalone question in completion below. Chat is more robust, costs more, and reaches input-limit quicker.
+  // Can either use chat (...messages) or standalone question in completion below. Chat is more robust, costs more, and reaches input-limit quicker.
   // Standalone is not as robust, but can save money and hinder reaching input-limit.
   const completion = await openai.createChatCompletion({
     model: "gpt-3.5-turbo",
     messages: [
       {
         role: "system",
-        content: formattedPrompt,
+        content: prompt,
       },
       ...messages,
     ],
@@ -159,7 +157,7 @@ export const sourceRouter = createTRPCRouter({
       }, "");
 
 
-      const qaPrompt = formatPrompt(input.qaPrompt ?? defaultQAPrompt, documents.length, documentsString)
+      const qaPrompt = formatPrompt(input.qaPrompt ?? defaultQAPrompt, documents.length.toString(), documentsString)
 
       let startQA = performance.now();
       const completion = await getResponse(documents, formatedmessages, qaPrompt)

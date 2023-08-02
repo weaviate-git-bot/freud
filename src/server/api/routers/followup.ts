@@ -84,7 +84,7 @@ export async function makeFollowUpQuestionsForText(text: string) {
     ];
   }
 
-  console.log("Feedback: " + calcPrice(usage).toPrecision(3) + "$")
+  console.log("Followups: " + calcPrice(usage).toPrecision(3) + "$")
   return generated_followup_questions;
 }
 
