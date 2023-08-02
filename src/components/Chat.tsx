@@ -18,6 +18,7 @@ import { Icon } from "./ui/icon/Icon";
 import { Spinner } from "./ui/icon/icons/Spinner";
 import { TextArea } from "./ui/textArea/TextArea";
 import useAutosizeTextArea from "./useAutosizeTextArea";
+import { env } from "~/env.mjs";
 
 type Prop = {
   messages: Message[];
@@ -93,8 +94,10 @@ const Chat = ({ messages, setMessages, categories }: Prop) => {
       // Call followUp api
       makeFollowUps.mutate(message.content);
 
-      // Archive/update chatlog
-      logchat.mutate({ chatId: chatId, messages: newMessageList });
+      // Archive/update chatlog (for production deployment only)
+      if (env.NODE_ENV === "production") {
+        logchat.mutate({ chatId: chatId, messages: newMessageList });
+      }
     },
   });
 
