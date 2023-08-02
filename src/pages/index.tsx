@@ -1,45 +1,50 @@
 import Head from "next/head";
 import React, { useEffect, useState } from "react";
-import { z } from "zod";
 import Chat from "~/components/Chat";
 import Header from "~/components/Header";
 import SelectCategories from "~/components/SelectCategories";
 import { SidebarFreud } from "~/components/SidebarFreud";
 import { VectorStoreSettings } from "~/components/VectorStoreSettings";
+import { Button } from "~/components/ui/button/Button";
 import { env } from "~/env.mjs";
 import { type Message } from "~/interfaces/message";
+import type { Categories } from "~/types/categories";
 import { api } from "~/utils/api";
-
-export const Categories = z.record(
-  z.string(),
-  z.object({ active: z.boolean() })
-);
-
-export type Categories = z.infer<typeof Categories>;
-
-// export type Categories = { [key: string]: { active: boolean } };
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [categories, setCategories] = useState<Categories>({});
+  const [diagnosisMode, setDiagnosisMode] = useState<boolean>(false);
 
   const fetchedCategories = api.weaviate.listSchemas.useMutation({
     onSuccess: (data) => {
       if (!data) {
         throw new Error("Data not defined in OnSuccess");
       }
+
+      // If category selections exists in localStorage, update checked value accordingly
+      const localCategorySelections: Categories = JSON.parse(
+        localStorage.getItem("categories") ?? "{}"
+      ) as Categories;
+
+      // Iterate through classes fetched via API
       data.classes?.map((item) => {
-        let name: string;
-        if (!item.class) {
-          name = "Kategori uten navn";
-        } else {
-          name = item.class;
+        if (item.class === undefined) {
+          return;
         }
 
-        setCategories((prevState) => ({
-          ...prevState,
-          [name]: { active: false },
+        const className = item.class;
+        const localStorageSelectionExists = Object.keys(
+          localCategorySelections
+        ).includes(className);
+
+        // Set to value in localStorage, alternatively default to false (not checked)
+        setCategories((categories) => ({
+          ...categories,
+          [className]: localStorageSelectionExists
+            ? localCategorySelections[className] ?? false
+            : false,
         }));
       });
     },
@@ -64,7 +69,17 @@ export default function Home() {
           setShowSettings={setShowSettings}
         >
           <>
-            <SelectCategories categories={categories} myfunc={setCategories} />
+            <SelectCategories
+              categories={categories}
+              setCategories={setCategories}
+            />
+            <Button
+              color={diagnosisMode ? "green" : "white"}
+              onClick={() => setDiagnosisMode(!diagnosisMode)}
+              className="ml-4"
+            >
+              Diagnosis mode
+            </Button>
             {env.NEXT_PUBLIC_NODE_ENV == "development" && (
               <VectorStoreSettings vectorStoreSchemas={fetchedCategories} />
             )}
@@ -78,6 +93,7 @@ export default function Home() {
           messages={messages}
           setMessages={setMessages}
           categories={categories}
+          diagnosisMode={diagnosisMode}
         />
       </main>
     </>

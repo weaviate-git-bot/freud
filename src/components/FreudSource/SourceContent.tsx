@@ -1,10 +1,11 @@
 import React from "react";
 import { ViewPDF } from "./ViewPDF";
 import { ViewEpub } from "./ViewEpub";
+import { env } from "~/env.mjs";
 
 type Prop = {
-  category: string;
   content: string;
+  category: string;
   filename: string;
   filetype: string;
   location: {
@@ -17,19 +18,20 @@ type Prop = {
 };
 
 export const SourceContent = ({
+  content,
   category,
-  // content,
   filename,
   filetype,
   location,
 }: Prop) => {
   return (
     <div className="bg-250 m-3 w-[100%] rounded-lg p-2">
-      {/* {content} */}
-      {filetype === "pdf" && (
+      {content}
+
+      {env.NEXT_PUBLIC_NODE_ENV == "development" && filetype === "pdf" && (
         <ViewPDF category={category} filename={filename} location={location} />
       )}
-      {filetype === "epub" && (
+      {env.NEXT_PUBLIC_NODE_ENV == "development" && filetype === "epub" && (
         <ViewEpub category={category} filename={filename} location={location} />
       )}
     </div>

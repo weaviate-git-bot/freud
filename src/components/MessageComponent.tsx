@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { type Message, Role } from "~/interfaces/message";
-import { colors } from "~/stitches/colors";
 import SourceList from "./FreudSource/SourceList";
-import { Button } from "./ui/button/Button";
 
 type Prop = {
   message: Message;
@@ -13,59 +11,61 @@ type Prop = {
 const AVATAR_IMAGE_SIZE = 50;
 
 const MessageComponent = ({ message, children }: Prop) => {
-
   //initializes with length of sources (if sources are available) or is empty array
-  const [activeSources, setActiveSources] = useState<boolean[]>(new Array(message.sources?.length ?? 0).fill(false));
   const [scrollToId, setScrollToId] = useState<number>(-1);
 
   const formatLinks = (input: string): React.JSX.Element => {
     try {
-
-      var regex = /\[[Source 0-9]+\]/gi;
+      //Sometimes gpt wrongly outputs [Source 1] instead of [1], so we include it in regex.
+      const regex = /\[[Source 0-9]+\]/i;
 
       if (!regex.test(input)) {
         // If it does not contain any source references
-        throw new Error("No sources found")
+        return <p className="whitespace-pre-wrap">{input}</p>;
       }
 
-      const goodspaces = input.replaceAll("\n", " \n")
+      const goodspaces = input.replaceAll("\n", " \n");
+      const moregoodspaces = goodspaces.replaceAll("]", "] ");
 
-      const splittext = goodspaces.split(' ');
+      const splittext = moregoodspaces.split(" ");
 
-      let outputlist: any[] = []
+      let outputlist: any[] = [];
 
       let mystring = "";
       splittext.map((split, idx) => {
-        if (regex.test(split)) {
-          outputlist.push(mystring)
-          mystring = ""
-          for (let i = 1; i <= message.sources!.length; i++) {
-            if (parseInt(split.charAt(1)) == i) {
-              outputlist.push(<button key={idx} className="text-blue600" onClick={() => {
-                setScrollToId(i - 1);
-                setActiveSources(prevState => prevState.map((active, index) => index === i - 1 ? true : active))
-              }}>[{i}].</button>)
+        if (regex.test(split.trim())) {
+          outputlist.push(mystring);
+          mystring = "";
+          for (let i = 0; i < message.sources!.length; i++) {
+            if (parseInt(split.trim().charAt(1)) == i + 1) {
+              outputlist.push(
+                <button
+                  key={idx}
+                  className="text-blue600"
+                  onClick={() => {
+                    setScrollToId(i);
+                  }}
+                >
+                  [{i + 1}]
+                </button>
+              );
             }
           }
         } else {
           mystring += split + " ";
-
         }
-      })
+      });
+      outputlist.push(mystring);
 
-      const output = <p className='whitespace-pre-wrap'>
-        {outputlist}
-      </p>
+      const output = <p className="whitespace-pre-wrap">{outputlist}</p>;
 
       return output;
-    }
-    catch (error) {
+    } catch (error) {
       // Code above is bad. So if it breaks, sources wont be clickable.
-      console.log(error)
-      return <p>{input}</p>
+      console.error(error);
+      return <p className="whitespace-pre-wrap">{input}</p>;
     }
-  }
-
+  };
 
   return (
     <div className="container border-b-2 border-gray900 py-10">
@@ -78,9 +78,7 @@ const MessageComponent = ({ message, children }: Prop) => {
             width={AVATAR_IMAGE_SIZE}
             height={AVATAR_IMAGE_SIZE}
           />
-          <p className="pt-5 whitespace-pre-wrap">
-            {message.content}
-          </p>
+          <p className="whitespace-pre-wrap pt-5">{message.content}</p>
         </div>
       ) : (
         <div>
@@ -95,7 +93,13 @@ const MessageComponent = ({ message, children }: Prop) => {
             {children}
             {formatLinks(message.content)}
           </div>
-          <SourceList sources={message.sources ?? []} activeSources={activeSources} setActiveSources={setActiveSources} scrollToId={scrollToId} setScrollToId={setScrollToId} />
+          {message.sources && (
+            <SourceList
+              sources={message.sources}
+              scrollToId={scrollToId}
+              setScrollToId={setScrollToId}
+            />
+          )}
         </div>
       )}
     </div>
